@@ -163,9 +163,60 @@
     input.addEventListener('change', confirmar);
   }
 
+  /* ---------- CNPJ a partir do nome da empresa ---------- */
+
+  // Não há serviço público gratuito que devolva o CNPJ pelo nome. O botão abre a busca já com o nome
+  // digitado; ao colar o CNPJ encontrado no campo de CNPJ, o autopreenchimento.js completa os demais dados.
+  function botaoBuscaCnpj(raiz, chavesNome, chavesCnpj) {
+    var nome = campo(raiz, chavesNome);
+    var cnpj = campo(raiz, chavesCnpj);
+    if (!nome || !cnpj || nome.dataset.visatBuscaCnpj) return;
+    nome.dataset.visatBuscaCnpj = '1';
+
+    var caixa = document.createElement('div');
+    caixa.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px';
+    var botao = document.createElement('button');
+    botao.type = 'button';
+    botao.textContent = 'Buscar CNPJ pelo nome ↗';
+    botao.style.cssText = 'padding:6px 12px;border:1px solid #112C45;border-radius:6px;background:#112C45;color:#FFFFFF;font-size:12px;font-weight:600;cursor:pointer';
+    var dica = document.createElement('small');
+    dica.style.cssText = 'color:#4A5D70;font-size:12px';
+    dica.textContent = 'Abre a busca em nova aba. Copie o CNPJ encontrado e cole no campo de CNPJ: os demais dados são preenchidos automaticamente.';
+    caixa.appendChild(botao);
+    caixa.appendChild(dica);
+    nome.insertAdjacentElement('afterend', caixa);
+
+    botao.addEventListener('click', function () {
+      var termo = String(nome.value || '').trim();
+      if (termo.length < 3) {
+        dica.style.color = '#B3261E';
+        dica.textContent = 'Digite ao menos parte do nome da empresa antes de buscar.';
+        nome.focus();
+        return;
+      }
+      dica.style.color = '#4A5D70';
+      dica.textContent = 'Copie o CNPJ encontrado e cole no campo de CNPJ: os demais dados são preenchidos automaticamente.';
+      window.open('https://www.google.com/search?q=' + encodeURIComponent('"' + termo + '" CNPJ'), '_blank', 'noopener');
+      setTimeout(function () { cnpj.focus(); }, 300);
+    });
+  }
+
+  function atualizarDicaCnpj(raiz) {
+    raiz.querySelectorAll('small, p, span, .hint, .ajuda').forEach(function (el) {
+      if (/Preencha o documento e os dados da empresa manualmente/i.test(el.textContent) && !el.dataset.visatDica) {
+        el.dataset.visatDica = '1';
+        el.textContent = 'Digite o CNPJ: nome, atividade econômica e endereço da empresa são preenchidos automaticamente. Para CPF, preencha os dados manualmente.';
+      }
+    });
+  }
+
   /* ---------- configuração por formulário ---------- */
 
   function configurar(raiz) {
+    botaoBuscaCnpj(raiz, ['empresa', 'empresaNome', 'razao'], ['cnpj']);
+    botaoBuscaCnpj(raiz, ['razaoPrincipal', 'razaoPrinc'], ['cnpjPrincipal', 'cnpjPrinc']);
+    atualizarDicaCnpj(raiz);
+
     // Unidade notificadora -> código CNES
     [['unidNotif', 'codUnidNotif'], ['unidade', null], ['unidadeNotificadora', null], ['munInvestigadora', 'codUnidInv']]
       .forEach(function (par) {
