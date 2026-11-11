@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  var FICHA_POR_AGRAVO = { 'C80': 'cancer', 'L98.9': 'dermatose', 'Z57.9': 'lerdort', 'H83.3': 'pair', 'J64': 'pneumo', 'F99': 'mental', 'Y96': 'at' };
+  var FICHA_POR_AGRAVO = { 'C80': 'cancer', 'L98.9': 'dermatose', 'Z57.9': 'lerdort', 'H83.3': 'pair', 'J64': 'pneumo', 'F99': 'mental', 'Y96': 'at', 'Z20.9': 'biologico', 'R49': 'voz' };
   var CAMPO_DIAGNOSTICO = { cancer: 'cid', dermatose: 'cid10', lerdort: 'cidCod', pair: 'cid', pneumo: 'cidDiag', mental: 'cid', at: 'cid' };
   var FAIXAS = {
     cancer: [['C00', 'C97'], ['D00', 'D48']],
@@ -237,6 +237,7 @@
     var ficha = fichaDe(raiz);
     if (!ficha) return;
     var campo = raiz.querySelector('[data-key="' + CAMPO_DIAGNOSTICO[ficha] + '"]');
+    if (!CAMPO_DIAGNOSTICO[ficha]) return; // 1.b e 1.e não têm campo de diagnóstico específico
     if (ficha === 'at') {
       anexar(campo, 'lesao');
       anexar(raiz.querySelector('[data-key="cidCausa"]'), 'causa');
