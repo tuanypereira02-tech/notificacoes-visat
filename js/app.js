@@ -119,6 +119,43 @@
   const normalizar = (texto) =>
     String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
+  const termosDeBuscaVisat = {
+    '1.a': ['acidente laboral', 'acidente ocupacional', 'acidente de trajeto'],
+    '1.b': ['exposição ocupacional a material biológico', 'acidente com material biológico', 'acidente com perfurocortante'],
+    '1.c': ['câncer ocupacional'],
+    '1.d': ['dermatose ocupacional', 'dermatoses ocupacionais', 'dermatite ocupacional'],
+    '1.e': ['DVRT', 'distúrbio vocal ocupacional'],
+    '1.f': ['LER', 'DORT', 'LER DORT'],
+    '1.g': ['PAIR', 'perda auditiva induzida por ruído', 'perda auditiva ocupacional'],
+    '1.h': ['pneumoconiose ocupacional'],
+    '1.i': ['TMRT', 'transtorno mental relacionado ao trabalho'],
+    '1.j': ['acidente de trabalho fatal', 'morte por acidente de trabalho']
+  };
+
+  function codigoDoAgravo(nome) {
+    return normalizar(nome).match(/^(\d+(?:\.[a-z])?)(?=[.\s–—-]|$)/)?.[1];
+  }
+
+  function buscarAgravos(agravos, consulta) {
+    const termo = normalizar(consulta);
+    const selecionaveis = agravos.filter((agravo) => agravo.selecionavel !== false);
+    if (!termo) return selecionaveis;
+
+    const idExato = agravos.find((agravo) => agravo.id === termo);
+    const partes = termo.match(/^(\d+)(?:[.\s-]*([a-z]))?\.?$/);
+    if (idExato || partes) {
+      const codigo = partes && (partes[2] ? partes[1] + '.' + partes[2] : partes[1]);
+      const agravo = idExato || agravos.find((item) => codigoDoAgravo(item.nome) === codigo);
+      if (!agravo) return [];
+      return agravo.selecionavel === false ? agravo.subitens : [agravo];
+    }
+
+    return selecionaveis.filter((agravo) => {
+      const sinonimos = termosDeBuscaVisat[codigoDoAgravo(agravo.nome)] || [];
+      return [agravo.nome, ...sinonimos].some((texto) => normalizar(texto).includes(termo));
+    });
+  }
+
   function numeroDoAgravo(texto) {
     const valor = String(texto || '').match(/(\d+)/);
     return valor ? Number(valor[1]) : Number.MAX_SAFE_INTEGER;
@@ -267,33 +304,31 @@
   }
 
   function renderizarListaAgravos() {
-    const termo = normalizar(estado.termo);
+    const encontrados = buscarAgravos(estado.agravos, estado.termo);
+    const idsEncontrados = new Set(encontrados.map((agravo) => agravo.id));
     const lista = $('#lista-agravos');
+    const status = $('#busca-status');
     ocultarConceito();
     lista.textContent = '';
 
     const grupos = estado.agravos.filter((a) => a.tipo === 'grupo')
       .sort((a, b) => numeroDoAgravo(a.nome) - numeroDoAgravo(b.nome));
-    const itensSimples = estado.agravos.filter((a) => a.tipo === 'item' && (!termo || normalizar(a.nome).includes(termo)))
+    const itensSimples = estado.agravos.filter((a) => a.tipo === 'item' && idsEncontrados.has(a.id))
       .sort((a, b) => numeroDoAgravo(a.nome) - numeroDoAgravo(b.nome));
 
     const gruposVisiveis = grupos
       .map((grupo) => ({
         ...grupo,
         subitens: (grupo.subitens || [])
-          .filter((sub) => !termo || normalizar(sub.nome).includes(termo))
+          .filter((sub) => idsEncontrados.has(sub.id))
           .sort((a, b) => numeroDoAgravo(a.nome) - numeroDoAgravo(b.nome))
       }))
       .filter((grupo) => grupo.subitens.length > 0);
 
-    const totalExibidos = itensSimples.length + gruposVisiveis.reduce((total, grupo) => total + grupo.subitens.length, 0);
+    const totalExibidos = encontrados.length;
 
     if (totalExibidos === 0) {
-      const li = document.createElement('li');
-      li.className = 'vazio';
-      li.textContent = 'Nenhum agravo encontrado para esta busca. Revise o termo digitado.';
-      lista.appendChild(li);
-      $('#busca-status').textContent = '';
+      status.textContent = 'Nenhum resultado. Revise o termo digitado.';
       return;
     }
 
@@ -363,7 +398,8 @@
     });
 
     const totalSelecionavel = estado.agravos.filter((a) => a.selecionavel !== false).length;
-    $('#busca-status').textContent = `${totalExibidos} agravo(s) exibido(s) de ${totalSelecionavel}.`;
+    const descricao = totalExibidos === 1 ? 'agravo exibido' : 'agravos exibidos';
+    status.textContent = `${totalExibidos} ${descricao} de ${totalSelecionavel}.`;
   }
 
   function renderizarPerfis() {
