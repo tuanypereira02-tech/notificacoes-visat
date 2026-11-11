@@ -201,25 +201,55 @@
     var cep = campo(raiz, ['cep']);
     if (!cep || cep.dataset.autopreenchimentoCep) return;
     cep.dataset.autopreenchimentoCep = '1';
+    var ultimoCep = digitos(cep.value);
+    var consulta = 0;
 
     function buscar() {
       var n = digitos(cep.value);
-      if (n.length !== 8 || cep.dataset.ultimoCep === n) return;
-      cep.dataset.ultimoCep = n;
+      if (n === ultimoCep) return;
+      ultimoCep = n;
+      var atual = ++consulta;
+      if (n.length !== 8) {
+        aviso(cep, '');
+        return;
+      }
       aviso(cep, 'Buscando endereço pelo CEP…');
       fetch('https://viacep.com.br/ws/' + n + '/json/')
         .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
         .then(function (d) {
-          if (d.erro) { aviso(cep, 'CEP não encontrado. Preencher o endereço manualmente.', true); return; }
-          definir(campo(raiz, ['logRes']), d.logradouro);
-          definir(campo(raiz, ['bairroRes']), d.bairro);
-          definir(campo(raiz, ['ufRes']), d.uf);
-          definir(campo(raiz, ['munRes']), d.localidade);
-          definir(campo(raiz, ['ibgeRes']), ibgeSinan(d.ibge));
-          aviso(cep, 'Endereço preenchido pelo CEP. Conferir antes de enviar.');
+          if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
+          if (d.erro) {
+            aviso(cep, 'CEP não encontrado. Confira o número ou informe o endereço manualmente.', true);
+            return;
+          }
+          var dados = {
+            logRes: d.logradouro,
+            bairroRes: d.bairro,
+            ufRes: d.uf,
+            munRes: d.localidade,
+            ibgeRes: ibgeSinan(d.ibge)
+          };
+          Object.entries(dados).forEach(function (item) {
+            var el = campo(raiz, [item[0]]);
+            if (!el) return;
+            if (item[1]) {
+              definir(el, item[1], true);
+            } else if (el.value) {
+              el.value = '';
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          });
+          aviso(cep, d.logradouro && d.bairro
+            ? 'Endereço atualizado. Confira número e complemento.'
+            : 'Endereço atualizado com os dados disponíveis. Complete os campos que faltam.');
         })
-        .catch(function () { aviso(cep, 'Não foi possível consultar o CEP agora. Preencher manualmente.', true); });
+        .catch(function () {
+          if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
+          ultimoCep = '';
+          aviso(cep, 'Consulta indisponível. Tente novamente ou informe o endereço manualmente.', true);
+        });
     }
+    cep.addEventListener('input', buscar);
     cep.addEventListener('change', buscar);
     cep.addEventListener('blur', buscar);
   }
