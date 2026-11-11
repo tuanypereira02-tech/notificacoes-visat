@@ -120,12 +120,6 @@
 
   function preencherPadrao(raiz) {
     definir(campo(raiz, ['dataNotificacao', 'dataNotif']), hoje());
-
-    var temUfNotifEspecifica = !!campo(raiz, ['ufNotif', 'ufNotificacao']);
-    // Nos formulários sem "ufNotif/ufNotificacao", o campo "uf" é o da notificação.
-    definir(campo(raiz, temUfNotifEspecifica ? ['ufNotif', 'ufNotificacao'] : ['uf']), PADRAO.uf);
-    definir(campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao']), PADRAO.municipio);
-    definir(campo(raiz, ['ibgeNotif']), PADRAO.ibge);
   }
 
   /* ---------- 2. dados do notificante ---------- */
@@ -192,6 +186,8 @@
     }
     idade.addEventListener('input', function (ev) { if (ev.isTrusted) idade.dataset.autopreenchido = '0'; });
     nasc.addEventListener('change', calcular);
+    var dataNotif = campo(raiz, ['dataNotificacao', 'dataNotif']);
+    if (dataNotif) dataNotif.addEventListener('change', calcular);
     calcular();
   }
 
