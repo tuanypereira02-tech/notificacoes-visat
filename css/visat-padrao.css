@@ -118,7 +118,7 @@ input, select, textarea {
 }
 
 /* Celular: texto corrido 16 px */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   body, p, li, label, legend, td, th, .item-agravo, input, select, textarea {
     font-size: 16px !important;
   }
