@@ -29,7 +29,7 @@
 
     <section aria-labelledby="h-agravo">
       <h2 id="h-agravo"><span class="etapa" aria-hidden="true">01</span> Escolha o agravo</h2>
-      <label for="busca">Buscar agravo pelo nome</label>
+      <label for="busca">Buscar por nome, sigla ou código</label>
       <input id="busca" type="search" autocomplete="off" aria-describedby="busca-status">
       <p id="busca-status" role="status"></p>
       <ul id="lista-agravos" class="lista-agravos" aria-label="Lista de agravos"></ul>
@@ -48,6 +48,12 @@
       <h2 id="h-resultado"><span class="etapa" aria-hidden="true">03</span> Direcionamento</h2>
       <div id="resultado" class="resultado" aria-live="polite"></div>
     </section>
+    <aside id="nota-fluxo-ve" aria-labelledby="h-fluxo-ve" hidden>
+      <h2 id="h-fluxo-ve">Intoxicação exógena e violências</h2>
+      <p>Notifique o caso no fluxo da Vigilância Epidemiológica (VE), usando a ficha específica do agravo. Se houver suspeita ou informação de relação com o trabalho, sinalize essa relação na notificação e descreva as circunstâncias nas observações.</p>
+      <p>A VE encaminha o caso à VISAT quando identifica possível relação com o trabalho na análise ou recebe essa sinalização na notificação.</p>
+      <p><a href="https://sites.google.com/view/gerve/notifica%C3%A7%C3%A3o-compuls%C3%B3ria" target="_blank" rel="noopener noreferrer">Consultar o fluxo da Vigilância Epidemiológica</a></p>
+    </aside>
   </main>
 
   <footer class="rodape">
@@ -655,7 +661,7 @@
   </template>
 
   <script src="js/formulario-acidente.js?v=20261111-p16" defer></script>
-  <script src="js/app.js?v=20261111-busca-exata" defer></script>
+  <script src="js/app.js?v=20261111-escopo-visat" defer></script>
   <script src="js/autopreenchimento.js?v=20261111-p12" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261111-p14" defer></script>
   <script src="js/cid-qualificado.js?v=20261111-cid-v1" defer></script>
