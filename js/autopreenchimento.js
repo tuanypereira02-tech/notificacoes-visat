@@ -428,14 +428,14 @@
 
   function parametros() {
     var p = new URLSearchParams(window.location.search);
-    return { agravo: p.get('agravo'), perfil: p.get('perfil'), homologacao: p.has('homologacao') };
+    return { agravo: p.get('agravo'), perfil: p.get('perfil'), homologacao: p.has('homologacao'), escopo: p.get('escopo') };
   }
 
   function repassarAoQuadro() {
     var quadro = document.getElementById('aplicacao-notificacao');
     if (!quadro) return;
     var p = parametros();
-    if (!p.agravo && !p.perfil && !p.homologacao) return;
+    if (!p.agravo && !p.perfil && !p.homologacao && !p.escopo) return;
     var base = (quadro.getAttribute('src') || 'notificacao.html').split('?')[0];
     quadro.setAttribute('src', base + window.location.search);
   }

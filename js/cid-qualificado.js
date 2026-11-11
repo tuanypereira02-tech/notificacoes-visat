@@ -158,7 +158,8 @@
     var ajuda = document.createElement('p');
     ajuda.className = 'field-help';
     ajuda.id = el.id + '-cid-ajuda';
-    ajuda.textContent = 'Digite o código ou o nome do diagnóstico e escolha na lista. Aceita ' + DESCRICAO_FAIXA[escopo] + '.';
+    ajuda.textContent = 'Digite o código ou o nome do diagnóstico e escolha na lista. Aceita ' + DESCRICAO_FAIXA[escopo] + '. ' +
+      'A tabela CID-10 (DATASUS) está incorporada a este formulário: a busca não depende do site do DATASUS.';
     el.insertAdjacentElement('afterend', ajuda);
     var lista = document.createElement('ul');
     lista.className = 'visat-cid-lista';
@@ -213,7 +214,14 @@
           lista.append(li);
         }
         lista.hidden = false;
-      }).catch(function () { lista.hidden = true; });
+      }).catch(function () {
+        lista.replaceChildren();
+        var li = document.createElement('li');
+        li.textContent = 'A tabela de CID não carregou agora. Digite o código (ex.: ' + (escopo === 'causa' ? 'W23.9' : escopo === 'lesao' ? 'S61.0' : 'G56.0') +
+          '): a regra de escopo da ficha continua valendo e a descrição é conferida quando a tabela voltar.';
+        lista.append(li);
+        lista.hidden = false;
+      });
     }
     function conferir() {
       var r = classificar(el);

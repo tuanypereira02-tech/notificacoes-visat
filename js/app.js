@@ -134,6 +134,17 @@
     '1.j': ['acidente de trabalho fatal', 'morte por acidente de trabalho']
   };
 
+  // Catálogo exclusivo da VISAT (?escopo=visat): numeração própria 1 a 10; o código da lista geral (1.a…) fica como referência.
+  function rotuloAgravo(agravo) {
+    if (!agravo) return '';
+    if (!escopoVisat) return agravo.nome;
+    if (agravo.id === grupoVisatId) return agravo.nome.replace(/^\s*\d+\.\s*/, '');
+    const codigo = codigoDoAgravo(agravo.nome);
+    if (agravo.grupoId !== grupoVisatId || !codigo || !codigo.includes('.')) return agravo.nome;
+    const numero = codigo.charCodeAt(codigo.length - 1) - 96;
+    return numero + '. ' + agravo.nome.replace(/^\s*\d+\.[a-z]\s*[-–—]?\s*/i, '');
+  }
+
   function codigoDoAgravo(nome) {
     return normalizar(nome).match(/^(\d+(?:\.[a-z])?)(?=[.\s–—-]|$)/)?.[1];
   }
@@ -146,7 +157,11 @@
     const idExato = agravos.find((agravo) => agravo.id === termo);
     const partes = termo.match(/^(\d+)(?:[.\s-]*([a-z]))?\.?$/);
     if (idExato || partes) {
-      const codigo = partes && (partes[2] ? partes[1] + '.' + partes[2] : partes[1]);
+      let codigo = partes && (partes[2] ? partes[1] + '.' + partes[2] : partes[1]);
+      // No catálogo da VISAT, "3" corresponde ao 3º agravo da lista (1.c na lista geral).
+      if (escopoVisat && partes && !partes[2] && Number(partes[1]) >= 1 && Number(partes[1]) <= 26) {
+        codigo = '1.' + String.fromCharCode(96 + Number(partes[1]));
+      }
       const agravo = idExato || agravos.find((item) => codigoDoAgravo(item.nome) === codigo);
       if (!agravo) return [];
       return agravo.selecionavel === false ? agravo.subitens : [agravo];
@@ -361,7 +376,7 @@
         botao.type = 'button';
         botao.className = 'item-agravo';
         botao.dataset.id = bloco.agravo.id;
-        botao.textContent = bloco.agravo.nome;
+        botao.textContent = rotuloAgravo(bloco.agravo);
         botao.setAttribute('aria-pressed', String(bloco.agravo.id === estado.agravoId));
         configurarConceito(botao, bloco.agravo.conceito);
         li.appendChild(botao);
@@ -374,7 +389,7 @@
 
       const titulo = document.createElement('div');
       titulo.className = 'grupo-agravo-titulo';
-      titulo.textContent = bloco.grupo.nome;
+      titulo.textContent = rotuloAgravo(bloco.grupo);
       titulo.tabIndex = 0;
       configurarConceito(titulo, bloco.grupo.conceito);
       liGrupo.appendChild(titulo);
@@ -388,7 +403,8 @@
         botao.type = 'button';
         botao.className = 'item-agravo item-subitem';
         botao.dataset.id = subitem.id;
-        botao.textContent = subitem.nome;
+        botao.textContent = rotuloAgravo(subitem);
+        if (escopoVisat) botao.title = 'Código na lista geral de notificações: ' + codigoDoAgravo(subitem.nome);
         botao.setAttribute('aria-pressed', String(subitem.id === estado.agravoId));
         configurarConceito(botao, subitem.conceito);
         itemLi.appendChild(botao);
@@ -471,7 +487,7 @@
 
     const contexto = document.createElement('div');
     contexto.className = 'resultado-contexto';
-    contexto.appendChild(criarCampoResultado('Agravo', agravo ? agravo.nome : 'Selecione um agravo'));
+    contexto.appendChild(criarCampoResultado('Agravo', agravo ? rotuloAgravo(agravo) : 'Selecione um agravo'));
     contexto.appendChild(criarCampoResultado('Perfil', perfil ? perfil.rotulo : 'Selecione um perfil'));
     caixa.appendChild(contexto);
 
@@ -553,7 +569,7 @@
     if (perfil.id === 'nao_municipal' && agravo.grupoId === grupoVisatId) {
       const painel = document.createElement('section');
       painel.className = 'resultado-painel';
-      painel.appendChild(criarLinha('p', `Direcionamento para ${agravo.nome}`, 'resultado-painel-titulo'));
+      painel.appendChild(criarLinha('p', `Direcionamento para ${rotuloAgravo(agravo)}`, 'resultado-painel-titulo'));
       const instrucao = document.createElement('p');
       instrucao.className = 'resultado-painel-texto';
       instrucao.append(document.createTextNode('Para registrar a notificação, preencha o formulário abaixo. Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail '));
