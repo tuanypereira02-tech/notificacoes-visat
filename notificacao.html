@@ -174,6 +174,11 @@
 <p class="screen-sub">Endereço de residência da pessoa notificada.</p>
 <div class="field-group">
 <div>
+<label class="field-label" for="sinan-cep">CEP</label>
+<input class="input input-lg" id="sinan-cep" type="text" data-key="cep" placeholder="00000-000" inputmode="numeric" maxlength="9">
+<p class="field-help">Informe o CEP para atualizar o endereço. Confira o número e o complemento.</p>
+</div>
+<div>
 <label class="field-label" for="sinan-uf-res">UF</label>
 <select class="input input-lg" id="sinan-uf-res" data-key="ufRes">
 <option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
@@ -218,10 +223,6 @@
 <div>
 <label class="field-label" for="sinan-ref">Ponto de referência</label>
 <input class="input input-lg" id="sinan-ref" type="text" data-key="refRes">
-</div>
-<div>
-<label class="field-label" for="sinan-cep">CEP</label>
-<input class="input input-lg" id="sinan-cep" type="text" data-key="cep" placeholder="00000-000">
 </div>
 <div>
 <label class="field-label" for="sinan-tel">(DDD) Telefone</label>
@@ -640,7 +641,7 @@
 
   <script src="js/formulario-acidente.js?v=20261111-consultas" defer></script>
   <script src="js/app.js?v=20261111-sinan" defer></script>
-  <script src="js/autopreenchimento.js?v=20261111-consultas" defer></script>
+  <script src="js/autopreenchimento.js?v=20261111-cep-residencia" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261111-consultas" defer></script>
 </body>
 </html>
