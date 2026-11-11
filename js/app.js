@@ -23,6 +23,8 @@
   // Total de agravos selecionáveis da versão auditada do catálogo (P01). A interface usa o total calculado da lista;
   // este valor serve apenas à conferência de integridade registrada no console.
   const TOTAL_AUDITADO = 106;
+  const grupoVisatId = '1-doencas-relacionadas-ao-trabalho';
+  const escopoVisat = new URLSearchParams(window.location.search).get('escopo') === 'visat';
 
   const hojeIso = new Date().toISOString().slice(0, 10);
 
@@ -548,7 +550,7 @@
       return;
     }
 
-    if (perfil.id === 'nao_municipal' && agravo.grupoId === '1-doencas-relacionadas-ao-trabalho') {
+    if (perfil.id === 'nao_municipal' && agravo.grupoId === grupoVisatId) {
       const painel = document.createElement('section');
       painel.className = 'resultado-painel';
       painel.appendChild(criarLinha('p', `Direcionamento para ${agravo.nome}`, 'resultado-painel-titulo'));
@@ -722,11 +724,16 @@
         carregarJSON('data/agravos.json'),
         carregarJSON('data/direcionamentos.json')
       ]);
-      estado.agravos = montarAgravos(agravos);
+      const catalogo = montarAgravos(agravos);
+      estado.agravos = escopoVisat
+        ? catalogo.filter((agravo) => agravo.id === grupoVisatId || agravo.grupoId === grupoVisatId)
+        : catalogo;
+      const notaFluxoVe = $('#nota-fluxo-ve');
+      if (notaFluxoVe) notaFluxoVe.hidden = !escopoVisat;
       estado.direcionamentos = direcionamentos && typeof direcionamentos === 'object' ? direcionamentos : {};
       renderizarListaAgravos();
       renderizarResultado();
-      const totalSelecionavel = estado.agravos.filter((a) => a.selecionavel !== false).length;
+      const totalSelecionavel = catalogo.filter((a) => a.selecionavel !== false).length;
       if (totalSelecionavel !== TOTAL_AUDITADO) {
         console.warn(`[VISAT] Catálogo: ${totalSelecionavel} agravos selecionáveis; a versão auditada tem ${TOTAL_AUDITADO}.`);
       }
