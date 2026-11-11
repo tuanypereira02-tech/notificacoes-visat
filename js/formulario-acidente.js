@@ -1,3 +1,16 @@
+// Remove somente as chaves de rascunho criadas por versões anteriores do VISAT.
+try {
+  const chavesLegadas = ['acidente', 'obito', 'biologico', 'cancer', 'dermatose', 'voz', 'lerdort', 'pair', 'pneumo', 'mental']
+    .map(agravo => 'notificacao-' + agravo + '-v1-inline');
+  chavesLegadas.push('visat-notificante-v1');
+  chavesLegadas.forEach(chave => window.localStorage.removeItem(chave));
+} catch (erro) {
+  // O formulário funciona mesmo quando o navegador bloqueia o armazenamento.
+}
+window.addEventListener('pageshow', evento => {
+  if (evento.persisted) window.location.reload();
+});
+
 function completarCamposEmpresa(area) {
   const grupos = [
     {
@@ -205,7 +218,6 @@ function montarBlocoSinan(root, options) {
 window.montarFormularioAcidente = function montarFormularioAcidente(container, onVoltar, obito = false) {
   return window.montarFormulario(container, onVoltar, {
     templateId: 'form-acidente-template',
-    storageKey: obito ? 'notificacao-obito-v1-inline' : 'notificacao-acidente-v1-inline',
     obito,
     defaults: { tempoUnidade: 'Anos', ...(obito ? { evolucao: 'Óbito por acidente de trabalho' } : {}) }
   });
@@ -217,31 +229,15 @@ if (!template) throw new Error('Modelo do formulario nao encontrado.');
 container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
 const TOTAL = montarBlocoSinan(root, options);
-const STORAGE_KEY = options.storageKey;
 const config = blocosSinan[options.templateId];
 const defaults = {
   [config.aliases.dataNotificacao || 'dataNotificacao']: new Date().toISOString().slice(0, 10),
   ...options.defaults
 };
-const defaultState = () => ({ screen: 1, values: {}, calcManual: false });
-const status = root.querySelector('#form-status');
-const setStatus = (message) => { status.textContent = message; };
-let state = defaultState();
-try {
-  const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved) state = JSON.parse(saved);
-} catch (error) {
-  console.error('Nao foi possivel carregar o rascunho do formulario.', error);
-  setStatus('O rascunho nao pode ser carregado do armazenamento deste navegador.');
-}
-if (!state || typeof state !== 'object') state = defaultState();
-if (!state.values) state.values = {};
-if (state.sinanLayout !== 1) {
-  state.screen = 1;
-  state.sinanLayout = 1;
-}
-if (!state.screen) state.screen = 1;
-
+const state = { screen: 1, values: { ...defaults } };
+root.querySelectorAll('input[data-key], textarea[data-key]').forEach(campo => {
+  campo.setAttribute('autocomplete', 'off');
+});
 const today = new Date().toISOString().slice(0, 10);
 Object.entries(defaults).forEach(([key, value]) => {
   if (!state.values[key]) state.values[key] = value;
@@ -258,15 +254,6 @@ const bottomBar = root.querySelector('#bottomBar');
 const progSegs = root.querySelectorAll('.progress-seg');
 
 
-function save() {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.error('Nao foi possivel salvar o rascunho do formulario.', error);
-    setStatus('O rascunho nao pode ser salvo neste navegador.');
-  }
-}
-
 function getScreens() { return Array.from(root.querySelectorAll('.screen')); }
 
 function persistInputs() {
@@ -280,7 +267,6 @@ if (group.dataset.multi) state.values[key] = selected;
 else state.values[key] = selected[0] || '';
 });
 aplicarCondicoes();
-save();
 }
 
 function restoreInputs() {
@@ -473,7 +459,6 @@ counter.textContent = isDone ? 'Concluído' : 'Tela ' + n + ' de ' + TOTAL;
 btnVoltar.style.visibility = n === 1 ? 'hidden' : 'visible';
 btnContinuar.textContent = n === TOTAL || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 renderProgress();
-save();
 area.scrollTop = 0;
 if (isDone) buildSummary();
 }
@@ -732,19 +717,8 @@ root.querySelector('[data-dialog-close]').addEventListener('click', () => dlg.cl
 root.querySelector('[data-voltar-consulta]').addEventListener('click', onVoltar);
 root.querySelector('#btnNova').addEventListener('click', () => dlg.showModal());
 root.querySelector('#btnConfirmaNova').addEventListener('click', () => {
-emCorrecao = false;
-state = { screen: 1, values: { ...defaults }, calcManual: false, sinanLayout: 1 };
-if (root.querySelector('[data-key="dataFechamento"]')) state.values.dataFechamento = today;
-save();
-root.querySelectorAll('[data-key]').forEach(el => {
-  el.value = state.values[el.dataset.key] || '';
-  el.classList.remove('invalid');
-});
-root.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
-root.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
-dlg.close();
-showScreen(1);
-setStatus('Novo formulario pronto para preenchimento.');
+  dlg.close();
+  window.montarFormulario(container, onVoltar, options);
 });
 
 // Init
