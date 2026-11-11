@@ -20,7 +20,9 @@
     }
   ];
 
-  const TOTAL_PREVISTO = 60;
+  // Total de agravos selecionáveis da versão auditada do catálogo (P01). A interface usa o total calculado da lista;
+  // este valor serve apenas à conferência de integridade registrada no console.
+  const TOTAL_AUDITADO = 106;
 
   const hojeIso = new Date().toISOString().slice(0, 10);
 
@@ -177,16 +179,7 @@
       }
     }
 
-    return Array.from({ length: TOTAL_PREVISTO }, (_, i) => {
-      const n = String(i + 1).padStart(2, '0');
-      return {
-        id: `PLACEHOLDER-${n}`,
-        nome: `PLACEHOLDER — agravo ${n} — nome oficial pendente`,
-        tipo: 'item',
-        selecionavel: true,
-        placeholder: true
-      };
-    });
+    return [];
   }
 
   async function carregarJSON(caminho) {
@@ -697,8 +690,9 @@
       estado.direcionamentos = direcionamentos && typeof direcionamentos === 'object' ? direcionamentos : {};
       renderizarListaAgravos();
       renderizarResultado();
-      if (estado.agravos.length !== TOTAL_PREVISTO) {
-        $('#busca-status').textContent += ` Atenção: a lista tem ${estado.agravos.length} itens; o previsto são ${TOTAL_PREVISTO}.`;
+      const totalSelecionavel = estado.agravos.filter((a) => a.selecionavel !== false).length;
+      if (totalSelecionavel !== TOTAL_AUDITADO) {
+        console.warn(`[VISAT] Catálogo: ${totalSelecionavel} agravos selecionáveis; a versão auditada tem ${TOTAL_AUDITADO}.`);
       }
     } catch (erro) {
       $('#busca-status').textContent = 'Não foi possível carregar os dados. Tente novamente mais tarde.';
