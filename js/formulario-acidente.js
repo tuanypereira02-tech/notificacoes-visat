@@ -388,25 +388,73 @@ const input = root.querySelector('[data-key="' + key + '"]');
 if (input) input.classList.remove('invalid');
 }
 
-function isFilled(key) {
-const v = state.values[key];
-if (Array.isArray(v)) return v.length > 0;
-return v !== undefined && String(v).trim() !== '';
+function camposBasicosPendentes() {
+  const grupos = [
+    [1, ['dataNotificacao', 'dataNotif'], 'Data da notificação'],
+    [1, ['ufNotif', 'ufNotificacao', 'uf'], 'UF notificadora'],
+    [1, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio', 'ibgeNotif'], 'Município notificador ou código IBGE'],
+    [1, ['unidNotif', 'unidadeNotificadora', 'unidade', 'codUnidNotif'], 'Unidade notificadora ou código CNES'],
+    [2, ['nome'], 'Nome completo'],
+    [2, ['nascimento', 'idade'], 'Data de nascimento ou idade'],
+    [2, ['sexo'], 'Sexo']
+  ];
+  if (!String(state.values.paisExterior || '').trim()) {
+    grupos.push([3, ['ufRes'], 'UF de residência'],
+      [3, ['munRes', 'ibgeRes'], 'Município de residência ou código IBGE']);
+  }
+  if (options.templateId !== 'form-voz-template' && state.values.sexo === 'Feminino') {
+    grupos.push([2, ['gestante'], 'Situação gestacional']);
+  }
+  return grupos.flatMap(([tela, chaves, rotulo]) => {
+    const secao = getScreens()[tela - 1];
+    const campos = chaves.map(chave => secao.querySelector(
+      '[data-key="' + chave + '"], [data-chips="' + chave + '"]'
+    )).filter(Boolean);
+    if (!campos.length || campos.some(campo => {
+      const valor = String(state.values[campo.dataset.key || campo.dataset.chips] ?? '').trim();
+      if (campo.dataset.key === 'codUnidNotif') return /^\d{7}$/.test(valor);
+      if (campo.dataset.key === 'ibgeNotif' || campo.dataset.key === 'ibgeRes') return /^\d{6,7}$/.test(valor);
+      return valor !== '';
+    })) return [];
+    return [{ tela, rotulo, campo: campos[0] }];
+  });
 }
 
-function validateCurrent() {
-const screen = getScreens().find(s => s.dataset.screen == state.screen);
-const missing = [];
-return missing;
-}
-
-function showErrors(missing) {
-missing.forEach(key => {
-const err = root.querySelector('[data-err="' + key + '"]');
-if (err) err.classList.add('show');
-const input = root.querySelector('[data-key="' + key + '"]');
-if (input) input.classList.add('invalid');
-});
+let emCorrecao = false;
+function finalizarFicha() {
+  persistInputs();
+  const pendentes = camposBasicosPendentes();
+  if (!pendentes.length) {
+    emCorrecao = false;
+    showScreen(TOTAL + 1);
+    return;
+  }
+  emCorrecao = true;
+  root.querySelector('[data-visat-pendencias]')?.remove();
+  const caixa = document.createElement('section');
+  caixa.className = 'highlight-box';
+  caixa.dataset.visatPendencias = '1';
+  const titulo = document.createElement('h2');
+  titulo.textContent = 'Complete os dados básicos para finalizar';
+  titulo.tabIndex = -1;
+  const lista = document.createElement('ul');
+  pendentes.forEach(({ tela, rotulo, campo }) => {
+    const item = document.createElement('li');
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'btn';
+    botao.dataset.variant = 'outline';
+    botao.textContent = rotulo;
+    botao.addEventListener('click', () => {
+      showScreen(tela);
+      (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
+    });
+    item.append(botao);
+    lista.append(item);
+  });
+  caixa.append(titulo, lista);
+  getScreens()[state.screen - 1].prepend(caixa);
+  titulo.focus();
 }
 
 function renderProgress() {
@@ -416,13 +464,14 @@ seg.classList.toggle('done', i < state.screen);
 }
 
 function showScreen(n) {
+root.querySelector('[data-visat-pendencias]')?.remove();
 state.screen = n;
 getScreens().forEach(s => s.classList.toggle('active', Number(s.dataset.screen) === n));
 const isDone = n === TOTAL + 1;
 bottomBar.style.display = isDone ? 'none' : 'block';
 counter.textContent = isDone ? 'Concluído' : 'Tela ' + n + ' de ' + TOTAL;
 btnVoltar.style.visibility = n === 1 ? 'hidden' : 'visible';
-btnContinuar.textContent = n === TOTAL ? 'Concluir notificação' : 'Seguinte';
+btnContinuar.textContent = n === TOTAL || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 renderProgress();
 save();
 area.scrollTop = 0;
@@ -430,6 +479,9 @@ if (isDone) buildSummary();
 }
 
 function buildPrint() {
+const tituloImpressao = root.querySelector('.pf-title');
+if (tituloImpressao) tituloImpressao.textContent = options.obito
+  ? 'Óbito por acidente de trabalho' : config.agravo;
 root.querySelector('#pfDataImpressao').textContent = formatDate(new Date().toISOString().slice(0, 10));
 const blocks = root.querySelector('#pfBlocks');
 blocks.replaceChildren();
@@ -565,11 +617,11 @@ function mostrarRevisaoDeCampos() {
   const secaoOcupacao = root.querySelector('[data-key="ocupacao"]')?.closest('.screen');
   if (secaoOcupacao) grupos.push({ tela: Number(secaoOcupacao.dataset.screen), campos: [[['ocupacao'], 'Ocupação / CBO']] });
 
-  const caixa = document.createElement('section');
+  const caixa = document.createElement('details');
   caixa.dataset.visatRevisao = '1';
   caixa.className = 'highlight-box';
-  const titulo = document.createElement('h2');
-  titulo.textContent = 'Conferência dos campos prioritários';
+  const titulo = document.createElement('summary');
+  titulo.textContent = 'Conferir campos complementares';
   const texto = document.createElement('p');
   const lista = document.createElement('ul');
   let total = 0;
@@ -609,6 +661,30 @@ function mostrarRevisaoDeCampos() {
 
 function buildSummary() {
 mostrarRevisaoDeCampos();
+const imprimir = root.querySelector('#btnImprimir');
+const acoes = imprimir.parentElement;
+imprimir.textContent = 'Imprimir / salvar PDF';
+const email = root.querySelector('.hospital-alert a[href^="mailto:"]');
+if (email && !acoes.querySelector('[data-visat-email]')) {
+  const link = document.createElement('a');
+  link.className = 'btn';
+  link.dataset.variant = 'outline';
+  link.dataset.visatEmail = '1';
+  link.href = email.href;
+  link.textContent = 'Abrir e-mail';
+  acoes.append(link);
+  const instrucao = document.createElement('p');
+  instrucao.className = 'field-help';
+  instrucao.dataset.visatPdfInstrucao = '1';
+  instrucao.textContent = 'Para enviar por e-mail, escolha Salvar como PDF na janela de impressão e anexe o arquivo à mensagem.';
+  acoes.after(instrucao);
+}
+const revisao = root.querySelector('[data-visat-revisao]');
+revisao.before(acoes);
+if (acoes.querySelector('[data-visat-email]')) {
+  const instrucao = root.querySelector('[data-visat-pdf-instrucao]');
+  if (instrucao) acoes.after(instrucao);
+}
 const marcados = root.querySelectorAll('[data-summary]');
 const items = marcados.length
   ? Array.from(marcados).map((el) => [rotuloResumo(el), valorResumo(el)])
@@ -639,11 +715,11 @@ if (state.screen > 1) showScreen(state.screen - 1);
 });
 
 btnContinuar.addEventListener('click', () => {
-persistInputs();
-if (state.screen < TOTAL) {
-showScreen(state.screen + 1);
+if (emCorrecao || state.screen === TOTAL) {
+  finalizarFicha();
 } else {
-showScreen(TOTAL + 1);
+  persistInputs();
+  showScreen(state.screen + 1);
 }
 });
 
@@ -656,6 +732,7 @@ root.querySelector('[data-dialog-close]').addEventListener('click', () => dlg.cl
 root.querySelector('[data-voltar-consulta]').addEventListener('click', onVoltar);
 root.querySelector('#btnNova').addEventListener('click', () => dlg.showModal());
 root.querySelector('#btnConfirmaNova').addEventListener('click', () => {
+emCorrecao = false;
 state = { screen: 1, values: { ...defaults }, calcManual: false, sinanLayout: 1 };
 if (root.querySelector('[data-key="dataFechamento"]')) state.values.dataFechamento = today;
 save();
