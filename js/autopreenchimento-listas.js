@@ -268,7 +268,14 @@
       }, 550);
     }
     nome.addEventListener('input', function (evento) {
-      if (evento.isTrusted) agendar();
+      if (!evento.isTrusted) return;
+      if (cnpj.value && cnpj.dataset.ultimoCnpj) {
+        var termoDigitado = nome.value;
+        cnpj.value = '';
+        cnpj.dispatchEvent(new Event('input', { bubbles: true }));
+        nome.value = termoDigitado;
+      }
+      agendar();
     });
     regiao.addEventListener('change', agendar);
   }
@@ -294,12 +301,31 @@
     var municipioNotif = campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio']);
     var ufNotif = campo(raiz, ['ufNotif', 'ufNotificacao', 'uf']);
     var ibgeNotif = campo(raiz, ['ibgeNotif']);
+    function vincularCampos(origens, vinculados) {
+      var confirmados = new Map();
+      origens.filter(Boolean).forEach(function (origem) {
+        origem.addEventListener('input', function (evento) {
+          if (!evento.isTrusted || !confirmados.has(origem) || confirmados.get(origem) === origem.value) return;
+          confirmados.clear();
+          vinculados.forEach(function (el) {
+            if (!el || el === origem || !el.value) return;
+            el.value = '';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
+      });
+      return function () {
+        origens.filter(Boolean).forEach(function (origem) { confirmados.set(origem, origem.value); });
+      };
+    }
+    var confirmarUnidade = vincularCampos([nomeUnidade, cnes], [nomeUnidade, cnes, municipioNotif, ufNotif, ibgeNotif]);
     function preencherUnidade(item) {
       definir(nomeUnidade, item.v, true);
       definir(cnes, item.c, true);
       definir(municipioNotif, item.municipio, true);
       definir(ufNotif, item.uf, true);
       definir(ibgeNotif, item.ibge, true);
+      confirmarUnidade();
     }
     anexarLista(nomeUnidade, 'cnes', preencherUnidade);
     anexarLista(cnes, 'cnes', preencherUnidade);
@@ -316,10 +342,12 @@
       [campo(raiz, ['munEmp']), campo(raiz, ['ibgeEmp']), campo(raiz, ['ufEmp'])],
       [campo(raiz, ['munPrincipal']), campo(raiz, ['ibgePrincipal']), campo(raiz, ['ufPrincipal'])]
     ].forEach(function (t) {
+      var confirmarMunicipio = vincularCampos(t.slice(0, 2), t);
       function preencherMunicipio(item) {
         definir(t[0], item.v, true);
         definir(t[1], item.c, true);
         definir(t[2], item.uf, true);
+        confirmarMunicipio();
       }
       anexarLista(t[0], 'mun', preencherMunicipio);
       anexarLista(t[1], 'mun', preencherMunicipio);
