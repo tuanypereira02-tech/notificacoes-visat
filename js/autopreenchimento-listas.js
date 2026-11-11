@@ -124,11 +124,19 @@
       carregar(tipo).then(function (lista) {
         var palavras = termo.split(' ');
         var achados = [];
-        for (var i = 0; i < lista.length && achados.length < 30; i++) {
+        for (var i = 0; i < lista.length && achados.length < 400; i++) {
           var x = lista[i];
           var alvo = norm(x.c + ' ' + x.d);
           if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
         }
+        // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
+        function nota(x) {
+          var v = norm(x.v), d = norm(x.d);
+          var n = (v === termo || x.c === termo) ? 0 : (v.indexOf(termo) === 0 || d.indexOf(termo) === 0 || x.c.indexOf(termo) === 0) ? 1 : 2;
+          return n - (x.uf === 'SC' ? 0.5 : 0);
+        }
+        achados.sort(function (a, b) { return nota(a) - nota(b); });
+        achados = achados.slice(0, 30);
         dl.textContent = '';
         achados.forEach(function (x) {
           var o = document.createElement('option');
@@ -143,7 +151,8 @@
       var valor = norm(input.value);
       if (!valor) return;
       carregar(tipo).then(function (lista) {
-        var item = lista.find(function (x) { return norm(x.v) === valor; }) ||
+        var iguais = lista.filter(function (x) { return norm(x.v) === valor; });
+        var item = iguais.find(function (x) { return x.uf === 'SC'; }) || iguais[0] ||
                    lista.find(function (x) { return norm(x.d) === valor || x.c === input.value.trim(); });
         if (item && aoEscolher) aoEscolher(item);
       });
