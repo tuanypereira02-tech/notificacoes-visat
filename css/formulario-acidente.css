@@ -459,3 +459,11 @@ body.modo-formulario-acidente .rodape { display: none; }
   #printArea.pf-preliminar .pf-title, #printArea.pf-homologacao .pf-title { color: #B3261E; }
   #printArea .pf-date { font-variant-numeric: tabular-nums; }
 }
+
+/* VISAT — atalhos junto ao rótulo (P13) e estado do código (P14) */
+.visat-atalho { float: right; margin-left: 10px; font-size: 13px; font-weight: 500; color: #195e8c; text-decoration: underline; line-height: 1.6; }
+.visat-atalho:focus-visible { outline: 3px solid #CC6A00; outline-offset: 2px; }
+.visat-estado-codigo { display: block; margin-top: 6px; font-size: 13px; color: #505b65; }
+.visat-estado-codigo[data-estado="validado"] { color: #1e6b3a; font-weight: 500; }
+.visat-estado-codigo[data-estado="manual"], .visat-estado-codigo[data-estado="varios"], .visat-estado-codigo[data-estado="indisponivel"] { color: #7d4000; }
+@media (max-width: 600px) { .visat-atalho { float: none; display: inline-block; margin: 0 0 4px; } }
