@@ -360,6 +360,72 @@
     });
   }
 
+  window.visatConferirTabelas = async function (raiz) {
+    var avisos = [];
+    var localizacoes = [
+      [['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio'], ['ibgeNotif'], ['ufNotif', 'ufNotificacao', 'uf']],
+      [['munRes'], ['ibgeRes'], ['ufRes']],
+      [['munEmp'], ['ibgeEmp'], ['ufEmp']],
+      [['munPrincipal'], ['ibgePrincipal'], ['ufPrincipal']]
+    ].map(function (grupo) {
+      return grupo.map(function (chaves) { return campo(raiz, chaves); });
+    }).filter(function (grupo) { return grupo[1] && grupo[1].value.trim(); });
+    var ocupacao = campo(raiz, ['ocupacao']);
+    var cbo = ocupacao && ocupacao.value.match(/^\s*(\d{4})-?(\d{2})\b/);
+    var cnes = campo(raiz, ['codUnidNotif']);
+    var camposCnae = ['cnae', 'cnaePrincipal', 'cnaePrinc'].map(function (chave) {
+      return campo(raiz, [chave]);
+    }).filter(function (el) { return el?.value.trim(); });
+    var [municipios, ocupacoes, unidades, atividades] = await Promise.all([
+      localizacoes.length ? carregar('mun') : [],
+      cbo ? carregar('cbo') : [],
+      cnes?.value ? carregar('cnes') : [],
+      camposCnae.length ? carregar('cnae') : []
+    ]);
+    localizacoes.forEach(function ([municipio, ibge, uf]) {
+      if (!municipios.length) return;
+      var codigo = ibge.value.trim();
+      var item = /^\d{6,7}$/.test(codigo) && municipios.find(function (x) { return x.c === codigo.slice(0, 6); });
+      if (!item || (municipio && municipio.value && norm(municipio.value) !== norm(item.v)) ||
+          (uf && uf.value && norm(uf.value) !== norm(item.uf))) {
+        avisos.push({ campo: ibge, mensagem: 'Confira a correspondência entre código IBGE, município e UF nesta etapa.' });
+      }
+    });
+    if (cbo && ocupacoes.length && !ocupacoes.some(function (x) { return x.c === cbo[1] + cbo[2]; })) {
+      avisos.push({ campo: ocupacao, mensagem: 'O código CBO informado não foi encontrado na tabela consultada.' });
+    }
+    if (ocupacao?.value && !cbo) {
+      avisos.push({ campo: ocupacao, mensagem: 'A ocupação está em texto livre. Se possível, selecione o código CBO correspondente.' });
+    }
+    camposCnae.forEach(function (el) {
+      var partes = el.value.match(/^\s*(\d{2})\.?(\d{2})-?(\d)(?:\/?\d{2})?\b/);
+      var codigo = partes && partes.slice(1).join('');
+      if (!codigo || (atividades.length && !atividades.some(function (x) { return x.c === codigo; }) &&
+          !window.visatCnaeLegado?.(codigo))) {
+        avisos.push({ campo: el, mensagem: 'Confira o código CNAE e a versão usada pela ficha.' });
+      }
+    });
+    if (cnes?.value) {
+      var unidade = unidades.find(function (x) { return x.c === cnes.value.trim(); });
+      if (!/^\d{7}$/.test(cnes.value.trim())) {
+        avisos.push({ campo: cnes, mensagem: 'Confira o código CNES. Informe sete dígitos.' });
+      } else if (unidade) {
+        var nome = campo(raiz, ['unidNotif', 'unidade', 'unidadeNotificadora']);
+        var cidade = campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio']);
+        var uf = campo(raiz, ['ufNotif', 'ufNotificacao', 'uf']);
+        if ((nome?.value && norm(nome.value) !== norm(unidade.v)) ||
+            (cidade?.value && norm(cidade.value) !== norm(unidade.municipio)) ||
+            (uf?.value && norm(uf.value) !== norm(unidade.uf))) {
+          avisos.push({ campo: cnes, mensagem: 'Confira unidade, CNES, município e UF da notificação.' });
+        }
+      }
+    }
+    if (localizacoes.length && !municipios.length || cbo && !ocupacoes.length || camposCnae.length && !atividades.length) {
+      avisos.push({ mensagem: 'Uma tabela de referência está indisponível. Confira os códigos antes do envio.' });
+    }
+    return avisos;
+  };
+
   /* ---------- configuração por formulário ---------- */
 
   function configurar(raiz) {
