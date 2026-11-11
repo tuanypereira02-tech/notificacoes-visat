@@ -1,0 +1,126 @@
+/*
+ * visat-padrao.css — Identidade visual do portal VISAT aplicada ao site de notificações
+ * Carregado por último: só sobrepõe cores e tipografia, sem alterar estrutura ou campos.
+ * Paleta: azul-marinho #112C45 e laranja queimado #CC6A00 (página Início do portal).
+ * Tipografia: Roboto; texto corrido 12 px na tela grande e 16 px no celular;
+ * títulos 22 px em caixa alta; subtítulos e títulos de grupos recolhíveis 18 px.
+ */
+
+:root {
+  --visat-azul: #112C45;
+  --visat-azul-escuro: #0B1E30;
+  --visat-laranja: #CC6A00;
+  --visat-fundo: #FAF8F5;
+  --visat-fundo-suave: #F4EFE8;
+  --visat-borda: #E3DCD2;
+  --visat-texto-suave: #4A5D70;
+
+  --cor-texto: var(--visat-azul);
+  --cor-texto-suave: var(--visat-texto-suave);
+  --cor-fundo: var(--visat-fundo);
+  --cor-superficie: #FFFFFF;
+  --cor-primaria: var(--visat-azul);
+  --cor-primaria-escura: var(--visat-azul-escuro);
+  --cor-destaque: var(--visat-laranja);
+  --cor-fundo-suave: var(--visat-fundo-suave);
+  --cor-borda: var(--visat-borda);
+  --portal-texto: var(--visat-azul);
+  --fonte: "Roboto", Arial, sans-serif;
+}
+
+html, body, button, input, select, textarea {
+  font-family: "Roboto", Arial, sans-serif !important;
+}
+
+body {
+  background: var(--visat-fundo) !important;
+  color: var(--visat-azul);
+  font-size: 12px;
+}
+
+p, li {
+  font-size: 12px !important;
+}
+
+label, legend, td, th, small, .item-agravo {
+  font-size: 12px;
+}
+
+/* Títulos e cabeçalhos: 22 px, caixa alta */
+h1 {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--visat-azul) !important;
+}
+
+/* Subtítulos e títulos de grupos recolhíveis: 18 px */
+h2, h3, summary {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--visat-azul) !important;
+}
+
+h4 {
+  font-size: 14px !important;
+  color: var(--visat-azul) !important;
+}
+
+/* Sobretítulo e marcadores de etapa no laranja do portal */
+.sobretitulo {
+  color: var(--visat-laranja) !important;
+}
+
+.etapa {
+  background: var(--visat-laranja) !important;
+  color: #FFFFFF !important;
+}
+
+/* Links e botões */
+a {
+  color: var(--visat-azul);
+}
+
+a:hover, a:focus-visible {
+  color: var(--visat-laranja);
+}
+
+button:not(.item-agravo):not([data-autopreenchimento-limpar]),
+.botao, .btn, [role="button"] {
+  border-radius: 6px;
+}
+
+button[type="submit"],
+.botao-primario, .btn-primario, .pf-btn-primary, .primary {
+  background: var(--visat-azul) !important;
+  border-color: var(--visat-azul) !important;
+  color: #FFFFFF !important;
+}
+
+/* Agravo selecionado e foco */
+.item-agravo[aria-pressed="true"] {
+  background: var(--visat-azul) !important;
+  color: #FFFFFF !important;
+}
+
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 2px solid var(--visat-laranja) !important;
+  outline-offset: 1px;
+  border-color: var(--visat-laranja) !important;
+}
+
+/* Campos de formulário: mantêm leitura confortável */
+input, select, textarea {
+  font-size: 13px;
+  color: var(--visat-azul);
+  border-color: var(--visat-borda);
+}
+
+/* Celular: texto corrido 16 px */
+@media (max-width: 768px) {
+  body, p, li, label, legend, td, th, .item-agravo, input, select, textarea {
+    font-size: 16px !important;
+  }
+  h1 { font-size: 20px !important; }
+}
