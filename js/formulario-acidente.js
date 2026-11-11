@@ -350,10 +350,10 @@ function mascaraCpf(valor) {
     [a, b, c].filter(Boolean).join('.') + (e ? '-' + e : ''));
 }
 function mascaraCnpjOuCpf(valor) {
-  let d = String(valor).replace(/\D/g, '');
-  if (d.length <= 11) return mascaraCpf(d);
+  let d = String(valor).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (/^\d{0,11}$/.test(d)) return mascaraCpf(d);
   d = d.slice(0, 14);
-  return d.replace(/^(\d{2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/, (m, a, b, c, e, f) =>
+  return d.replace(/^([A-Z0-9]{2})([A-Z0-9]{0,3})([A-Z0-9]{0,3})([A-Z0-9]{0,4})([A-Z0-9]{0,2}).*/, (m, a, b, c, e, f) =>
     [a, b, c].filter(Boolean).join('.') + (e ? '/' + e : '') + (f ? '-' + f : ''));
 }
 root.querySelectorAll('[data-mask="cpf"], #cpf').forEach((campo) => {
@@ -361,7 +361,8 @@ root.querySelectorAll('[data-mask="cpf"], #cpf').forEach((campo) => {
     campo.value = mascaraCpf(campo.value);
   });
 });
-root.querySelectorAll('[data-mask="cnpj"], #cnpj').forEach((campo) => {
+root.querySelectorAll('[data-mask="cnpj"], [data-key="cnpj"], [data-key="cnpjPrincipal"], [data-key="cnpjPrinc"]').forEach((campo) => {
+  campo.setAttribute('inputmode', 'text');
   campo.addEventListener('input', () => {
     campo.value = mascaraCnpjOuCpf(campo.value);
   });
@@ -406,13 +407,134 @@ function camposBasicosPendentes() {
   });
 }
 
+function documentoValido(valor, tipo) {
+  const id = valor.toUpperCase().replace(/[.\/\s-]/g, '');
+  const cpf = tipo === 'cpf';
+  if (!(cpf ? /^\d{11}$/ : /^[A-Z0-9]{12}\d{2}$/).test(id) || /^(.)(\1)+$/.test(id)) return false;
+  const base = id.length - 2;
+  return [0, 1].every(passo => {
+    const tamanho = base + passo;
+    let soma = 0;
+    for (let i = 0; i < tamanho; i++) {
+      const peso = cpf ? tamanho + 1 - i : (tamanho - 1 - i) % 8 + 2;
+      soma += (id.charCodeAt(i) - 48) * peso;
+    }
+    const resto = soma % 11;
+    return Number(id[tamanho]) === (resto < 2 ? 0 : 11 - resto);
+  });
+}
+
+function checarDadosDigitados() {
+  const avisos = [];
+  const input = chave => root.querySelector('[data-key="' + chave + '"]');
+  const nascimento = input('nascimento');
+  const notificacao = input('dataNotificacao') || input('dataNotif');
+  const evento = config.event && input(config.event);
+  const cpf = input('cpf');
+  const nome = input('nome');
+  if (nome?.value && !/\p{L}/u.test(nome.value)) {
+    avisos.push({ campo: nome, mensagem: 'Confira o nome da pessoa notificada.' });
+  }
+  if (cpf?.value && !documentoValido(cpf.value, 'cpf')) {
+    avisos.push({ campo: cpf, mensagem: 'Confira os dígitos do CPF da pessoa notificada.' });
+  }
+  for (const chave of ['cnpj', 'cnpjPrincipal', 'cnpjPrinc']) {
+    const campo = input(chave);
+    if (!campo?.value) continue;
+    const valor = campo.value.replace(/[.\/\s-]/g, '');
+    const tipo = chave === 'cnpj' && /^\d{11}$/.test(valor) ? 'cpf' : 'cnpj';
+    if (!documentoValido(valor, tipo)) {
+      avisos.push({ campo, mensagem: 'Confira o documento do empregador ou da empresa principal.' });
+    }
+  }
+  if (nascimento?.value && [notificacao, evento].some(campo => campo?.value && nascimento.value > campo.value)) {
+    avisos.push({ campo: nascimento, mensagem: 'A data de nascimento está depois da data da notificação ou do evento. Confira as datas.' });
+  }
+  const idade = input('idade');
+  const unidade = input('idadeUnidade');
+  if (nascimento?.value && notificacao?.value && idade?.value && /^anos?$/i.test(unidade?.value || '') &&
+      nascimento.value <= notificacao.value) {
+    const [anoNasc, mesNasc, diaNasc] = nascimento.value.split('-').map(Number);
+    const [anoNotif, mesNotif, diaNotif] = notificacao.value.split('-').map(Number);
+    const antesDoAniversario = mesNotif < mesNasc || (mesNotif === mesNasc && diaNotif < diaNasc);
+    const anos = anoNotif - anoNasc - Number(antesDoAniversario);
+    if (Number(idade.value) !== anos) {
+      avisos.push({ campo: idade, mensagem: 'Confira a idade em anos em relação ao nascimento e à data da notificação.' });
+    }
+  }
+  return avisos;
+}
+
+let avisosCoerencia = [];
+let conferindoCoerencia = false;
+async function verificarCoerencia() {
+  const avisos = checarDadosDigitados().concat(window.visatConferirEmpresas?.(root) || []);
+  if (!window.visatConferirTabelas) return avisos;
+  let temporizador;
+  try {
+    const conferencias = await Promise.race([
+      window.visatConferirTabelas(root),
+      new Promise(resolve => {
+        temporizador = setTimeout(() => resolve([{ mensagem: 'A consulta às tabelas ainda não respondeu. Confira os códigos antes do envio.' }]), 2500);
+      })
+    ]);
+    return avisos.concat(conferencias);
+  } catch {
+    return avisos.concat({ mensagem: 'A conferência automática dos códigos ficou indisponível.' });
+  } finally {
+    clearTimeout(temporizador);
+  }
+}
+
+function mostrarCoerencia(ancora) {
+  root.querySelector('[data-visat-coerencia]')?.remove();
+  if (!avisosCoerencia.length) return;
+  const painel = document.createElement('section');
+  painel.dataset.visatCoerencia = '1';
+  painel.className = 'highlight-box';
+  const titulo = document.createElement('h2');
+  titulo.textContent = 'Confira possíveis divergências';
+  const lista = document.createElement('ul');
+  avisosCoerencia.forEach(({ campo, mensagem }) => {
+    const linha = document.createElement('li');
+    if (campo) {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'btn';
+      botao.dataset.variant = 'outline';
+      botao.textContent = mensagem;
+      botao.addEventListener('click', () => {
+        emCorrecao = true;
+        showScreen(Number(campo.closest('.screen').dataset.screen));
+        campo.focus();
+      });
+      linha.append(botao);
+    } else linha.textContent = mensagem;
+    lista.append(linha);
+  });
+  painel.append(titulo, lista);
+  ancora.before(painel);
+}
+
 let emCorrecao = false;
-function finalizarFicha() {
+async function finalizarFicha() {
+  if (conferindoCoerencia) return;
   persistInputs();
   const pendentes = camposBasicosPendentes();
   if (!pendentes.length) {
-    emCorrecao = false;
-    showScreen(TOTAL + 1);
+    conferindoCoerencia = true;
+    btnContinuar.disabled = true;
+    btnVoltar.disabled = true;
+    try {
+      avisosCoerencia = await verificarCoerencia();
+      if (!root.isConnected) return;
+      emCorrecao = false;
+      showScreen(TOTAL + 1);
+    } finally {
+      conferindoCoerencia = false;
+      btnContinuar.disabled = false;
+      btnVoltar.disabled = false;
+    }
     return;
   }
   emCorrecao = true;
@@ -666,6 +788,7 @@ if (email && !acoes.querySelector('[data-visat-email]')) {
 }
 const revisao = root.querySelector('[data-visat-revisao]');
 revisao.before(acoes);
+mostrarCoerencia(acoes);
 if (acoes.querySelector('[data-visat-email]')) {
   const instrucao = root.querySelector('[data-visat-pdf-instrucao]');
   if (instrucao) acoes.after(instrucao);
