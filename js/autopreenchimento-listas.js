@@ -33,7 +33,7 @@
       return fetch('data/cnes-florianopolis.json').then(function (r) { return r.json(); }).then(function (l) {
         return l.map(function (p) {
           var nome = String(p[1]).split(' · ')[0];
-          return { c: p[0], d: p[1], v: nome };
+          return { c: p[0], d: p[1], v: nome, uf: 'SC', municipio: 'Florianópolis', ibge: '420540' };
         });
       });
     },
@@ -132,6 +132,7 @@
       var termo = norm(input.value);
       if (termo.length < 2) { dl.textContent = ''; return; }
       carregar(tipo).then(function (lista) {
+        if (norm(input.value) !== termo) return;
         var palavras = termo.split(' ');
         var achados = [];
         for (var i = 0; i < lista.length && achados.length < 400; i++) {
@@ -150,21 +151,26 @@
         dl.textContent = '';
         achados.forEach(function (x) {
           var o = document.createElement('option');
-          o.value = x.v;
+          o.value = tipo === 'mun' ? x.d : tipo === 'cnes' ? x.v + ' – ' + x.c : x.v;
           o.label = x.d + ' (' + x.c + ')';
           dl.appendChild(o);
         });
       });
     }
 
-    function confirmar() {
+    function confirmar(evento) {
+      if (!evento.isTrusted || !aoEscolher) return;
       var valor = norm(input.value);
       if (!valor) return;
       carregar(tipo).then(function (lista) {
-        var iguais = lista.filter(function (x) { return norm(x.v) === valor; });
-        var item = iguais.find(function (x) { return x.uf === 'SC'; }) || iguais[0] ||
-                   lista.find(function (x) { return norm(x.d) === valor || x.c === input.value.trim(); });
-        if (item && aoEscolher) aoEscolher(item);
+        if (!input.isConnected || norm(input.value) !== valor) return;
+        var exatos = lista.filter(function (x) {
+          return norm(x.d) === valor || x.c === valor ||
+            (tipo === 'mun' && /^\d{7}$/.test(valor) && x.c === valor.slice(0, 6)) ||
+            (tipo === 'cnes' && norm(x.v + ' – ' + x.c) === valor);
+        });
+        if (!exatos.length) exatos = lista.filter(function (x) { return norm(x.v) === valor; });
+        if (exatos.length === 1) aoEscolher(exatos[0]);
       });
     }
 
@@ -283,30 +289,41 @@
     configurarBuscaEmpresa(raiz, ['razaoPrincipal', 'razaoPrinc'], ['cnpjPrincipal', 'cnpjPrinc']);
     atualizarDicaCnpj(raiz);
 
-    // Unidade notificadora -> código CNES
-    [['unidNotif', 'codUnidNotif'], ['unidade', 'codUnidNotif'], ['unidadeNotificadora', 'codUnidNotif'], ['munInvestigadora', 'codUnidInv']]
-      .forEach(function (par) {
-        var nome = campo(raiz, [par[0]]);
-        var cod = par[1] ? campo(raiz, [par[1]]) : null;
-        anexarLista(nome, 'cnes', function (item) {
-          if (nome.value !== item.v) definir(nome, item.v, true);
-          if (cod) definir(cod, item.c, true);
-        });
-      });
+    var nomeUnidade = campo(raiz, ['unidNotif', 'unidade', 'unidadeNotificadora']);
+    var cnes = campo(raiz, ['codUnidNotif']);
+    var municipioNotif = campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio']);
+    var ufNotif = campo(raiz, ['ufNotif', 'ufNotificacao', 'uf']);
+    var ibgeNotif = campo(raiz, ['ibgeNotif']);
+    function preencherUnidade(item) {
+      definir(nomeUnidade, item.v, true);
+      definir(cnes, item.c, true);
+      definir(municipioNotif, item.municipio, true);
+      definir(ufNotif, item.uf, true);
+      definir(ibgeNotif, item.ibge, true);
+    }
+    anexarLista(nomeUnidade, 'cnes', preencherUnidade);
+    anexarLista(cnes, 'cnes', preencherUnidade);
+    var investigadora = campo(raiz, ['munInvestigadora']);
+    anexarLista(investigadora, 'cnes', function (item) {
+      definir(investigadora, item.v, true);
+      definir(campo(raiz, ['codUnidInv']), item.c, true);
+    });
 
-    // Município -> código IBGE (6 dígitos) e UF
-    [['munRes', 'ibgeRes', 'ufRes'], ['munEmp', 'ibgeEmp', 'ufEmp'], ['municipioNotif', 'ibgeNotif', 'uf'],
-     ['munNotif', 'ibgeNotif', 'ufNotif'], ['municipioNotificacao', 'ibgeNotif', 'ufNotificacao'], ['munPrincipal', 'ibgePrincipal', 'ufPrincipal']]
-      .forEach(function (t) {
-        var mun = campo(raiz, [t[0]]);
-        var ibge = t[1] ? campo(raiz, [t[1]]) : null;
-        var uf = t[2] ? campo(raiz, [t[2]]) : null;
-        anexarLista(mun, 'mun', function (item) {
-          if (norm(mun.value) !== norm(item.v)) definir(mun, item.v, true);
-          if (ibge) definir(ibge, item.c, true);
-          if (uf) definir(uf, item.uf, true);
-        });
-      });
+    // A escolha inclui a UF para distinguir municípios com o mesmo nome.
+    [
+      [municipioNotif, ibgeNotif, ufNotif],
+      [campo(raiz, ['munRes']), campo(raiz, ['ibgeRes']), campo(raiz, ['ufRes'])],
+      [campo(raiz, ['munEmp']), campo(raiz, ['ibgeEmp']), campo(raiz, ['ufEmp'])],
+      [campo(raiz, ['munPrincipal']), campo(raiz, ['ibgePrincipal']), campo(raiz, ['ufPrincipal'])]
+    ].forEach(function (t) {
+      function preencherMunicipio(item) {
+        definir(t[0], item.v, true);
+        definir(t[1], item.c, true);
+        definir(t[2], item.uf, true);
+      }
+      anexarLista(t[0], 'mun', preencherMunicipio);
+      anexarLista(t[1], 'mun', preencherMunicipio);
+    });
 
     // Ocupação -> CBO
     anexarLista(campo(raiz, ['ocupacao']), 'cbo', null);
@@ -314,14 +331,6 @@
     ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (k) {
       anexarLista(campo(raiz, [k]), 'cnae', null);
     });
-    if (!campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao'])) {
-      var municipio = campo(raiz, ['municipio']);
-      anexarLista(municipio, 'mun', function (item) {
-        definir(campo(raiz, ['ibgeNotif']), item.c, true);
-        definir(campo(raiz, ['uf']), item.uf, true);
-      });
-    }
-
     // Diagnóstico -> CID-10 (campos editáveis; o CID fixo do agravo não é alterado)
     ['cid', 'cid10', 'cid10Notif'].forEach(function (k) {
       var el = campo(raiz, [k]);
