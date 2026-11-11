@@ -33,7 +33,7 @@
       titulo: '1.b - Acidente de trabalho com exposição a material biológico',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-biologico-template',
-        storageKey: 'notificacao-biologico-v1-inline',
+
         defaults: { tipoNotif: 'Individual', idadeUnidade: 'Ano', tempoUnidade: 'Ano', dataNotificacao: hojeIso }
       })
     },
@@ -41,7 +41,7 @@
       titulo: '1.c - Câncer relacionado ao trabalho',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-cancer-template',
-        storageKey: 'notificacao-cancer-v1-inline',
+
         defaults: {
           dataNotificacao: hojeIso,
           data: hojeIso,
@@ -55,7 +55,7 @@
       titulo: '1.d - Dermatose ocupacionais',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-dermatose-template',
-        storageKey: 'notificacao-dermatose-v1-inline',
+
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', expUnid: 'Ano', afastUnid: 'Ano' }
       })
     },
@@ -63,7 +63,7 @@
       titulo: '1.e - Distúrbio de voz relacionado ao trabalho',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-voz-template',
-        storageKey: 'notificacao-voz-v1-inline'
+
       })
     },
     '1-j-obito-por-acidente-de-trabalho': {
@@ -74,7 +74,7 @@
       titulo: '1.f - Lesões por Esforços Repetitivos/Distúrbios Osteomusculares Relacionados ao Trabalho (LER/DORT)',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-lerdort-template',
-        storageKey: 'notificacao-lerdort-v1-inline',
+
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
@@ -82,7 +82,7 @@
       titulo: '1.g - Perda Auditiva relacionada ao trabalho',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pair-template',
-        storageKey: 'notificacao-pair-v1-inline',
+
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
@@ -90,7 +90,7 @@
       titulo: '1.h - Pneumoconioses relacionadas ao trabalho',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pneumo-template',
-        storageKey: 'notificacao-pneumo-v1-inline',
+
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoTabacoUnid: 'Ano' }
       })
     },
@@ -98,7 +98,7 @@
       titulo: '1.i - Transtornos mentais relacionados ao trabalho',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-mental-template',
-        storageKey: 'notificacao-mental-v1-inline',
+
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tabacoUnidade: 'Ano', agenteUnidade: 'Ano' }
       })
     }
