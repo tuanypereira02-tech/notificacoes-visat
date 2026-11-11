@@ -450,16 +450,38 @@ function checarDadosDigitados() {
   if (nascimento?.value && [notificacao, evento].some(campo => campo?.value && nascimento.value > campo.value)) {
     avisos.push({ campo: nascimento, mensagem: 'A data de nascimento está depois da data da notificação ou do evento. Confira as datas.' });
   }
+  if (evento?.value && notificacao?.value && evento.value > notificacao.value &&
+      ['dataAcidente', 'inicioSintomas'].includes(config.event)) {
+    avisos.push({ campo: evento, mensagem: 'Confira a cronologia: o acidente ou início dos sintomas está depois da notificação.' });
+  }
+  const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
+  const obito = input('dataObito');
+  if (fechamento?.value && notificacao?.value && fechamento.value < notificacao.value) {
+    avisos.push({ campo: fechamento, mensagem: 'A data de encerramento está antes da notificação.' });
+  }
+  if (obito?.value && [nascimento, config.event === 'dataAcidente' ? evento : null]
+      .some(campo => campo?.value && obito.value < campo.value)) {
+    avisos.push({ campo: obito, mensagem: 'A data do óbito está antes do nascimento ou do acidente. Confira as datas.' });
+  }
+  if (obito?.value && fechamento?.value && fechamento.value < obito.value &&
+      /^óbito/i.test(String(state.values.evolucao || ''))) {
+    avisos.push({ campo: fechamento, mensagem: 'Confira o encerramento: a evolução por óbito foi registrada com data posterior ao encerramento.' });
+  }
+  const gestante = root.querySelector('[data-chips="gestante"]');
+  if (gestante && state.values.sexo === 'Masculino' && /trimestre|idade gestacional/i.test(String(state.values.gestante || ''))) {
+    avisos.push({ campo: gestante, mensagem: 'Confira a situação gestacional em relação ao sexo registrado e às opções da ficha.' });
+  }
   const idade = input('idade');
   const unidade = input('idadeUnidade');
-  if (nascimento?.value && notificacao?.value && idade?.value && /^anos?$/i.test(unidade?.value || '') &&
-      nascimento.value <= notificacao.value) {
+  const referenciaIdade = evento?.value || notificacao?.value;
+  if (nascimento?.value && referenciaIdade && idade?.value && /^anos?$/i.test(unidade?.value || '') &&
+      nascimento.value <= referenciaIdade) {
     const [anoNasc, mesNasc, diaNasc] = nascimento.value.split('-').map(Number);
-    const [anoNotif, mesNotif, diaNotif] = notificacao.value.split('-').map(Number);
+    const [anoNotif, mesNotif, diaNotif] = referenciaIdade.split('-').map(Number);
     const antesDoAniversario = mesNotif < mesNasc || (mesNotif === mesNasc && diaNotif < diaNasc);
     const anos = anoNotif - anoNasc - Number(antesDoAniversario);
     if (Number(idade.value) !== anos) {
-      avisos.push({ campo: idade, mensagem: 'Confira a idade em anos em relação ao nascimento e à data da notificação.' });
+      avisos.push({ campo: idade, mensagem: 'Confira a idade em anos na data de referência do agravo.' });
     }
   }
   return avisos;
@@ -506,7 +528,7 @@ function mostrarCoerencia(ancora) {
       botao.addEventListener('click', () => {
         emCorrecao = true;
         showScreen(Number(campo.closest('.screen').dataset.screen));
-        campo.focus();
+        (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
       });
       linha.append(botao);
     } else linha.textContent = mensagem;
@@ -721,6 +743,8 @@ function mostrarRevisaoDeCampos() {
       [['munRes'], 'Município de residência']
     ] }
   ];
+  const secaoEvolucao = root.querySelector('[data-chips="evolucao"]')?.closest('.screen');
+  if (secaoEvolucao) grupos.push({ tela: Number(secaoEvolucao.dataset.screen), campos: [[['evolucao'], 'Evolução do caso']] });
   const secaoOcupacao = root.querySelector('[data-key="ocupacao"]')?.closest('.screen');
   if (secaoOcupacao) grupos.push({ tela: Number(secaoOcupacao.dataset.screen), campos: [[['ocupacao'], 'Ocupação / CBO']] });
 
