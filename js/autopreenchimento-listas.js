@@ -173,42 +173,98 @@
     input.addEventListener('change', confirmar);
   }
 
-  /* ---------- CNPJ a partir do nome da empresa ---------- */
-
-  // Não há serviço público gratuito que devolva o CNPJ pelo nome. O botão abre a busca já com o nome
-  // digitado; ao colar o CNPJ encontrado no campo de CNPJ, o autopreenchimento.js completa os demais dados.
-  function botaoBuscaCnpj(raiz, chavesNome, chavesCnpj) {
+  /* Busca de estabelecimentos nos dados públicos do CNPJ. */
+  function configurarBuscaEmpresa(raiz, chavesNome, chavesCnpj) {
     var nome = campo(raiz, chavesNome);
     var cnpj = campo(raiz, chavesCnpj);
     if (!nome || !cnpj || nome.dataset.visatBuscaCnpj) return;
     nome.dataset.visatBuscaCnpj = '1';
 
     var caixa = document.createElement('div');
-    caixa.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px';
-    var botao = document.createElement('button');
-    botao.type = 'button';
-    botao.textContent = 'Buscar CNPJ pelo nome ↗';
-    botao.style.cssText = 'padding:6px 12px;border:1px solid #112C45;border-radius:6px;background:#112C45;color:#FFFFFF;font-size:12px;font-weight:600;cursor:pointer';
-    var dica = document.createElement('small');
-    dica.style.cssText = 'color:#4A5D70;font-size:12px';
-    dica.textContent = 'Abre a busca em nova aba. Copie o CNPJ encontrado e cole no campo de CNPJ: os demais dados são preenchidos automaticamente.';
-    caixa.appendChild(botao);
-    caixa.appendChild(dica);
+    caixa.style.cssText = 'display:grid;gap:6px;margin-top:6px';
+    var ajuda = document.createElement('small');
+    ajuda.textContent = 'Digite pelo menos 3 caracteres da razão social ou do nome fantasia. Consulte apenas pessoas jurídicas.';
+    var regiao = document.createElement('select');
+    regiao.className = 'input';
+    regiao.setAttribute('aria-label', 'Abrangência da busca de empresas');
+    regiao.add(new Option('Buscar em Santa Catarina', 'SC'));
+    regiao.add(new Option('Buscar no Brasil', ''));
+    var estado = document.createElement('small');
+    estado.setAttribute('role', 'status');
+    var resultados = document.createElement('ul');
+    resultados.style.cssText = 'display:grid;gap:4px;list-style:none;margin:0;padding:0';
+    resultados.setAttribute('aria-label', 'Estabelecimentos encontrados');
+    var fonte = document.createElement('a');
+    fonte.href = 'https://fichario.app/api';
+    fonte.target = '_blank';
+    fonte.rel = 'noopener noreferrer';
+    fonte.style.fontSize = '12px';
+    fonte.textContent = 'Fonte: Fichário · Dados abertos do CNPJ';
+    caixa.append(ajuda, regiao, estado, resultados, fonte);
     nome.insertAdjacentElement('afterend', caixa);
 
-    botao.addEventListener('click', function () {
-      var termo = String(nome.value || '').trim();
-      if (termo.length < 3) {
-        dica.style.color = '#B3261E';
-        dica.textContent = 'Digite ao menos parte do nome da empresa antes de buscar.';
-        nome.focus();
-        return;
-      }
-      dica.style.color = '#4A5D70';
-      dica.textContent = 'Copie o CNPJ encontrado e cole no campo de CNPJ: os demais dados são preenchidos automaticamente.';
-      window.open('https://www.google.com/search?q=' + encodeURIComponent('"' + termo + '" CNPJ'), '_blank', 'noopener');
-      setTimeout(function () { cnpj.focus(); }, 300);
+    var espera;
+    var consulta;
+    function cancelar() {
+      clearTimeout(espera);
+      if (consulta) consulta.abort();
+      consulta = null;
+      resultados.replaceChildren();
+    }
+
+    function agendar() {
+      cancelar();
+      estado.textContent = '';
+      var termo = nome.value.trim().slice(0, 100);
+      if (!termo || termo.length < 3 || !/\p{L}/u.test(termo) || /\d{11,}/.test(termo.replace(/\D/g, ''))) return;
+      espera = setTimeout(function () {
+        var atual = new AbortController();
+        consulta = atual;
+        var parametros = new URLSearchParams({ q: termo });
+        if (regiao.value) parametros.set('uf', regiao.value);
+        estado.textContent = 'Buscando estabelecimentos…';
+        fetch('https://fichario.app/api/v1/busca?' + parametros, {
+          signal: atual.signal,
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer'
+        }).then(function (resposta) {
+          if (!resposta.ok) throw new Error(resposta.status);
+          return resposta.json();
+        }).then(function (dados) {
+          if (consulta !== atual || !nome.isConnected) return;
+          var encontrados = (Array.isArray(dados.resultados) ? dados.resultados : []).filter(function (item) {
+            return /^\d{14}$/.test(item.cnpj) && (item.razao_social || item.nome_fantasia);
+          }).slice(0, 10);
+          estado.textContent = encontrados.length ? 'Selecione o estabelecimento correto.' :
+            'Nenhum estabelecimento encontrado. Ajuste o início do nome, amplie a região ou informe o CNPJ.';
+          encontrados.forEach(function (item) {
+            var linha = document.createElement('li');
+            var botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'btn';
+            botao.textContent = [item.razao_social, item.nome_fantasia !== item.razao_social ? item.nome_fantasia : '',
+              item.cnpj, [item.municipio, item.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ');
+            botao.addEventListener('click', function () {
+              cancelar();
+              definir(cnpj, item.cnpj, true);
+              nome.value = item.razao_social || item.nome_fantasia;
+              nome.dispatchEvent(new Event('change', { bubbles: true }));
+              estado.textContent = 'CNPJ selecionado. Confira o estabelecimento, o endereço e a atividade econômica.';
+              cnpj.focus();
+            });
+            linha.append(botao);
+            resultados.append(linha);
+          });
+        }).catch(function () {
+          if (consulta !== atual || !nome.isConnected) return;
+          estado.textContent = 'Busca indisponível. Tente novamente ou informe o CNPJ.';
+        });
+      }, 550);
+    }
+    nome.addEventListener('input', function (evento) {
+      if (evento.isTrusted) agendar();
     });
+    regiao.addEventListener('change', agendar);
   }
 
   function atualizarDicaCnpj(raiz) {
@@ -223,8 +279,8 @@
   /* ---------- configuração por formulário ---------- */
 
   function configurar(raiz) {
-    botaoBuscaCnpj(raiz, ['empresa', 'empresaNome', 'razao'], ['cnpj']);
-    botaoBuscaCnpj(raiz, ['razaoPrincipal', 'razaoPrinc'], ['cnpjPrincipal', 'cnpjPrinc']);
+    configurarBuscaEmpresa(raiz, ['empresa', 'empresaNome', 'razao'], ['cnpj']);
+    configurarBuscaEmpresa(raiz, ['razaoPrincipal', 'razaoPrinc'], ['cnpjPrincipal', 'cnpjPrinc']);
     atualizarDicaCnpj(raiz);
 
     // Unidade notificadora -> código CNES
