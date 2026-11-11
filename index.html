@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Notificações compulsórias — Demonstração</title>
+  <link rel="stylesheet" href="css/portal.css?v=20261022-logo-unico">
+</head>
+<body>
+  <header class="portal-capa" aria-label="Identificação institucional">
+    <img src="images/logo-prefeitura-saude-dvs.png" alt="Prefeitura de Florianópolis Saúde e Diretoria de Vigilância em Saúde — DVS Floripa">
+  </header>
+
+  <main id="conteudo" class="portal-conteudo" tabindex="-1">
+    <iframe
+      id="aplicacao-notificacao"
+      class="portal-aplicacao"
+      title="Aplicação de Notificação Compulsória"
+      src="notificacao.html?v=20261103-forms-item1"
+      scrolling="no"></iframe>
+  </main>
+
+  <footer class="portal-rodape">
+    <p>Desenvolvido por Luana Lenzi</p>
+  </footer>
+
+  <script src="js/portal.js?v=20261103-forms-item1" defer></script>
+  <script src="js/autopreenchimento.js?v=20261111-auto2" defer></script>
+</body>
+</html>

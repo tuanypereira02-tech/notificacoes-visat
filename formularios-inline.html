@@ -1,0 +1,1258 @@
+<template id="form-biologico-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true">
+<div class="progress-seg" data-seg="1"></div>
+<div class="progress-seg" data-seg="2"></div>
+<div class="progress-seg" data-seg="3"></div>
+<div class="progress-seg" data-seg="4"></div>
+<div class="progress-seg" data-seg="5"></div>
+<div class="progress-seg" data-seg="6"></div>
+<div class="progress-seg" data-seg="7"></div>
+<div class="progress-seg" data-seg="8"></div>
+</div>
+<div class="shell-container row between items-center">
+<span class="pill">Material biológico</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 8</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1">
+<h1 class="screen-title">Identificação da notificação</h1>
+<p class="screen-sub">Dados gerais do registro.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="bio-tipo">Tipo de notificação</label>
+<select class="input input-lg" id="bio-tipo" data-key="tipoNotif">
+<option value="">Selecione</option><option selected>Individual</option><option>Agregado</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="bio-agravo">Agravo / doença</label>
+<input class="input input-lg" id="bio-agravo" type="text" data-key="agravo" value="Acidente de trabalho com exposição a material biológico">
+</div>
+<div>
+<label class="field-label" for="bio-data-notif">Data da notificação</label>
+<input class="input input-lg" id="bio-data-notif" type="date" data-key="dataNotificacao">
+</div>
+<div>
+<label class="field-label" for="bio-uf-notif">UF</label>
+<select class="input input-lg" id="bio-uf-notif" data-key="ufNotif">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="bio-mun-notif">Município de notificação</label>
+<input class="input input-lg" id="bio-mun-notif" type="text" data-key="munNotif">
+</div>
+<div>
+<label class="field-label" for="bio-ibge-notif">Código IBGE</label>
+<input class="input input-lg" id="bio-ibge-notif" type="text" data-key="ibgeNotif">
+</div>
+<div>
+<label class="field-label" for="bio-unid">Unidade de saúde notificadora</label>
+<input class="input input-lg" id="bio-unid" type="text" data-key="unidNotif">
+</div>
+<div>
+<label class="field-label" for="bio-cod-unid">Código da unidade</label>
+<input class="input input-lg" id="bio-cod-unid" type="text" data-key="codUnidNotif">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="2">
+<h1 class="screen-title">Quem foi atendido</h1>
+<p class="screen-sub">Dados da pessoa que sofreu a exposição.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="bio-nome">Nome completo</label>
+<input class="input input-lg" id="bio-nome" type="text" data-key="nome" placeholder="Ex.: Ana Paula Ribeiro" data-summary="Nome completo">
+</div>
+<div>
+<label class="field-label" for="bio-nasc">Data de nascimento</label>
+<input class="input input-lg" id="bio-nasc" type="date" data-key="nascimento">
+</div>
+<div>
+<span class="field-label">Idade</span>
+<div class="unit-row" >
+<input class="input input-lg" id="bio-idade" type="number" min="0" data-key="idade">
+<select class="input input-lg" id="bio-idade-un" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+<div>
+<span class="field-label">Sexo</span>
+<div class="chip-grid" data-chips="sexo" data-single="true">
+<button type="button" class="chip" data-value="Masculino">Masculino</button>
+<button type="button" class="chip" data-value="Feminino">Feminino</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Gestante</span>
+<div class="chip-grid" data-chips="gestante" data-single="true">
+<button type="button" class="chip" data-value="1º trimestre">1º trimestre</button>
+<button type="button" class="chip" data-value="2º trimestre">2º trimestre</button>
+<button type="button" class="chip" data-value="3º trimestre">3º trimestre</button>
+<button type="button" class="chip" data-value="Idade gestacional ignorada">Idade gestacional ignorada</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+</div>
+</div>
+<div>
+<span class="field-label">Raça/Cor</span>
+<div class="chip-grid" data-chips="raca" data-single="true">
+<button type="button" class="chip" data-value="Branca">Branca</button>
+<button type="button" class="chip" data-value="Preta">Preta</button>
+<button type="button" class="chip" data-value="Amarela">Amarela</button>
+<button type="button" class="chip" data-value="Parda">Parda</button>
+<button type="button" class="chip" data-value="Indígena">Indígena</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-esc">Escolaridade</label>
+<select class="input input-lg" id="bio-esc" data-key="escolaridade">
+<option value="">Selecione</option><option>Analfabeto</option><option>1ª a 4ª série incompleta do EF</option><option>4ª série completa do EF</option><option>5ª a 8ª série incompleta do EF</option><option>Ensino fundamental completo</option><option>Ensino médio incompleto</option><option>Ensino médio completo</option><option>Ensino superior incompleto</option><option>Ensino superior completo</option><option>Ignorado</option><option>Não se aplica</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="bio-cpf">CPF</label>
+<input class="input input-lg" id="bio-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf" inputmode="numeric" maxlength="14">
+</div>
+<div>
+<label class="field-label" for="bio-mae">Nome da mãe</label>
+<input class="input input-lg" id="bio-mae" type="text" data-key="nomeMae">
+</div>
+<div>
+<label class="field-label" for="bio-sus">Cartão SUS</label>
+<input class="input input-lg" id="bio-sus" type="text" data-key="cartaoSus">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="3">
+<h1 class="screen-title">Residência</h1>
+<p class="screen-sub">Endereço atual da pessoa atendida.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="bio-uf-res">UF</label>
+<select class="input input-lg" id="bio-uf-res" data-key="ufRes">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="bio-mun-res">Município de residência</label>
+<input class="input input-lg" id="bio-mun-res" type="text" data-key="munRes">
+</div>
+<div>
+<label class="field-label" for="bio-ibge-res">Código IBGE</label>
+<input class="input input-lg" id="bio-ibge-res" type="text" data-key="ibgeRes">
+</div>
+<div>
+<label class="field-label" for="bio-dist">Distrito</label>
+<input class="input input-lg" id="bio-dist" type="text" data-key="distRes">
+</div>
+<div>
+<label class="field-label" for="bio-bairro">Bairro</label>
+<input class="input input-lg" id="bio-bairro" type="text" data-key="bairroRes">
+</div>
+<div>
+<label class="field-label" for="bio-logr">Logradouro</label>
+<input class="input input-lg" id="bio-logr" type="text" data-key="logRes">
+</div>
+<div>
+<label class="field-label" for="bio-num">Número</label>
+<input class="input input-lg" id="bio-num" type="text" data-key="numRes">
+</div>
+<div>
+<label class="field-label" for="bio-comp">Complemento</label>
+<input class="input input-lg" id="bio-comp" type="text" data-key="compRes">
+</div>
+<div>
+<label class="field-label" for="bio-geo1">Geo campo 1</label>
+<input class="input input-lg" id="bio-geo1" type="text" data-key="geo1">
+</div>
+<div>
+<label class="field-label" for="bio-geo2">Geo campo 2</label>
+<input class="input input-lg" id="bio-geo2" type="text" data-key="geo2">
+</div>
+<div>
+<label class="field-label" for="bio-ref">Ponto de referência</label>
+<input class="input input-lg" id="bio-ref" type="text" data-key="refRes">
+</div>
+<div>
+<label class="field-label" for="bio-cep">CEP</label>
+<input class="input input-lg" id="bio-cep" type="text" data-key="cep" placeholder="00000-000">
+</div>
+<div>
+<label class="field-label" for="bio-tel">(DDD) Telefone</label>
+<input class="input input-lg" id="bio-tel" type="tel" data-key="telefone" placeholder="(00) 00000-0000">
+</div>
+<div>
+<span class="field-label">Zona</span>
+<div class="chip-grid" data-chips="zona" data-single="true">
+<button type="button" class="chip" data-value="Urbana">Urbana</button>
+<button type="button" class="chip" data-value="Rural">Rural</button>
+<button type="button" class="chip" data-value="Periurbana">Periurbana</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-pais">País se residente fora do Brasil</label>
+<input class="input input-lg" id="bio-pais" type="text" data-key="paisExterior">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="4">
+<h1 class="screen-title">O trabalho</h1>
+<p class="screen-sub">Vínculo e tempo na função em que ocorreu o acidente.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="bio-ocup">Ocupação</label>
+<input class="input input-lg" id="bio-ocup" type="text" data-key="ocupacao" placeholder="Ex.: Técnica de enfermagem">
+</div>
+<div>
+<label class="field-label" for="bio-sit">Situação no mercado de trabalho</label>
+<select class="input input-lg" id="bio-sit" data-key="situacao">
+<option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option>
+</select>
+</div>
+<div>
+<span class="field-label">Tempo de trabalho na ocupação</span>
+<div class="unit-row" >
+<input class="input input-lg" id="bio-tempo" type="number" min="0" data-key="tempoValor">
+<select class="input input-lg" id="bio-tempo-un" data-key="tempoUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-cnpj">CNPJ ou CPF do empregador</label>
+<input class="input input-lg" id="bio-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj" inputmode="numeric">
+</div>
+<div>
+<label class="field-label" for="bio-emp">Nome da empresa ou empregador</label>
+<input class="input input-lg" id="bio-emp" type="text" data-key="empresa">
+</div>
+<div>
+<label class="field-label" for="bio-cnae">Atividade econômica (CNAE)</label>
+<input class="input input-lg" id="bio-cnae" type="text" data-key="cnae">
+</div>
+<div>
+<label class="field-label" for="bio-uf-emp">UF da empresa</label>
+<select class="input input-lg" id="bio-uf-emp" data-key="ufEmp">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="bio-mun-emp">Município da empresa</label>
+<input class="input input-lg" id="bio-mun-emp" type="text" data-key="munEmp">
+</div>
+<div>
+<label class="field-label" for="bio-ibge-emp">Código IBGE</label>
+<input class="input input-lg" id="bio-ibge-emp" type="text" data-key="ibgeEmp">
+</div>
+<div>
+<label class="field-label" for="bio-dist-emp">Distrito</label>
+<input class="input input-lg" id="bio-dist-emp" type="text" data-key="distEmp">
+</div>
+<div>
+<label class="field-label" for="bio-bairro-emp">Bairro</label>
+<input class="input input-lg" id="bio-bairro-emp" type="text" data-key="bairroEmp">
+</div>
+<div>
+<label class="field-label" for="bio-end-emp">Endereço</label>
+<input class="input input-lg" id="bio-end-emp" type="text" data-key="endEmp">
+</div>
+<div>
+<label class="field-label" for="bio-num-emp">Número</label>
+<input class="input input-lg" id="bio-num-emp" type="text" data-key="numEmp">
+</div>
+<div>
+<label class="field-label" for="bio-ref-emp">Ponto de referência</label>
+<input class="input input-lg" id="bio-ref-emp" type="text" data-key="refEmp">
+</div>
+<div>
+<label class="field-label" for="bio-tel-emp">(DDD) Telefone</label>
+<input class="input input-lg" id="bio-tel-emp" type="tel" data-key="telEmp" placeholder="(00) 0000-0000">
+</div>
+<div>
+<span class="field-label">Empregador é empresa terceirizada?</span>
+<div class="chip-grid" data-chips="terceirizada" data-single="true">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div data-show-when="terceirizada=Sim"><div>
+<label class="field-label" for="bio-cnae-p">CNAE da empresa principal</label>
+<input class="input input-lg" id="bio-cnae-p" type="text" data-key="cnaePrincipal">
+</div>
+<div>
+<label class="field-label" for="bio-cnpj-p">CNPJ da empresa principal</label>
+<input class="input input-lg" id="bio-cnpj-p" type="text" data-key="cnpjPrincipal">
+</div>
+<div>
+<label class="field-label" for="bio-rs-p">Razão social da empresa principal</label>
+<input class="input input-lg" id="bio-rs-p" type="text" data-key="razaoPrincipal">
+</div></div>
+</div>
+</section>
+<section class="screen" data-screen="5">
+<h1 class="screen-title">A exposição</h1>
+<p class="screen-sub">Como e onde o contato com o material aconteceu.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Tipo de exposição</span>
+<div class="chip-grid" data-chips="tipoExposicao" data-single="true" data-summary="Tipo de exposição">
+<button type="button" class="chip chip-lg" data-value="Percutânea">Percutânea</button>
+<button type="button" class="chip chip-lg" data-value="Mucosa (oral ou ocular)">Mucosa (oral ou ocular)</button>
+<button type="button" class="chip chip-lg" data-value="Pele íntegra">Pele íntegra</button>
+<button type="button" class="chip chip-lg" data-value="Pele não íntegra">Pele não íntegra</button>
+<button type="button" class="chip chip-lg" data-value="Outros">Outros</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-data-ac">Data do acidente</label>
+<input class="input input-lg" id="bio-data-ac" type="date" data-key="dataAcidente" data-summary="Data do acidente">
+</div>
+<div>
+<label class="field-label" for="bio-hora-ac">Hora do acidente</label>
+<input class="input input-lg" id="bio-hora-ac" type="time" data-key="horaAcidente">
+</div>
+<div>
+<span class="field-label">Local onde ocorreu</span>
+<div class="chip-grid" data-chips="local" data-single="true">
+<button type="button" class="chip" data-value="Instalações do contratante">Instalações do contratante</button>
+<button type="button" class="chip" data-value="Via pública">Via pública</button>
+<button type="button" class="chip" data-value="Instalações de terceiros">Instalações de terceiros</button>
+<button type="button" class="chip" data-value="Domicílio próprio">Domicílio próprio</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Material orgânico</span>
+<div class="chip-grid" data-chips="material" data-multi="true" data-summary="Material orgânico">
+<button type="button" class="chip" data-value="Sangue">Sangue</button>
+<button type="button" class="chip" data-value="Líquor">Líquor</button>
+<button type="button" class="chip" data-value="Líquido pleural">Líquido pleural</button>
+<button type="button" class="chip" data-value="Líquido ascítico">Líquido ascítico</button>
+<button type="button" class="chip" data-value="Líquido amniótico">Líquido amniótico</button>
+<button type="button" class="chip" data-value="Fluido com sangue">Fluido com sangue</button>
+<button type="button" class="chip" data-value="Soro/plasma">Soro/plasma</button>
+<button type="button" class="chip" data-value="Outros">Outros</button>
+</div>
+</div>
+<div>
+<span class="field-label">Agente</span>
+<div class="chip-grid" data-chips="agente" data-single="true" data-summary="Agente">
+<button type="button" class="chip" data-value="Agulha com lúmen">Agulha com lúmen</button>
+<button type="button" class="chip" data-value="Agulha sem lúmen/maciça">Agulha sem lúmen/maciça</button>
+<button type="button" class="chip" data-value="Intracath">Intracath</button>
+<button type="button" class="chip" data-value="Vidros">Vidros</button>
+<button type="button" class="chip" data-value="Lâmina/lanceta">Lâmina/lanceta</button>
+<button type="button" class="chip" data-value="Outros">Outros</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-circ">Circunstância do acidente</label>
+<select class="input input-lg" id="bio-circ" data-key="circunstancia">
+<option value="">Selecione</option><option>Administração de medicação endovenosa, intramuscular, subcutânea, intradérmica</option><option>Punção venosa/arterial para coleta de sangue</option><option>Punção venosa/arterial não especificada</option><option>Descarte inadequado em saco de lixo</option><option>Descarte inadequado em bancada/cama/chão</option><option>Lavanderia</option><option>Lavagem de material</option><option>Manipulação de caixa com material perfurocortante</option><option>Procedimento cirúrgico</option><option>Procedimento odontológico</option><option>Procedimento laboratorial</option><option>Dextro</option><option>Reencape</option><option>Outros</option><option>Ignorado</option>
+</select>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="6">
+<h1 class="screen-title">Proteção e vacinação</h1>
+<p class="screen-sub">Equipamentos usados e situação vacinal no momento do acidente.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Uso de EPI no momento do acidente</span>
+<div class="chip-grid" data-chips="epi" data-multi="true">
+<button type="button" class="chip" data-value="Luva">Luva</button>
+<button type="button" class="chip" data-value="Avental">Avental</button>
+<button type="button" class="chip" data-value="Óculos">Óculos</button>
+<button type="button" class="chip" data-value="Máscara">Máscara</button>
+<button type="button" class="chip" data-value="Proteção facial">Proteção facial</button>
+<button type="button" class="chip" data-value="Bota">Bota</button>
+</div>
+</div>
+<div>
+<span class="field-label">Situação vacinal do acidentado para hepatite B (3 doses)</span>
+<div class="chip-grid" data-chips="vacinaHB" data-single="true">
+<button type="button" class="chip" data-value="Vacinado">Vacinado</button>
+<button type="button" class="chip" data-value="Não vacinado">Não vacinado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Ocorreu atendimento médico?</span>
+<div class="chip-grid" data-chips="atendimento" data-single="true">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="7">
+<h1 class="screen-title">Paciente fonte, exames e conduta</h1>
+<p class="screen-sub">Exames são feitos na hora e definem a conduta.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Paciente fonte conhecida?</span>
+<div class="chip-grid" data-chips="fonte" data-single="true" data-summary="Paciente fonte conhecida?">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Resultado — Anti-HIV (acidentado, data zero)</span>
+<div class="chip-grid" data-chips="sorAntiHIV" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Resultado — HBsAg (acidentado, data zero)</span>
+<div class="chip-grid" data-chips="sorHBsAg" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Resultado — Anti-HBs (acidentado, data zero)</span>
+<div class="chip-grid" data-chips="sorAntiHBs" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Resultado — Anti-HCV (acidentado, data zero)</span>
+<div class="chip-grid" data-chips="sorAntiHCV" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Paciente fonte — HBsAg</span>
+<div class="chip-grid" data-chips="fonteHBsAg" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Paciente fonte — Anti-HBc</span>
+<div class="chip-grid" data-chips="fonteAntiHBc" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Paciente fonte — Anti-HIV</span>
+<div class="chip-grid" data-chips="fonteAntiHIV" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Paciente fonte — Anti-HCV</span>
+<div class="chip-grid" data-chips="fonteAntiHCV" data-single="true">
+<button type="button" class="chip" data-value="Positivo">Positivo</button>
+<button type="button" class="chip" data-value="Negativo">Negativo</button>
+<button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
+<button type="button" class="chip" data-value="Não realizado">Não realizado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Conduta no momento do acidente</span>
+<div class="chip-grid" data-chips="conduta" data-multi="true" data-summary="Conduta no momento do acidente">
+<button type="button" class="chip" data-value="Sem indicação de quimioprofilaxia">Sem indicação de quimioprofilaxia</button>
+<button type="button" class="chip" data-value="Recusou quimioprofilaxia indicada">Recusou quimioprofilaxia indicada</button>
+<button type="button" class="chip" data-value="AZT+3TC">AZT+3TC</button>
+<button type="button" class="chip" data-value="AZT+3TC+Indinavir">AZT+3TC+Indinavir</button>
+<button type="button" class="chip" data-value="AZT+3TC+Nelfinavir">AZT+3TC+Nelfinavir</button>
+<button type="button" class="chip" data-value="Imunoglobulina humana contra hepatite B (HBIG)">Imunoglobulina humana contra hepatite B (HBIG)</button>
+<button type="button" class="chip" data-value="Vacina contra hepatite B">Vacina contra hepatite B</button>
+<button type="button" class="chip" data-value="Outro esquema de ARV">Outro esquema de ARV</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-arv">Outro esquema de ARV (especificar)</label>
+<input class="input input-lg" id="bio-arv" type="text" data-key="outroArv">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="8">
+<h1 class="screen-title">Fechamento</h1>
+<p class="screen-sub">Desfecho do caso e responsável pela investigação.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Evolução do caso</span>
+<div class="chip-grid" data-chips="evolucao" data-single="true">
+<button type="button" class="chip" data-value="Alta com conversão sorológica">Alta com conversão sorológica</button>
+<button type="button" class="chip" data-value="Alta sem conversão sorológica">Alta sem conversão sorológica</button>
+<button type="button" class="chip" data-value="Alta paciente fonte negativo">Alta paciente fonte negativo</button>
+<button type="button" class="chip" data-value="Abandono">Abandono</button>
+<button type="button" class="chip" data-value="Óbito por acidente com material biológico">Óbito por acidente com material biológico</button>
+<button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-virus">Se alta com conversão sorológica, qual vírus</label>
+<input class="input input-lg" id="bio-virus" type="text" data-key="virusConversao">
+</div>
+<div>
+<label class="field-label" for="bio-obito">Se óbito, data</label>
+<input class="input input-lg" id="bio-obito" type="date" data-key="dataObito">
+</div>
+<div>
+<span class="field-label">CAT emitida?</span>
+<div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="bio-mun-inv">Município/Unidade de saúde investigadora</label>
+<input class="input input-lg" id="bio-mun-inv" type="text" data-key="munInvestigadora">
+</div>
+<div>
+<label class="field-label" for="bio-cod-inv">Código da unidade</label>
+<input class="input input-lg" id="bio-cod-inv" type="text" data-key="codUnidInv">
+</div>
+<div>
+<label class="field-label" for="bio-inv">Nome do investigador</label>
+<input class="input input-lg" id="bio-inv" type="text" data-key="investigador">
+</div>
+<div>
+<label class="field-label" for="bio-func">Função</label>
+<input class="input input-lg" id="bio-func" type="text" data-key="funcao">
+</div>
+<div>
+<label class="field-label" for="bio-data-fim">Data</label>
+<input class="input input-lg" id="bio-data-fim" type="date" data-key="dataFechamento">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="9">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — ACIDENTE DE TRABALHO COM EXPOSIÇÃO A MATERIAL BIOLÓGICO</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-cancer-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true">
+<div class="progress-seg" data-seg="1"></div>
+<div class="progress-seg" data-seg="2"></div>
+<div class="progress-seg" data-seg="3"></div>
+<div class="progress-seg" data-seg="4"></div>
+<div class="progress-seg" data-seg="5"></div>
+<div class="progress-seg" data-seg="6"></div>
+<div class="progress-seg" data-seg="7"></div>
+<div class="progress-seg" data-seg="8"></div>
+</div>
+<div class="shell-container row between items-center">
+<span class="pill">Câncer relacionado ao trabalho</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 8</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1">
+<h1 class="screen-title">Dados da notificação</h1>
+<p class="screen-sub">Informações gerais da notificação.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="can-tipo">Tipo de notificação</label>
+<input class="input input-lg" id="can-tipo" type="text" data-key="tipoNotificacao" value="Individual" readonly>
+</div>
+<div>
+<label class="field-label" for="can-agravo">Agravo/doença</label>
+<input class="input input-lg" id="can-agravo" type="text" data-key="agravo" value="Câncer relacionado ao trabalho" readonly>
+</div>
+<div>
+<label class="field-label" for="can-cidn">CID-10</label>
+<input class="input input-lg" id="can-cidn" type="text" data-key="cid10Notif" value="C80" readonly>
+</div>
+<div>
+<label class="field-label" for="can-datan">Data da notificação</label>
+<input class="input input-lg" id="can-datan" type="date" data-key="dataNotificacao">
+</div>
+<div>
+<label class="field-label" for="can-ufn">UF</label>
+<select class="input input-lg" id="can-ufn" data-key="ufNotificacao">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="can-munn">Município de notificação</label>
+<input class="input input-lg" id="can-munn" type="text" data-key="municipioNotificacao">
+</div>
+<div>
+<label class="field-label" for="can-unid">Unidade de saúde notificadora</label>
+<input class="input input-lg" id="can-unid" type="text" data-key="unidadeNotificadora" value="UBS Centro — Unidade Modelo">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="2">
+<h1 class="screen-title">Quem foi atendido</h1>
+<p class="screen-sub">Identificação da pessoa atendida pelo serviço de saúde.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="can-nome">Nome completo</label>
+<input class="input input-lg" id="can-nome" type="text" data-key="nome" placeholder="Ex.: Maria Aparecida Souza" data-summary="Nome completo">
+</div>
+<div>
+<label class="field-label" for="can-nasc">Data de nascimento</label>
+<input class="input input-lg" id="can-nasc" type="date" data-key="nascimento">
+</div>
+<div>
+<label class="field-label" for="can-cpf">CPF</label>
+<input class="input input-lg" id="can-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf" inputmode="numeric" maxlength="14">
+</div>
+<div>
+<span class="field-label">Sexo</span>
+<div class="chip-grid" data-chips="sexo" data-single="true">
+<button type="button" class="chip" data-value="Masculino">Masculino</button>
+<button type="button" class="chip" data-value="Feminino">Feminino</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="3">
+<h1 class="screen-title">O trabalho</h1>
+<p class="screen-sub">Ocupação e vínculo de trabalho na época da exposição.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="can-ocup">Ocupação / cargo</label>
+<input class="input input-lg" id="can-ocup" type="text" data-key="ocupacao" placeholder="Ex.: Soldador de estrutura metálica">
+</div>
+<div>
+<label class="field-label" for="can-sit">Situação no mercado de trabalho</label>
+<select class="input input-lg" id="can-sit" data-key="situacao">
+<option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option>
+</select>
+</div>
+<div>
+<span class="field-label">Tempo de trabalho na ocupação</span>
+<div class="unit-row" >
+<input class="input input-lg" id="can-tempo" type="number" min="0" data-key="tempoOcupacao">
+<select class="input input-lg" id="can-tempo-un" data-key="tempoOcupacaoUn"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="4">
+<h1 class="screen-title">Dados da empresa contratante</h1>
+<p class="screen-sub">Empregador ou empresa contratante na época da exposição.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="can-cnpj">CNPJ ou CPF do empregador</label>
+<input class="input input-lg" id="can-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj" maxlength="18">
+</div>
+<div>
+<label class="field-label" for="can-empresa">Nome da empresa ou empregador</label>
+<input class="input input-lg" id="can-empresa" type="text" data-key="empresaNome">
+</div>
+<div>
+<label class="field-label" for="can-cnae">Atividade econômica (CNAE)</label>
+<input class="input input-lg" id="can-cnae" type="text" data-key="cnae" placeholder="Ex.: 2521-7/00">
+</div>
+<div>
+<label class="field-label" for="can-uf">UF</label>
+<select class="input input-lg" id="can-uf" data-key="uf">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="can-mun">Município</label>
+<input class="input input-lg" id="can-mun" type="text" data-key="municipio">
+</div>
+<div>
+<label class="field-label" for="can-bairro">Bairro</label>
+<input class="input input-lg" id="can-bairro" type="text" data-key="bairro">
+</div>
+<div>
+<label class="field-label" for="can-end">Endereço</label>
+<input class="input input-lg" id="can-end" type="text" data-key="endereco">
+</div>
+<div>
+<label class="field-label" for="can-num">Número</label>
+<input class="input input-lg" id="can-num" type="text" data-key="numero">
+</div>
+<div>
+<label class="field-label" for="can-tel">(DDD) Telefone</label>
+<input class="input input-lg" id="can-tel" type="text" data-key="telefone" placeholder="(00) 00000-0000">
+</div>
+<div>
+<span class="field-label">O empregador é empresa terceirizada?</span>
+<div class="chip-grid" data-chips="terceirizada" data-single="true">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div data-show-when="terceirizada=Sim"><div>
+<label class="field-label" for="can-cnae-p">CNAE da empresa principal</label>
+<input class="input input-lg" id="can-cnae-p" type="text" data-key="cnaePrincipal">
+</div>
+<div>
+<label class="field-label" for="can-cnpj-p">CNPJ da empresa principal</label>
+<input class="input input-lg" id="can-cnpj-p" type="text" data-key="cnpjPrincipal">
+</div>
+<div>
+<label class="field-label" for="can-rs-p">Razão social da empresa principal</label>
+<input class="input input-lg" id="can-rs-p" type="text" data-key="razaoPrincipal">
+</div></div>
+</div>
+</section>
+<section class="screen" data-screen="5">
+<h1 class="screen-title">O diagnóstico</h1>
+<p class="screen-sub">Dados clínicos do diagnóstico e do tratamento.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="can-diag">Data do diagnóstico</label>
+<input class="input input-lg" id="can-diag" type="date" data-key="dataDiagnostico" data-summary="Data do diagnóstico">
+</div>
+<div>
+<label class="field-label" for="can-cid">Diagnóstico específico — CID-10</label>
+<input class="input input-lg" id="can-cid" type="text" data-key="cid" placeholder="Ex.: C34.1" maxlength="10" data-summary="Diagnóstico específico — CID-10">
+</div>
+<div>
+<span class="field-label">Regime de tratamento</span>
+<div class="chip-grid" data-chips="regime" data-single="true">
+<button type="button" class="chip" data-value="Hospitalar">Hospitalar</button>
+<button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button>
+</div>
+</div>
+<div>
+<span class="field-label">Tempo de exposição ao agente de risco</span>
+<div class="unit-row"  data-summary="Tempo de exposição ao agente de risco">
+<input class="input input-lg" id="can-exp" type="number" min="0" data-key="tempoExposicao">
+<select class="input input-lg" id="can-exp-un" data-key="tempoExposicaoUn"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="6">
+<h1 class="screen-title">Exposição ao longo da vida profissional</h1>
+<p class="screen-sub">Registre os agentes de risco a que a pessoa esteve exposta.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Houve exposição, durante toda a vida profissional, a algum dos agentes abaixo?</span>
+<div class="chip-grid" data-chips="exposicao" data-single="true">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Agentes aos quais houve exposição</span>
+<div class="chip-grid" data-chips="agentes" data-multi="true" data-summary="Agentes aos quais houve exposição">
+<button type="button" class="chip" data-value="Asbesto ou amianto">Asbesto ou amianto</button>
+<button type="button" class="chip" data-value="Sílica livre, arsênico e compostos arsenicais">Sílica livre, arsênico e compostos arsenicais</button>
+<button type="button" class="chip" data-value="Aminas aromáticas">Aminas aromáticas</button>
+<button type="button" class="chip" data-value="Benzeno ou seus homólogos tóxicos">Benzeno ou seus homólogos tóxicos</button>
+<button type="button" class="chip" data-value="Alcatrão, breu, betume, hulha mineral, parafina e resíduos">Alcatrão, breu, betume, hulha mineral, parafina e resíduos</button>
+<button type="button" class="chip" data-value="Hidrocarbonetos alifáticos ou aromáticos (derivados halogenados tóxicos)">Hidrocarbonetos alifáticos ou aromáticos (derivados halogenados tóxicos)</button>
+<button type="button" class="chip" data-value="Óleos minerais">Óleos minerais</button>
+<button type="button" class="chip" data-value="Berílio e seus compostos tóxicos">Berílio e seus compostos tóxicos</button>
+<button type="button" class="chip" data-value="Cádmio ou seus compostos">Cádmio ou seus compostos</button>
+<button type="button" class="chip" data-value="Cromo ou seus compostos tóxicos">Cromo ou seus compostos tóxicos</button>
+<button type="button" class="chip" data-value="Compostos de níquel">Compostos de níquel</button>
+<button type="button" class="chip" data-value="Radiações ionizantes">Radiações ionizantes</button>
+<button type="button" class="chip" data-value="Radiações não ionizantes">Radiações não ionizantes</button>
+<button type="button" class="chip" data-value="Hormônios">Hormônios</button>
+<button type="button" class="chip" data-value="Antineoplásicos">Antineoplásicos</button>
+<button type="button" class="chip" data-value="Outros">Outros</button>
+</div>
+</div>
+<div data-show-includes="agentes=Outros"><div>
+<label class="field-label" for="can-outros">Especifique outros agentes</label>
+<input class="input input-lg" id="can-outros" type="text" data-key="outrosAgente" placeholder="Descreva o agente">
+</div></div>
+</div>
+</section>
+<section class="screen" data-screen="7">
+<h1 class="screen-title">Tabagismo e outros trabalhadores</h1>
+<p class="screen-sub">Hábito de fumar e ocorrências semelhantes no local de trabalho.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Hábito de fumar</span>
+<div class="chip-grid" data-chips="fumo" data-single="true" data-summary="Hábito de fumar">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Ex-fumante">Ex-fumante</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Tempo de exposição ao tabaco</span>
+<div class="unit-row" >
+<input class="input input-lg" id="can-tabaco" type="number" min="0" data-key="tempoTabaco">
+<select class="input input-lg" id="can-tabaco-un" data-key="tempoTabacoUn"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+<div>
+<span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span>
+<div class="chip-grid" data-chips="outros" data-single="true">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-screen="8">
+<h1 class="screen-title">Fechamento</h1>
+<p class="screen-sub">Evolução do caso e dados do profissional responsável.</p>
+<div class="field-group">
+<div>
+<span class="field-label">Evolução do caso</span>
+<div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso">
+<button type="button" class="chip" data-value="Sem evidência da doença (remissão completa)">Sem evidência da doença (remissão completa)</button>
+<button type="button" class="chip" data-value="Remissão parcial">Remissão parcial</button>
+<button type="button" class="chip" data-value="Doença estável">Doença estável</button>
+<button type="button" class="chip" data-value="Doença em progressão">Doença em progressão</button>
+<button type="button" class="chip" data-value="Fora de possibilidade terapêutica">Fora de possibilidade terapêutica</button>
+<button type="button" class="chip" data-value="Óbito por câncer relacionado ao trabalho">Óbito por câncer relacionado ao trabalho</button>
+<button type="button" class="chip" data-value="Óbito por outras causas">Óbito por outras causas</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="can-obito">Se óbito, data</label>
+<input class="input input-lg" id="can-obito" type="date" data-key="dataObito">
+</div>
+<div>
+<span class="field-label">CAT emitida?</span>
+<div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?">
+<button type="button" class="chip" data-value="Sim">Sim</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="can-prof">Profissional responsável</label>
+<input class="input input-lg" id="can-prof" type="text" data-key="profissional" placeholder="Nome e registro profissional">
+</div>
+<div>
+<label class="field-label" for="can-data">Data</label>
+<input class="input input-lg" id="can-data" type="date" data-key="data">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="9">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — CÂNCER RELACIONADO AO TRABALHO</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-dermatose-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true"><div class="progress-seg" data-seg="1"></div><div class="progress-seg" data-seg="2"></div><div class="progress-seg" data-seg="3"></div><div class="progress-seg" data-seg="4"></div><div class="progress-seg" data-seg="5"></div><div class="progress-seg" data-seg="6"></div><div class="progress-seg" data-seg="7"></div></div>
+<div class="shell-container row between items-center">
+<span class="pill">Dermatoses ocupacionais</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 7</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1"><h1 class="screen-title">Dados da notificação</h1><p class="screen-sub">Confira os dados gerais desta notificação.</p><div class="field-group"><div><label class="field-label" for="der-tipo">Tipo de notificação</label><input class="input input-lg" id="der-tipo" type="text" data-key="tipo" value="Individual"></div><div><label class="field-label" for="der-agravo">Agravo / doença</label><input class="input input-lg" id="der-agravo" type="text" data-key="agravo" value="Dermatoses ocupacionais"></div><div><label class="field-label" for="der-cidFixo">CID-10</label><input class="input input-lg" id="der-cidFixo" type="text" data-key="cidFixo" value="L98.9"></div><div><label class="field-label" for="der-dataNotif">Data da notificação</label><input class="input input-lg" id="der-dataNotif" type="date" data-key="dataNotif"><p class="field-help">Preenchida com a data de hoje. Pode ser alterada.</p></div><div><label class="field-label" for="der-uf">UF</label><select class="input input-lg" id="der-uf" data-key="uf"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div><div><label class="field-label" for="der-municipioNotif">Município de notificação</label><input class="input input-lg" id="der-municipioNotif" type="text" data-key="municipioNotif" placeholder="Ex.: Florianópolis"></div><div><label class="field-label" for="der-unidade">Unidade de saúde notificadora</label><input class="input input-lg" id="der-unidade" type="text" data-key="unidade" placeholder="Ex.: UBS Vila Nova"><p class="field-help">Digite a unidade notificadora.</p></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Quem foi atendido</h1><p class="screen-sub">Identificação do trabalhador.</p><div class="field-group"><div><label class="field-label" for="der-cpf">CPF do trabalhador</label><input class="input input-lg" id="der-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf"></div><div><label class="field-label" for="der-nome">Nome completo</label><input class="input input-lg" id="der-nome" type="text" data-key="nome" placeholder="Nome do trabalhador" data-summary="Nome completo"></div><div><label class="field-label" for="der-nascimento">Data de nascimento</label><input class="input input-lg" id="der-nascimento" type="date" data-key="nascimento"></div><div><span class="field-label">Sexo</span><div class="chip-grid" data-chips="sexo" data-single="true" data-summary="Sexo"><button type="button" class="chip" data-value="Masculino">Masculino</button><button type="button" class="chip" data-value="Feminino">Feminino</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="3"><h1 class="screen-title">O trabalho</h1><p class="screen-sub">Ocupação e situação do trabalhador no mercado de trabalho.</p><div class="field-group"><div><label class="field-label" for="der-ocupacao">Ocupação / cargo</label><input class="input input-lg" id="der-ocupacao" type="text" data-key="ocupacao" placeholder="Digite a ocupação ou o cargo"></div><div><label class="field-label" for="der-situacao">Situação no mercado de trabalho</label><select class="input input-lg" id="der-situacao" data-key="situacao"><option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option></select></div><div><span class="field-label">Tempo de trabalho na ocupação</span><div class="unit-row" data-summary="Tempo de trabalho na ocupação"><input class="input input-lg" id="der-tempoOcup" type="number" min="0" data-key="tempoOcup"><select class="input input-lg" id="der-tempoOcupUnid" data-key="tempoOcupUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="4"><h1 class="screen-title">Dados da empresa contratante</h1><p class="screen-sub">Informe o empregador e, se for o caso, a empresa principal.</p><div class="field-group"><div><label class="field-label" for="der-cnpj">CNPJ ou CPF do empregador</label><input class="input input-lg" id="der-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj"><p class="field-help">Preencha o documento e os dados da empresa manualmente.</p></div><div><label class="field-label" for="der-razao">Nome da empresa ou empregador</label><input class="input input-lg" id="der-razao" type="text" data-key="razao"></div><div><label class="field-label" for="der-cnae">Atividade econômica (CNAE)</label><input class="input input-lg" id="der-cnae" type="text" data-key="cnae"></div><div><label class="field-label" for="der-ufEmp">UF da empresa</label><input class="input input-lg" id="der-ufEmp" type="text" data-key="ufEmp"></div><div><label class="field-label" for="der-munEmp">Município da empresa</label><input class="input input-lg" id="der-munEmp" type="text" data-key="munEmp"></div><div><label class="field-label" for="der-bairro">Bairro</label><input class="input input-lg" id="der-bairro" type="text" data-key="bairro"></div><div><label class="field-label" for="der-endereco">Endereço</label><input class="input input-lg" id="der-endereco" type="text" data-key="endereco"></div><div><label class="field-label" for="der-numero">Número</label><input class="input input-lg" id="der-numero" type="text" data-key="numero"></div><div><label class="field-label" for="der-telefone">(DDD) Telefone</label><input class="input input-lg" id="der-telefone" type="text" data-key="telefone" placeholder="(00) 00000-0000"><p class="field-help">Preencher manualmente.</p></div><p class="field-help">Somente se empresa terceirizada</p><div><span class="field-label">O empregador é empresa terceirizada?</span><div class="chip-grid" data-chips="terceirizada" data-single="true" data-summary="O empregador é empresa terceirizada?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="terceirizada=Sim" hidden><div><label class="field-label" for="der-cnaePrinc">CNAE da empresa principal</label><input class="input input-lg" id="der-cnaePrinc" type="text" data-key="cnaePrinc"></div><div><label class="field-label" for="der-cnpjPrinc">CNPJ da empresa principal</label><input class="input input-lg" id="der-cnpjPrinc" type="text" data-key="cnpjPrinc" data-mask="cnpj"></div><div><label class="field-label" for="der-razaoPrinc">Razão social da empresa principal</label><input class="input input-lg" id="der-razaoPrinc" type="text" data-key="razaoPrinc"></div></div></div></section><section class="screen" data-screen="5"><h1 class="screen-title">A dermatose</h1><p class="screen-sub">Dados clínicos e de exposição ao agente de risco.</p><div class="field-group"><div><label class="field-label" for="der-dataDiag">Data do diagnóstico</label><input class="input input-lg" id="der-dataDiag" type="date" data-key="dataDiag" data-summary="Data do diagnóstico"></div><div><span class="field-label">Principal agente causador da dermatose</span><div class="chip-grid" data-chips="agente" data-single="true" data-summary="Principal agente causador da dermatose"><button type="button" class="chip" data-value="Cimento">Cimento</button><button type="button" class="chip" data-value="Borracha">Borracha</button><button type="button" class="chip" data-value="Plástico">Plástico</button><button type="button" class="chip" data-value="Solventes orgânicos">Solventes orgânicos</button><button type="button" class="chip" data-value="Graxas">Graxas</button><button type="button" class="chip" data-value="Óleo de corte">Óleo de corte</button><button type="button" class="chip" data-value="Resinas">Resinas</button><button type="button" class="chip" data-value="Níquel">Níquel</button><button type="button" class="chip" data-value="Cosméticos">Cosméticos</button><button type="button" class="chip" data-value="Madeiras">Madeiras</button><button type="button" class="chip" data-value="Cromo">Cromo</button><button type="button" class="chip" data-value="Outros">Outros</button></div></div><div data-show-when="agente=Outros" hidden><div><label class="field-label" for="der-agenteOutros">Especifique o agente</label><input class="input input-lg" id="der-agenteOutros" type="text" data-key="agenteOutros" placeholder="Ex.: Tinta epóxi"></div></div><div><span class="field-label">Localização da lesão (parte do corpo atingida)</span><div class="chip-grid" data-chips="localizacao" data-multi="true" data-summary="Localização da lesão (parte do corpo atingida)"><button type="button" class="chip" data-value="Mão">Mão</button><button type="button" class="chip" data-value="Membro superior">Membro superior</button><button type="button" class="chip" data-value="Cabeça">Cabeça</button><button type="button" class="chip" data-value="Pescoço">Pescoço</button><button type="button" class="chip" data-value="Tórax">Tórax</button><button type="button" class="chip" data-value="Abdome">Abdome</button><button type="button" class="chip" data-value="Membro inferior">Membro inferior</button><button type="button" class="chip" data-value="Pé">Pé</button><button type="button" class="chip" data-value="Todo o corpo">Todo o corpo</button><button type="button" class="chip" data-value="Outro">Outro</button></div></div><div data-show-includes="localizacao=Outro" hidden><div><label class="field-label" for="der-localOutro">Especifique a localização</label><input class="input input-lg" id="der-localOutro" type="text" data-key="localOutro" placeholder="Ex.: Couro cabeludo"></div></div><div><span class="field-label">Teste epicutâneo positivo</span><div class="chip-grid" data-chips="epicutaneo" data-single="true" data-summary="Teste epicutâneo positivo"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="der-cid10">Diagnóstico específico — CID-10</label><input class="input input-lg" id="der-cid10" type="text" data-key="cid10" placeholder="Ex.: L23"></div><div><span class="field-label">Regime de tratamento</span><div class="chip-grid" data-chips="regime" data-single="true" data-summary="Regime de tratamento"><button type="button" class="chip" data-value="Hospitalar">Hospitalar</button><button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button></div></div><div><span class="field-label">Tempo de exposição ao agente de risco</span><div class="unit-row" data-summary="Tempo de exposição ao agente de risco"><input class="input input-lg" id="der-expTempo" type="number" min="0" data-key="expTempo"><select class="input input-lg" id="der-expUnid" data-key="expUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="6"><h1 class="screen-title">Agravos associados e afastamento</h1><p class="screen-sub">Condições associadas e informações sobre afastamento do trabalho.</p><div class="field-group"><div><span class="field-label">Agravos associados</span><div class="chip-grid" data-chips="agravos" data-multi="true" data-summary="Agravos associados"><button type="button" class="chip" data-value="Hipertensão arterial">Hipertensão arterial</button><button type="button" class="chip" data-value="Diabetes mellitus">Diabetes mellitus</button><button type="button" class="chip" data-value="Tuberculose">Tuberculose</button><button type="button" class="chip" data-value="Hanseníase">Hanseníase</button><button type="button" class="chip" data-value="Asma">Asma</button><button type="button" class="chip" data-value="Transtorno mental">Transtorno mental</button><button type="button" class="chip" data-value="Outras">Outras</button></div><p class="field-help">Marque todos os agravos presentes.</p></div><div data-show-includes="agravos=Outras" hidden><div><label class="field-label" for="der-agravosOutras">Especifique as outras condições</label><input class="input input-lg" id="der-agravosOutras" type="text" data-key="agravosOutras" placeholder="Ex.: Dislipidemia"></div></div><div><span class="field-label">Houve afastamento do trabalho para tratamento?</span><div class="chip-grid" data-chips="afastamento" data-single="true" data-summary="Houve afastamento do trabalho para tratamento?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de afastamento do trabalho para tratamento</span><div class="unit-row" data-summary="Tempo de afastamento do trabalho para tratamento"><input class="input input-lg" id="der-afastTempo" type="number" min="0" data-key="afastTempo"><select class="input input-lg" id="der-afastUnid" data-key="afastUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><span class="field-label">Com afastamento do trabalho, o quadro</span><div class="chip-grid" data-chips="comAfast" data-single="true" data-summary="Com afastamento do trabalho, o quadro"><button type="button" class="chip" data-value="Melhora">Melhora</button><button type="button" class="chip" data-value="Piora">Piora</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span><div class="chip-grid" data-chips="outrosTrab" data-single="true" data-summary="Há ou houve outros trabalhadores com a mesma doença no local de trabalho?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="7"><h1 class="screen-title">Conduta e fechamento</h1><p class="screen-sub">Medidas adotadas e situação atual do caso.</p><div class="field-group"><div><span class="field-label">Conduta geral</span><div class="chip-grid" data-chips="conduta" data-multi="true" data-summary="Conduta geral"><button type="button" class="chip" data-value="Afastamento do agente de risco com mudança de função e/ou posto de trabalho">Afastamento do agente de risco com mudança de função e/ou posto de trabalho</button><button type="button" class="chip" data-value="Adoção de proteção individual">Adoção de proteção individual</button><button type="button" class="chip" data-value="Adoção de mudança na organização do trabalho">Adoção de mudança na organização do trabalho</button><button type="button" class="chip" data-value="Adoção de proteção coletiva">Adoção de proteção coletiva</button><button type="button" class="chip" data-value="Afastamento do local de trabalho">Afastamento do local de trabalho</button><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todas as condutas adotadas.</p></div><div data-show-includes="conduta=Outros" hidden><div><label class="field-label" for="der-condutaOutros">Especifique a conduta</label><input class="input input-lg" id="der-condutaOutros" type="text" data-key="condutaOutros" placeholder="Ex.: Treinamento de higiene"></div></div><div><span class="field-label">Evolução do caso</span><div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso"><button type="button" class="chip" data-value="Cura">Cura</button><button type="button" class="chip" data-value="Cura não confirmada">Cura não confirmada</button><button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button><button type="button" class="chip" data-value="Incapacidade permanente parcial">Incapacidade permanente parcial</button><button type="button" class="chip" data-value="Incapacidade permanente total">Incapacidade permanente total</button><button type="button" class="chip" data-value="Óbito por doença relacionada ao trabalho">Óbito por doença relacionada ao trabalho</button><button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-contains="evolucao=Óbito" hidden><div><label class="field-label" for="der-dataObito">Se óbito, data</label><input class="input input-lg" id="der-dataObito" type="date" data-key="dataObito"></div></div><div><span class="field-label">CAT emitida?</span><div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="der-profissional">Profissional responsável</label><input class="input input-lg" id="der-profissional" type="text" data-key="profissional" placeholder="Nome do profissional"></div><div><label class="field-label" for="der-dataFinal">Data</label><input class="input input-lg" id="der-dataFinal" type="date" data-key="dataFinal"></div></div></section>
+<section class="screen" data-screen="8">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Os dados ficam neste navegador. Baixe o PDF e encaminhe para o e-mail indicado.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Os dados ficam neste navegador e não são enviados automaticamente.</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — DERMATOSES OCUPACIONAIS</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-lerdort-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true"><div class="progress-seg" data-seg="1"></div><div class="progress-seg" data-seg="2"></div><div class="progress-seg" data-seg="3"></div><div class="progress-seg" data-seg="4"></div><div class="progress-seg" data-seg="5"></div><div class="progress-seg" data-seg="6"></div><div class="progress-seg" data-seg="7"></div></div>
+<div class="shell-container row between items-center">
+<span class="pill">LER/DORT</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 7</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1"><h1 class="screen-title">Dados da notificação</h1><p class="screen-sub">Informações gerais sobre esta notificação.</p><div class="field-group"><div><label class="field-label" for="ler-tipo">Tipo de notificação</label><input class="input input-lg" id="ler-tipo" type="text" data-key="tipo" value="Individual"></div><div><label class="field-label" for="ler-agravo">Agravo/doença</label><input class="input input-lg" id="ler-agravo" type="text" data-key="agravo" value="LER/DORT"></div><div><label class="field-label" for="ler-cidFixo">CID-10</label><input class="input input-lg" id="ler-cidFixo" type="text" data-key="cidFixo" value="Z57.9"></div><div><label class="field-label" for="ler-dataNotif">Data da notificação</label><input class="input input-lg" id="ler-dataNotif" type="date" data-key="dataNotif"><p class="field-help">Preenchida com a data de hoje. Pode ser alterada.</p></div><div><label class="field-label" for="ler-uf">UF</label><select class="input input-lg" id="ler-uf" data-key="uf"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div><div><label class="field-label" for="ler-municipio">Município de notificação</label><input class="input input-lg" id="ler-municipio" type="text" data-key="municipio" placeholder="Ex.: Florianópolis"></div><div><label class="field-label" for="ler-unidade">Unidade de saúde notificadora</label><input class="input input-lg" id="ler-unidade" type="text" data-key="unidade" placeholder="Ex.: UBS Centro"><p class="field-help">Digite a unidade notificadora.</p></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Quem foi atendido</h1><p class="screen-sub">Identificação do trabalhador notificado.</p><div class="field-group"><div><label class="field-label" for="ler-cpf">CPF do trabalhador</label><input class="input input-lg" id="ler-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf"></div><div><label class="field-label" for="ler-nome">Nome completo</label><input class="input input-lg" id="ler-nome" type="text" data-key="nome" placeholder="Nome do trabalhador" data-summary="Nome completo"></div><div><label class="field-label" for="ler-nascimento">Data de nascimento</label><input class="input input-lg" id="ler-nascimento" type="date" data-key="nascimento"></div><div><span class="field-label">Sexo</span><div class="chip-grid" data-chips="sexo" data-single="true" data-summary="Sexo"><button type="button" class="chip" data-value="Masculino">Masculino</button><button type="button" class="chip" data-value="Feminino">Feminino</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="3"><h1 class="screen-title">O trabalho</h1><p class="screen-sub">Ocupação e vínculo do trabalhador no momento do agravo.</p><div class="field-group"><div><label class="field-label" for="ler-ocupacao">Ocupação / cargo</label><input class="input input-lg" id="ler-ocupacao" type="text" data-key="ocupacao" placeholder="Digite a ocupação ou o cargo"></div><div><label class="field-label" for="ler-situacao">Situação no mercado de trabalho</label><select class="input input-lg" id="ler-situacao" data-key="situacao"><option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option></select></div><div><span class="field-label">Tempo de trabalho na ocupação</span><div class="unit-row" data-summary="Tempo de trabalho na ocupação"><input class="input input-lg" id="ler-tempoOcup" type="number" min="0" data-key="tempoOcup"><select class="input input-lg" id="ler-tempoOcupUnid" data-key="tempoOcupUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="4"><h1 class="screen-title">Dados da empresa contratante</h1><p class="screen-sub">Informe o empregador e, se for o caso, a empresa principal.</p><div class="field-group"><div><label class="field-label" for="ler-cnpj">CNPJ ou CPF do empregador</label><input class="input input-lg" id="ler-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj"><p class="field-help">Preencha o documento e os dados da empresa manualmente.</p></div><div><label class="field-label" for="ler-razao">Nome da empresa ou empregador</label><input class="input input-lg" id="ler-razao" type="text" data-key="razao"></div><div><label class="field-label" for="ler-cnae">Atividade econômica (CNAE)</label><input class="input input-lg" id="ler-cnae" type="text" data-key="cnae"></div><div><label class="field-label" for="ler-ufEmp">UF da empresa</label><input class="input input-lg" id="ler-ufEmp" type="text" data-key="ufEmp"></div><div><label class="field-label" for="ler-munEmp">Município da empresa</label><input class="input input-lg" id="ler-munEmp" type="text" data-key="munEmp"></div><div><label class="field-label" for="ler-bairro">Bairro</label><input class="input input-lg" id="ler-bairro" type="text" data-key="bairro"></div><div><label class="field-label" for="ler-endereco">Endereço</label><input class="input input-lg" id="ler-endereco" type="text" data-key="endereco"></div><div><label class="field-label" for="ler-numero">Número</label><input class="input input-lg" id="ler-numero" type="text" data-key="numero"></div><div><label class="field-label" for="ler-telefone">(DDD) Telefone</label><input class="input input-lg" id="ler-telefone" type="text" data-key="telefone" placeholder="(00) 00000-0000"><p class="field-help">Preencher manualmente.</p></div><p class="field-help">Somente se empresa terceirizada</p><div><span class="field-label">O empregador é empresa terceirizada?</span><div class="chip-grid" data-chips="terceirizada" data-single="true" data-summary="O empregador é empresa terceirizada?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="terceirizada=Sim" hidden><div><label class="field-label" for="ler-cnpjPrincipal">CNPJ da empresa principal</label><input class="input input-lg" id="ler-cnpjPrincipal" type="text" data-key="cnpjPrincipal" data-mask="cnpj"></div><div><label class="field-label" for="ler-razaoPrincipal">Razão social da empresa principal</label><input class="input input-lg" id="ler-razaoPrincipal" type="text" data-key="razaoPrincipal"></div><div><label class="field-label" for="ler-cnaePrincipal">CNAE da empresa principal</label><input class="input input-lg" id="ler-cnaePrincipal" type="text" data-key="cnaePrincipal"></div></div></div></section><section class="screen" data-screen="5"><h1 class="screen-title">Sinais, sintomas e diagnóstico</h1><p class="screen-sub">Registre o quadro clínico identificado.</p><div class="field-group"><div><label class="field-label" for="ler-dataDiag">Data do diagnóstico</label><input class="input input-lg" id="ler-dataDiag" type="date" data-key="dataDiag" data-summary="Data do diagnóstico"></div><div><span class="field-label">Sinais e sintomas</span><div class="chip-grid" data-chips="sinais" data-multi="true" data-summary="Sinais e sintomas"><button type="button" class="chip" data-value="Alteração de sensibilidade">Alteração de sensibilidade</button><button type="button" class="chip" data-value="Diminuição de força muscular">Diminuição de força muscular</button><button type="button" class="chip" data-value="Diminuição do movimento">Diminuição do movimento</button><button type="button" class="chip" data-value="Limitação de movimentos">Limitação de movimentos</button><button type="button" class="chip" data-value="Sinais flogísticos">Sinais flogísticos</button><button type="button" class="chip" data-value="Dor">Dor</button><button type="button" class="chip" data-value="Outro">Outro</button></div><p class="field-help">Marque todos os sinais e sintomas presentes.</p></div><div data-show-includes="sinais=Outro" hidden><div><label class="field-label" for="ler-sinaisOutro">Descreva o outro sinal ou sintoma</label><input class="input input-lg" id="ler-sinaisOutro" type="text" data-key="sinaisOutro" placeholder="Descreva brevemente"></div></div><div><span class="field-label">Limitação e incapacidade para o exercício de tarefas</span><div class="chip-grid" data-chips="limitacao" data-single="true" data-summary="Limitação e incapacidade para o exercício de tarefas"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="ler-cidCod">Diagnóstico específico — CID-10</label><input class="input input-lg" id="ler-cidCod" type="text" data-key="cidCod" placeholder="Ex.: G56.0"></div><div><span class="field-label">Regime de tratamento</span><div class="chip-grid" data-chips="regime" data-single="true" data-summary="Regime de tratamento"><button type="button" class="chip" data-value="Hospitalar">Hospitalar</button><button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button></div></div><div><span class="field-label">Tempo de exposição ao agente de risco</span><div class="unit-row" data-summary="Tempo de exposição ao agente de risco"><input class="input input-lg" id="ler-tempoExp" type="number" min="0" data-key="tempoExp"><select class="input input-lg" id="ler-tempoExpUnid" data-key="tempoExpUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="6"><h1 class="screen-title">Exposição no trabalho e agravos</h1><p class="screen-sub">Fatores do posto de trabalho e condições associadas.</p><div class="field-group"><div><span class="field-label">O paciente está exposto em seu local de trabalho a</span><div class="chip-grid" data-chips="fatores" data-multi="true" data-summary="O paciente está exposto em seu local de trabalho a"><button type="button" class="chip" data-value="Prêmios de produção">Prêmios de produção</button><button type="button" class="chip" data-value="Movimentos repetitivos">Movimentos repetitivos</button><button type="button" class="chip" data-value="Ambiente estressante">Ambiente estressante</button><button type="button" class="chip" data-value="Há tempo de pausas">Há tempo de pausas</button><button type="button" class="chip" data-value="Jornada de trabalho de mais de 6 horas">Jornada de trabalho de mais de 6 horas</button></div><p class="field-help">Marque todos os fatores presentes no posto de trabalho.</p></div><div><span class="field-label">Agravos associados</span><div class="chip-grid" data-chips="agravos" data-multi="true" data-summary="Agravos associados"><button type="button" class="chip" data-value="Hipertensão arterial">Hipertensão arterial</button><button type="button" class="chip" data-value="Diabetes mellitus">Diabetes mellitus</button><button type="button" class="chip" data-value="Tuberculose">Tuberculose</button><button type="button" class="chip" data-value="Hanseníase">Hanseníase</button><button type="button" class="chip" data-value="Asma">Asma</button><button type="button" class="chip" data-value="Transtorno mental">Transtorno mental</button><button type="button" class="chip" data-value="Outras">Outras</button></div><p class="field-help">Marque todos os agravos presentes.</p></div><div data-show-includes="agravos=Outras" hidden><div><label class="field-label" for="ler-agravoOutro">Especifique os outros agravos</label><input class="input input-lg" id="ler-agravoOutro" type="text" data-key="agravoOutro" placeholder="Qual?"></div></div><div><span class="field-label">Houve afastamento do trabalho para tratamento?</span><div class="chip-grid" data-chips="afastamento" data-single="true" data-summary="Houve afastamento do trabalho para tratamento?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de afastamento do trabalho para tratamento</span><div class="unit-row" data-summary="Tempo de afastamento do trabalho para tratamento"><input class="input input-lg" id="ler-tempoAfast" type="number" min="0" data-key="tempoAfast"><select class="input input-lg" id="ler-tempoAfastUnid" data-key="tempoAfastUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><span class="field-label">Com afastamento do trabalho</span><div class="chip-grid" data-chips="evolAfast" data-single="true" data-summary="Com afastamento do trabalho"><button type="button" class="chip" data-value="Melhora">Melhora</button><button type="button" class="chip" data-value="Piora">Piora</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span><div class="chip-grid" data-chips="outrosTrab" data-single="true" data-summary="Há ou houve outros trabalhadores com a mesma doença no local de trabalho?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="7"><h1 class="screen-title">Conduta e fechamento</h1><p class="screen-sub">Condutas adotadas e situação final do caso.</p><div class="field-group"><div><span class="field-label">Conduta geral</span><div class="chip-grid" data-chips="condutas" data-multi="true" data-summary="Conduta geral"><button type="button" class="chip" data-value="Afastamento do agente de risco com mudança de função e/ou posto de trabalho">Afastamento do agente de risco com mudança de função e/ou posto de trabalho</button><button type="button" class="chip" data-value="Adoção de proteção individual">Adoção de proteção individual</button><button type="button" class="chip" data-value="Adoção de mudança na organização do trabalho">Adoção de mudança na organização do trabalho</button><button type="button" class="chip" data-value="Adoção de proteção coletiva">Adoção de proteção coletiva</button><button type="button" class="chip" data-value="Afastamento do local de trabalho">Afastamento do local de trabalho</button><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todas as condutas adotadas.</p></div><div data-show-includes="condutas=Outros" hidden><div><label class="field-label" for="ler-condutaOutro">Especifique a conduta</label><input class="input input-lg" id="ler-condutaOutro" type="text" data-key="condutaOutro" placeholder="Qual?"></div></div><div><span class="field-label">Evolução do caso</span><div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso"><button type="button" class="chip" data-value="Cura">Cura</button><button type="button" class="chip" data-value="Cura não confirmada">Cura não confirmada</button><button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button><button type="button" class="chip" data-value="Incapacidade permanente parcial">Incapacidade permanente parcial</button><button type="button" class="chip" data-value="Incapacidade permanente total">Incapacidade permanente total</button><button type="button" class="chip" data-value="Óbito por doença relacionada ao trabalho">Óbito por doença relacionada ao trabalho</button><button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-contains="evolucao=Óbito" hidden><div><label class="field-label" for="ler-dataObito">Se óbito, data</label><input class="input input-lg" id="ler-dataObito" type="date" data-key="dataObito"></div></div><div><span class="field-label">CAT emitida?</span><div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="ler-profissional">Profissional responsável</label><input class="input input-lg" id="ler-profissional" type="text" data-key="profissional" placeholder="Nome do profissional"></div><div><label class="field-label" for="ler-dataFinal">Data</label><input class="input input-lg" id="ler-dataFinal" type="date" data-key="dataFinal"></div></div></section>
+<section class="screen" data-screen="8">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Os dados ficam neste navegador. Baixe o PDF e encaminhe para o e-mail indicado.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Os dados ficam neste navegador e não são enviados automaticamente.</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — LER/DORT</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-pair-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true"><div class="progress-seg" data-seg="1"></div><div class="progress-seg" data-seg="2"></div><div class="progress-seg" data-seg="3"></div><div class="progress-seg" data-seg="4"></div><div class="progress-seg" data-seg="5"></div><div class="progress-seg" data-seg="6"></div><div class="progress-seg" data-seg="7"></div></div>
+<div class="shell-container row between items-center">
+<span class="pill">Perda auditiva</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 7</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1"><h1 class="screen-title">Dados da notificação</h1><p class="screen-sub">Informações gerais sobre a notificação do caso.</p><div class="field-group"><div><label class="field-label" for="pair-tipo">Tipo de notificação</label><input class="input input-lg" id="pair-tipo" type="text" data-key="tipo" value="Individual"></div><div><label class="field-label" for="pair-agravo">Agravo / doença</label><input class="input input-lg" id="pair-agravo" type="text" data-key="agravo" value="PAIR — Perda auditiva induzida por ruído"></div><div><label class="field-label" for="pair-cidFixo">CID-10</label><input class="input input-lg" id="pair-cidFixo" type="text" data-key="cidFixo" value="H83.3"></div><div><label class="field-label" for="pair-dataNotif">Data da notificação</label><input class="input input-lg" id="pair-dataNotif" type="date" data-key="dataNotif"><p class="field-help">Preenchida com a data de hoje. Pode ser alterada.</p></div><div><label class="field-label" for="pair-uf">UF</label><select class="input input-lg" id="pair-uf" data-key="uf"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div><div><label class="field-label" for="pair-municipio">Município de notificação</label><input class="input input-lg" id="pair-municipio" type="text" data-key="municipio" placeholder="Ex.: Florianópolis"></div><div><label class="field-label" for="pair-unidade">Unidade de saúde notificadora</label><input class="input input-lg" id="pair-unidade" type="text" data-key="unidade" placeholder="Nome da unidade de saúde"><p class="field-help">Digite a unidade notificadora.</p></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Quem foi atendido</h1><p class="screen-sub">Identifique o trabalhador.</p><div class="field-group"><div><label class="field-label" for="pair-cpf">CPF do trabalhador</label><input class="input input-lg" id="pair-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf"></div><div><label class="field-label" for="pair-nome">Nome completo</label><input class="input input-lg" id="pair-nome" type="text" data-key="nome" placeholder="Nome do trabalhador" data-summary="Nome completo"></div><div><label class="field-label" for="pair-nascimento">Data de nascimento</label><input class="input input-lg" id="pair-nascimento" type="date" data-key="nascimento"></div><div><span class="field-label">Sexo</span><div class="chip-grid" data-chips="sexo" data-single="true" data-summary="Sexo"><button type="button" class="chip" data-value="Masculino">Masculino</button><button type="button" class="chip" data-value="Feminino">Feminino</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="3"><h1 class="screen-title">O trabalho</h1><p class="screen-sub">Ocupação e vínculo do trabalhador no momento do diagnóstico.</p><div class="field-group"><div><label class="field-label" for="pair-ocupacao">Ocupação / cargo</label><input class="input input-lg" id="pair-ocupacao" type="text" data-key="ocupacao" placeholder="Digite a ocupação ou o cargo"></div><div><label class="field-label" for="pair-situacao">Situação no mercado de trabalho</label><select class="input input-lg" id="pair-situacao" data-key="situacao"><option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option></select></div><div><span class="field-label">Tempo de trabalho na ocupação</span><div class="unit-row" data-summary="Tempo de trabalho na ocupação"><input class="input input-lg" id="pair-tempoOcup" type="number" min="0" data-key="tempoOcup"><select class="input input-lg" id="pair-tempoOcupUnid" data-key="tempoOcupUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="4"><h1 class="screen-title">Dados da empresa contratante</h1><p class="screen-sub">Informe o empregador e, se for o caso, a empresa principal.</p><div class="field-group"><div><label class="field-label" for="pair-cnpj">CNPJ ou CPF do empregador</label><input class="input input-lg" id="pair-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj"><p class="field-help">Preencha o documento e os dados da empresa manualmente.</p></div><div><label class="field-label" for="pair-razao">Nome da empresa ou empregador</label><input class="input input-lg" id="pair-razao" type="text" data-key="razao"></div><div><label class="field-label" for="pair-cnae">Atividade econômica (CNAE)</label><input class="input input-lg" id="pair-cnae" type="text" data-key="cnae"></div><div><label class="field-label" for="pair-ufEmp">UF da empresa</label><input class="input input-lg" id="pair-ufEmp" type="text" data-key="ufEmp"></div><div><label class="field-label" for="pair-munEmp">Município da empresa</label><input class="input input-lg" id="pair-munEmp" type="text" data-key="munEmp"></div><div><label class="field-label" for="pair-bairro">Bairro</label><input class="input input-lg" id="pair-bairro" type="text" data-key="bairro"></div><div><label class="field-label" for="pair-endereco">Endereço</label><input class="input input-lg" id="pair-endereco" type="text" data-key="endereco"></div><div><label class="field-label" for="pair-numero">Número</label><input class="input input-lg" id="pair-numero" type="text" data-key="numero"></div><div><label class="field-label" for="pair-telefone">(DDD) Telefone</label><input class="input input-lg" id="pair-telefone" type="text" data-key="telefone" placeholder="(00) 00000-0000"><p class="field-help">Preencher manualmente.</p></div><p class="field-help">Somente se empresa terceirizada</p><div><span class="field-label">O empregador é empresa terceirizada?</span><div class="chip-grid" data-chips="terceirizada" data-single="true" data-summary="O empregador é empresa terceirizada?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="terceirizada=Sim" hidden><div><label class="field-label" for="pair-cnaePrinc">CNAE da empresa principal</label><input class="input input-lg" id="pair-cnaePrinc" type="text" data-key="cnaePrinc"></div><div><label class="field-label" for="pair-cnpjPrinc">CNPJ da empresa principal</label><input class="input input-lg" id="pair-cnpjPrinc" type="text" data-key="cnpjPrinc" data-mask="cnpj"></div><div><label class="field-label" for="pair-razaoPrinc">Razão social da empresa principal</label><input class="input input-lg" id="pair-razaoPrinc" type="text" data-key="razaoPrinc"></div></div></div></section><section class="screen" data-screen="5"><h1 class="screen-title">A exposição ao ruído</h1><p class="screen-sub">Caracterize o ruído e os agentes associados.</p><div class="field-group"><div><label class="field-label" for="pair-dataDiag">Data do diagnóstico</label><input class="input input-lg" id="pair-dataDiag" type="date" data-key="dataDiag" data-summary="Data do diagnóstico"></div><div><span class="field-label">Tipo de ruído predominante</span><div class="chip-grid" data-chips="tipoRuido" data-single="true" data-summary="Tipo de ruído predominante"><button type="button" class="chip" data-value="Ruído contínuo">Ruído contínuo</button><button type="button" class="chip" data-value="Ruído intermitente">Ruído intermitente</button><button type="button" class="chip" data-value="Ambos">Ambos</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Exposição concomitante a ruído e</span><div class="chip-grid" data-chips="concomitante" data-multi="true" data-summary="Exposição concomitante a ruído e"><button type="button" class="chip" data-value="Solvente à base de tolueno">Solvente à base de tolueno</button><button type="button" class="chip" data-value="Metais pesados">Metais pesados</button><button type="button" class="chip" data-value="Medicamentos ototóxicos">Medicamentos ototóxicos</button><button type="button" class="chip" data-value="Gases tóxicos">Gases tóxicos</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todas as exposições concomitantes presentes.</p></div><div data-show-includes="concomitante=Outros" hidden><div><label class="field-label" for="pair-outrosConcTxt">Descreva a outra exposição</label><input class="input input-lg" id="pair-outrosConcTxt" type="text" data-key="outrosConcTxt" placeholder="Descreva a outra exposição"></div></div><div><span class="field-label">Tempo de exposição ao agente de risco</span><div class="unit-row" data-summary="Tempo de exposição ao agente de risco"><input class="input input-lg" id="pair-tempoExp" type="number" min="0" data-key="tempoExp"><select class="input input-lg" id="pair-tempoExpUnid" data-key="tempoExpUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><span class="field-label">Regime de tratamento</span><div class="chip-grid" data-chips="regime" data-single="true" data-summary="Regime de tratamento"><button type="button" class="chip" data-value="Hospitalar">Hospitalar</button><button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button></div></div></div></section><section class="screen" data-screen="6"><h1 class="screen-title">Sintomas, agravos e afastamento</h1><p class="screen-sub">Registre o quadro clínico e o histórico de afastamento.</p><div class="field-group"><div><span class="field-label">Sintomas</span><div class="chip-grid" data-chips="sintomas" data-multi="true" data-summary="Sintomas"><button type="button" class="chip" data-value="Zumbido">Zumbido</button><button type="button" class="chip" data-value="Tontura">Tontura</button><button type="button" class="chip" data-value="Dificuldade para compreensão da fala">Dificuldade para compreensão da fala</button><button type="button" class="chip" data-value="Cefaleia">Cefaleia</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todos os sintomas relatados.</p></div><div data-show-includes="sintomas=Outros" hidden><div><label class="field-label" for="pair-outrosSintTxt">Descreva o outro sintoma</label><input class="input input-lg" id="pair-outrosSintTxt" type="text" data-key="outrosSintTxt" placeholder="Descreva o outro sintoma"></div></div><div><label class="field-label" for="pair-cid">Diagnóstico específico — CID-10</label><input class="input input-lg" id="pair-cid" type="text" data-key="cid" placeholder="Ex.: H83.3"></div><div><span class="field-label">Agravos associados</span><div class="chip-grid" data-chips="agravos" data-multi="true" data-summary="Agravos associados"><button type="button" class="chip" data-value="Hipertensão arterial">Hipertensão arterial</button><button type="button" class="chip" data-value="Diabetes mellitus">Diabetes mellitus</button><button type="button" class="chip" data-value="Tuberculose">Tuberculose</button><button type="button" class="chip" data-value="Hanseníase">Hanseníase</button><button type="button" class="chip" data-value="Asma">Asma</button><button type="button" class="chip" data-value="Transtorno mental">Transtorno mental</button><button type="button" class="chip" data-value="Outras">Outras</button></div><p class="field-help">Marque todos os agravos presentes.</p></div><div data-show-includes="agravos=Outras" hidden><div><label class="field-label" for="pair-outrasAgrTxt">Descreva o outro agravo</label><input class="input input-lg" id="pair-outrasAgrTxt" type="text" data-key="outrasAgrTxt" placeholder="Descreva o outro agravo"></div></div><div><span class="field-label">Houve afastamento do trabalho para tratamento?</span><div class="chip-grid" data-chips="afastamento" data-single="true" data-summary="Houve afastamento do trabalho para tratamento?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de afastamento do trabalho para tratamento</span><div class="unit-row" data-summary="Tempo de afastamento do trabalho para tratamento"><input class="input input-lg" id="pair-tempoAfast" type="number" min="0" data-key="tempoAfast"><select class="input input-lg" id="pair-tempoAfastUnid" data-key="tempoAfastUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><span class="field-label">Com afastamento do trabalho</span><div class="chip-grid" data-chips="comAfast" data-single="true" data-summary="Com afastamento do trabalho"><button type="button" class="chip" data-value="Melhora">Melhora</button><button type="button" class="chip" data-value="Piora">Piora</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span><div class="chip-grid" data-chips="outrosTrab" data-single="true" data-summary="Há ou houve outros trabalhadores com a mesma doença no local de trabalho?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="7"><h1 class="screen-title">Conduta e fechamento</h1><p class="screen-sub">Registre as condutas adotadas e a evolução do caso.</p><div class="field-group"><div><span class="field-label">Conduta geral</span><div class="chip-grid" data-chips="conduta" data-multi="true" data-summary="Conduta geral"><button type="button" class="chip" data-value="Afastamento do agente de risco com mudança de função e/ou posto de trabalho">Afastamento do agente de risco com mudança de função e/ou posto de trabalho</button><button type="button" class="chip" data-value="Adoção de proteção individual">Adoção de proteção individual</button><button type="button" class="chip" data-value="Adoção de mudança na organização do trabalho">Adoção de mudança na organização do trabalho</button><button type="button" class="chip" data-value="Adoção de proteção coletiva">Adoção de proteção coletiva</button><button type="button" class="chip" data-value="Afastamento do local de trabalho">Afastamento do local de trabalho</button><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todas as condutas adotadas.</p></div><div data-show-includes="conduta=Outros" hidden><div><label class="field-label" for="pair-outrosCondTxt">Descreva a outra conduta</label><input class="input input-lg" id="pair-outrosCondTxt" type="text" data-key="outrosCondTxt" placeholder="Descreva a outra conduta"></div></div><div><span class="field-label">Evolução do caso</span><div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso"><button type="button" class="chip" data-value="Cura">Cura</button><button type="button" class="chip" data-value="Cura não confirmada">Cura não confirmada</button><button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button><button type="button" class="chip" data-value="Incapacidade permanente parcial">Incapacidade permanente parcial</button><button type="button" class="chip" data-value="Incapacidade permanente total">Incapacidade permanente total</button><button type="button" class="chip" data-value="Óbito por doença relacionada ao trabalho">Óbito por doença relacionada ao trabalho</button><button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-contains="evolucao=Óbito" hidden><div><label class="field-label" for="pair-dataObito">Se óbito, data</label><input class="input input-lg" id="pair-dataObito" type="date" data-key="dataObito"></div></div><div><span class="field-label">CAT emitida?</span><div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="pair-profissional">Profissional responsável</label><input class="input input-lg" id="pair-profissional" type="text" data-key="profissional" placeholder="Nome do profissional"></div><div><label class="field-label" for="pair-dataFinal">Data</label><input class="input input-lg" id="pair-dataFinal" type="date" data-key="dataFinal"></div></div></section>
+<section class="screen" data-screen="8">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Os dados ficam neste navegador. Baixe o PDF e encaminhe para o e-mail indicado.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Os dados ficam neste navegador e não são enviados automaticamente.</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — PERDA AUDITIVA INDUZIDA POR RUÍDO</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-pneumo-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true"><div class="progress-seg" data-seg="1"></div><div class="progress-seg" data-seg="2"></div><div class="progress-seg" data-seg="3"></div><div class="progress-seg" data-seg="4"></div><div class="progress-seg" data-seg="5"></div><div class="progress-seg" data-seg="6"></div><div class="progress-seg" data-seg="7"></div><div class="progress-seg" data-seg="8"></div></div>
+<div class="shell-container row between items-center">
+<span class="pill">Pneumoconioses</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 8</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1"><h1 class="screen-title">Dados da notificação</h1><p class="screen-sub">Confira os dados gerais desta notificação individual.</p><div class="field-group"><div><label class="field-label" for="pne-tipo">Tipo de notificação</label><input class="input input-lg" id="pne-tipo" type="text" data-key="tipo" value="Individual"></div><div><label class="field-label" for="pne-agravo">Agravo/doença</label><input class="input input-lg" id="pne-agravo" type="text" data-key="agravo" value="Pneumoconioses"></div><div><label class="field-label" for="pne-cidFixo">CID-10</label><input class="input input-lg" id="pne-cidFixo" type="text" data-key="cidFixo" value="J64"></div><div><label class="field-label" for="pne-dataNotif">Data da notificação</label><input class="input input-lg" id="pne-dataNotif" type="date" data-key="dataNotif"><p class="field-help">Preenchida com a data de hoje. Pode ser alterada.</p></div><div><label class="field-label" for="pne-uf">UF</label><select class="input input-lg" id="pne-uf" data-key="uf"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div><div><label class="field-label" for="pne-municipio">Município de notificação</label><input class="input input-lg" id="pne-municipio" type="text" data-key="municipio" placeholder="Ex.: Florianópolis"></div><div><label class="field-label" for="pne-unidade">Unidade de saúde notificadora</label><input class="input input-lg" id="pne-unidade" type="text" data-key="unidade" placeholder="Digite o nome da unidade"><p class="field-help">Digite a unidade notificadora.</p></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Quem foi atendido</h1><p class="screen-sub">Identificação do trabalhador.</p><div class="field-group"><div><label class="field-label" for="pne-cpf">CPF do trabalhador</label><input class="input input-lg" id="pne-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf"></div><div><label class="field-label" for="pne-nome">Nome completo</label><input class="input input-lg" id="pne-nome" type="text" data-key="nome" placeholder="Nome do trabalhador" data-summary="Nome completo"></div><div><label class="field-label" for="pne-nascimento">Data de nascimento</label><input class="input input-lg" id="pne-nascimento" type="date" data-key="nascimento"></div><div><span class="field-label">Sexo</span><div class="chip-grid" data-chips="sexo" data-single="true" data-summary="Sexo"><button type="button" class="chip" data-value="Masculino">Masculino</button><button type="button" class="chip" data-value="Feminino">Feminino</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="3"><h1 class="screen-title">O trabalho</h1><p class="screen-sub">Descreva a ocupação e o vínculo de trabalho do atendido.</p><div class="field-group"><div><label class="field-label" for="pne-ocupacao">Ocupação / cargo</label><input class="input input-lg" id="pne-ocupacao" type="text" data-key="ocupacao" placeholder="Digite a ocupação ou o cargo"></div><div><label class="field-label" for="pne-situacao">Situação no mercado de trabalho</label><select class="input input-lg" id="pne-situacao" data-key="situacao"><option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option></select></div><div><span class="field-label">Tempo de trabalho na ocupação</span><div class="unit-row" data-summary="Tempo de trabalho na ocupação"><input class="input input-lg" id="pne-tempoOcup" type="number" min="0" data-key="tempoOcup"><select class="input input-lg" id="pne-tempoOcupUnid" data-key="tempoOcupUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="4"><h1 class="screen-title">Dados da empresa contratante</h1><p class="screen-sub">Informe o empregador e, se for o caso, a empresa principal.</p><div class="field-group"><div><label class="field-label" for="pne-cnpj">CNPJ ou CPF do empregador</label><input class="input input-lg" id="pne-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj"><p class="field-help">Preencha o documento e os dados da empresa manualmente.</p></div><div><label class="field-label" for="pne-razao">Nome da empresa ou empregador</label><input class="input input-lg" id="pne-razao" type="text" data-key="razao"></div><div><label class="field-label" for="pne-cnae">Atividade econômica (CNAE)</label><input class="input input-lg" id="pne-cnae" type="text" data-key="cnae"></div><div><label class="field-label" for="pne-ufEmp">UF da empresa</label><input class="input input-lg" id="pne-ufEmp" type="text" data-key="ufEmp"></div><div><label class="field-label" for="pne-munEmp">Município da empresa</label><input class="input input-lg" id="pne-munEmp" type="text" data-key="munEmp"></div><div><label class="field-label" for="pne-bairro">Bairro</label><input class="input input-lg" id="pne-bairro" type="text" data-key="bairro"></div><div><label class="field-label" for="pne-endereco">Endereço</label><input class="input input-lg" id="pne-endereco" type="text" data-key="endereco"></div><div><label class="field-label" for="pne-numero">Número</label><input class="input input-lg" id="pne-numero" type="text" data-key="numero"></div><div><label class="field-label" for="pne-telefone">(DDD) Telefone</label><input class="input input-lg" id="pne-telefone" type="text" data-key="telefone" placeholder="(00) 00000-0000"><p class="field-help">Preencher manualmente.</p></div><p class="field-help">Somente se empresa terceirizada</p><div><span class="field-label">O empregador é empresa terceirizada?</span><div class="chip-grid" data-chips="terceirizada" data-single="true" data-summary="O empregador é empresa terceirizada?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="terceirizada=Sim" hidden><div><label class="field-label" for="pne-cnaePrincipal">CNAE da empresa principal</label><input class="input input-lg" id="pne-cnaePrincipal" type="text" data-key="cnaePrincipal"></div><div><label class="field-label" for="pne-cnpjPrincipal">CNPJ da empresa principal</label><input class="input input-lg" id="pne-cnpjPrincipal" type="text" data-key="cnpjPrincipal" data-mask="cnpj"></div><div><label class="field-label" for="pne-razaoPrincipal">Razão social da empresa principal</label><input class="input input-lg" id="pne-razaoPrincipal" type="text" data-key="razaoPrincipal"></div></div></div></section><section class="screen" data-screen="5"><h1 class="screen-title">Agentes de exposição</h1><p class="screen-sub">Registre a exposição a poeiras e minerais no trabalho.</p><div class="field-group"><div><label class="field-label" for="pne-dataDiag">Data do diagnóstico</label><input class="input input-lg" id="pne-dataDiag" type="date" data-key="dataDiag" data-summary="Data do diagnóstico"></div><div><span class="field-label">A exposição a poeiras e minerais ocorreu em um ou mais vínculos distintos da empresa?</span><div class="chip-grid" data-chips="exposicaoVinculos" data-single="true" data-summary="A exposição a poeiras e minerais ocorreu em um ou mais vínculos distintos da empresa?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="exposicaoVinculos=Sim" hidden><div><label class="field-label" for="pne-especificarVinculos">Especificar</label><input class="input input-lg" id="pne-especificarVinculos" type="text" data-key="especificarVinculos" placeholder="Descreva os vínculos"></div></div><div><span class="field-label">Agente de exposição</span><div class="chip-grid" data-chips="agentes" data-single="true" data-summary="Agente de exposição"><button type="button" class="chip" data-value="Sílica">Sílica</button><button type="button" class="chip" data-value="Asbesto">Asbesto</button><button type="button" class="chip" data-value="Poeiras de carvão mineral">Poeiras de carvão mineral</button><button type="button" class="chip" data-value="Poeiras mistas (silicatos, talco)">Poeiras mistas (silicatos, talco)</button><button type="button" class="chip" data-value="Metais duros (cobalto, titânio, tungstênio)">Metais duros (cobalto, titânio, tungstênio)</button><button type="button" class="chip" data-value="Poeiras de abrasivos">Poeiras de abrasivos</button><button type="button" class="chip" data-value="Berílio">Berílio</button><button type="button" class="chip" data-value="Poeiras orgânicas">Poeiras orgânicas</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de exposição ao agente de risco</span><div class="unit-row" data-summary="Tempo de exposição ao agente de risco"><input class="input input-lg" id="pne-tempoExp" type="number" min="0" data-key="tempoExp"><select class="input input-lg" id="pne-tempoExpUnid" data-key="tempoExpUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><span class="field-label">Regime de tratamento</span><div class="chip-grid" data-chips="regime" data-single="true" data-summary="Regime de tratamento"><button type="button" class="chip" data-value="Hospitalar">Hospitalar</button><button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button></div></div></div></section><section class="screen" data-screen="6"><h1 class="screen-title">Confirmação diagnóstica</h1><p class="screen-sub">Indique como o diagnóstico foi confirmado e os dados clínicos.</p><div class="field-group"><div><span class="field-label">Confirmação diagnóstica</span><div class="chip-grid" data-chips="confirmacao" data-single="true" data-summary="Confirmação diagnóstica"><button type="button" class="chip" data-value="Radiografia de tórax">Radiografia de tórax</button><button type="button" class="chip" data-value="Biópsia pulmonar">Biópsia pulmonar</button><button type="button" class="chip" data-value="Tomografia de tórax de alta resolução">Tomografia de tórax de alta resolução</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="confirmacao=Outro" hidden><div><label class="field-label" for="pne-outroExame">Outro exame</label><input class="input input-lg" id="pne-outroExame" type="text" data-key="outroExame" placeholder="Qual exame"></div></div><div><label class="field-label" for="pne-cidDiag">Diagnóstico específico — CID-10</label><input class="input input-lg" id="pne-cidDiag" type="text" data-key="cidDiag" placeholder="Ex.: J62"></div><div><span class="field-label">Avaliação funcional (prova de função pulmonar)</span><div class="chip-grid" data-chips="funcional" data-single="true" data-summary="Avaliação funcional (prova de função pulmonar)"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Resultado da avaliação funcional</span><div class="chip-grid" data-chips="resultadoFunc" data-single="true" data-summary="Resultado da avaliação funcional"><button type="button" class="chip" data-value="Normal">Normal</button><button type="button" class="chip" data-value="Alterada">Alterada</button></div></div><div><span class="field-label">Hábito de fumar</span><div class="chip-grid" data-chips="fumo" data-single="true" data-summary="Hábito de fumar"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ex-fumante">Ex-fumante</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de exposição ao tabaco</span><div class="unit-row" data-summary="Tempo de exposição ao tabaco"><input class="input input-lg" id="pne-tempoTabaco" type="number" min="0" data-key="tempoTabaco"><select class="input input-lg" id="pne-tempoTabacoUnid" data-key="tempoTabacoUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="7"><h1 class="screen-title">Agravos e afastamento</h1><p class="screen-sub">Registre agravos associados e outros casos no local de trabalho.</p><div class="field-group"><div><span class="field-label">Agravos associados</span><div class="chip-grid" data-chips="agravosAssoc" data-single="true" data-summary="Agravos associados"><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Limitação crônica ao fluxo aéreo">Limitação crônica ao fluxo aéreo</button><button type="button" class="chip" data-value="Tuberculose">Tuberculose</button><button type="button" class="chip" data-value="Câncer">Câncer</button><button type="button" class="chip" data-value="Tireoidite">Tireoidite</button><button type="button" class="chip" data-value="Artrite reumatoide">Artrite reumatoide</button><button type="button" class="chip" data-value="Outras">Outras</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="agravosAssoc=Outras" hidden><div><label class="field-label" for="pne-outrosAgravos">Outras</label><input class="input input-lg" id="pne-outrosAgravos" type="text" data-key="outrosAgravos" placeholder="Qual agravo"></div></div><div><span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span><div class="chip-grid" data-chips="outrosTrab" data-single="true" data-summary="Há ou houve outros trabalhadores com a mesma doença no local de trabalho?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="8"><h1 class="screen-title">Conduta e fechamento</h1><p class="screen-sub">Registre as condutas adotadas e finalize a ficha.</p><div class="field-group"><div><span class="field-label">Conduta geral</span><div class="chip-grid" data-chips="conduta" data-single="true" data-summary="Conduta geral"><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Afastamento do agente de risco com mudança de função e/ou posto de trabalho">Afastamento do agente de risco com mudança de função e/ou posto de trabalho</button><button type="button" class="chip" data-value="Adoção de proteção individual">Adoção de proteção individual</button><button type="button" class="chip" data-value="Adoção de mudança na organização do trabalho">Adoção de mudança na organização do trabalho</button><button type="button" class="chip" data-value="Adoção de proteção coletiva">Adoção de proteção coletiva</button><button type="button" class="chip" data-value="Afastamento do local de trabalho">Afastamento do local de trabalho</button><button type="button" class="chip" data-value="Outros">Outros</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="conduta=Outros" hidden><div><label class="field-label" for="pne-outraConduta">Outros</label><input class="input input-lg" id="pne-outraConduta" type="text" data-key="outraConduta" placeholder="Qual conduta"></div></div><div><span class="field-label">Evolução do caso</span><div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso"><button type="button" class="chip" data-value="Cura">Cura</button><button type="button" class="chip" data-value="Cura não confirmada">Cura não confirmada</button><button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button><button type="button" class="chip" data-value="Incapacidade permanente parcial">Incapacidade permanente parcial</button><button type="button" class="chip" data-value="Incapacidade permanente total">Incapacidade permanente total</button><button type="button" class="chip" data-value="Óbito por doença relacionada ao trabalho">Óbito por doença relacionada ao trabalho</button><button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-contains="evolucao=Óbito" hidden><div><label class="field-label" for="pne-dataObito">Se óbito, data</label><input class="input input-lg" id="pne-dataObito" type="date" data-key="dataObito"></div></div><div><span class="field-label">CAT emitida?</span><div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="pne-profissional">Profissional responsável</label><input class="input input-lg" id="pne-profissional" type="text" data-key="profissional" placeholder="Nome do profissional"></div><div><label class="field-label" for="pne-dataFinal">Data</label><input class="input input-lg" id="pne-dataFinal" type="date" data-key="dataFinal"></div></div></section>
+<section class="screen" data-screen="9">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Os dados ficam neste navegador. Baixe o PDF e encaminhe para o e-mail indicado.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Os dados ficam neste navegador e não são enviados automaticamente.</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — PNEUMOCONIOSES</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>
+
+<template id="form-mental-template">
+<div class="acidente-inline">
+<div class="form-app">
+<header class="top-bar">
+<div class="progress-track" aria-hidden="true"><div class="progress-seg" data-seg="1"></div><div class="progress-seg" data-seg="2"></div><div class="progress-seg" data-seg="3"></div><div class="progress-seg" data-seg="4"></div><div class="progress-seg" data-seg="5"></div><div class="progress-seg" data-seg="6"></div><div class="progress-seg" data-seg="7"></div></div>
+<div class="shell-container row between items-center">
+<span class="pill">Transtornos mentais</span>
+<button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button>
+<span class="step-counter" id="stepCounter">Tela 1 de 7</span>
+</div>
+<div class="shell-container hospital-alert-container">
+<div class="alert hospital-alert" role="note">
+<p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+</div>
+</div>
+</header>
+<main class="step-area" id="mainArea">
+<section class="screen active" data-screen="1"><h1 class="screen-title">Dados da notificação</h1><p class="screen-sub">Confira os dados gerais da notificação.</p><div class="field-group"><div><label class="field-label" for="men-tipo">Tipo de notificação</label><input class="input input-lg" id="men-tipo" type="text" data-key="tipo" value="Individual"></div><div><label class="field-label" for="men-agravo">Agravo / doença</label><input class="input input-lg" id="men-agravo" type="text" data-key="agravo" value="Transtornos mentais relacionados ao trabalho"></div><div><label class="field-label" for="men-cidFixo">CID-10</label><input class="input input-lg" id="men-cidFixo" type="text" data-key="cidFixo" value="F99"></div><div><label class="field-label" for="men-dataNotif">Data da notificação</label><input class="input input-lg" id="men-dataNotif" type="date" data-key="dataNotif"><p class="field-help">Vem preenchida com a data de hoje. Altere se a notificação for de outro dia.</p></div><div><label class="field-label" for="men-uf">UF</label><select class="input input-lg" id="men-uf" data-key="uf"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div><div><label class="field-label" for="men-municipio">Município de notificação</label><input class="input input-lg" id="men-municipio" type="text" data-key="municipio" placeholder="Ex.: Florianópolis"></div><div><label class="field-label" for="men-unidade">Unidade de saúde notificadora</label><input class="input input-lg" id="men-unidade" type="text" data-key="unidade" placeholder="Ex.: UBS Centro de Saúde"><p class="field-help">Digite a unidade notificadora.</p></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Quem foi atendido</h1><p class="screen-sub">Identificação do trabalhador atendido.</p><div class="field-group"><div><label class="field-label" for="men-cpf">CPF do trabalhador</label><input class="input input-lg" id="men-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf"></div><div><label class="field-label" for="men-nome">Nome completo</label><input class="input input-lg" id="men-nome" type="text" data-key="nome" placeholder="Nome do trabalhador" data-summary="Nome completo"></div><div><label class="field-label" for="men-nascimento">Data de nascimento</label><input class="input input-lg" id="men-nascimento" type="date" data-key="nascimento"></div><div><span class="field-label">Sexo</span><div class="chip-grid" data-chips="sexo" data-single="true" data-summary="Sexo"><button type="button" class="chip" data-value="Masculino">Masculino</button><button type="button" class="chip" data-value="Feminino">Feminino</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="3"><h1 class="screen-title">O trabalho</h1><p class="screen-sub">Descreva a ocupação e a situação de trabalho no momento do atendimento.</p><div class="field-group"><div><label class="field-label" for="men-ocupacao">Ocupação / cargo</label><input class="input input-lg" id="men-ocupacao" type="text" data-key="ocupacao" placeholder="Digite a ocupação ou o cargo"></div><div><label class="field-label" for="men-situacao">Situação no mercado de trabalho</label><select class="input input-lg" id="men-situacao" data-key="situacao"><option value="">Selecione</option><option>Empregado registrado com carteira assinada</option><option>Empregado não registrado</option><option>Autônomo/conta própria</option><option>Servidor público estatutário</option><option>Servidor público celetista</option><option>Aposentado</option><option>Desempregado</option><option>Trabalho temporário</option><option>Cooperativado</option><option>Trabalhador avulso</option><option>Empregador</option><option>Outros</option><option>Ignorado</option></select></div><div><span class="field-label">Tempo de trabalho na ocupação</span><div class="unit-row" data-summary="Tempo de trabalho na ocupação"><input class="input input-lg" id="men-tempoOcup" type="number" min="0" data-key="tempoOcup"><select class="input input-lg" id="men-tempoOcupUnid" data-key="tempoOcupUnid"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="4"><h1 class="screen-title">Dados da empresa contratante</h1><p class="screen-sub">Informe o empregador e, se for o caso, a empresa principal.</p><div class="field-group"><div><label class="field-label" for="men-cnpj">CNPJ ou CPF do empregador</label><input class="input input-lg" id="men-cnpj" type="text" data-key="cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj"><p class="field-help">Preencha o documento e os dados da empresa manualmente.</p></div><div><label class="field-label" for="men-razao">Nome da empresa ou empregador</label><input class="input input-lg" id="men-razao" type="text" data-key="razao"></div><div><label class="field-label" for="men-cnae">Atividade econômica (CNAE)</label><input class="input input-lg" id="men-cnae" type="text" data-key="cnae"></div><div><label class="field-label" for="men-ufEmp">UF da empresa</label><input class="input input-lg" id="men-ufEmp" type="text" data-key="ufEmp"></div><div><label class="field-label" for="men-munEmp">Município da empresa</label><input class="input input-lg" id="men-munEmp" type="text" data-key="munEmp"></div><div><label class="field-label" for="men-bairro">Bairro</label><input class="input input-lg" id="men-bairro" type="text" data-key="bairro"></div><div><label class="field-label" for="men-endereco">Endereço</label><input class="input input-lg" id="men-endereco" type="text" data-key="endereco"></div><div><label class="field-label" for="men-numero">Número</label><input class="input input-lg" id="men-numero" type="text" data-key="numero"></div><div><label class="field-label" for="men-telefone">(DDD) Telefone</label><input class="input input-lg" id="men-telefone" type="text" data-key="telefone" placeholder="(00) 00000-0000"><p class="field-help">Preencher manualmente.</p></div><p class="field-help">Somente se empresa terceirizada</p><div><span class="field-label">O empregador é empresa terceirizada?</span><div class="chip-grid" data-chips="terceirizada" data-single="true" data-summary="O empregador é empresa terceirizada?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-when="terceirizada=Sim" hidden><div><label class="field-label" for="men-cnpjPrincipal">CNPJ da empresa principal</label><input class="input input-lg" id="men-cnpjPrincipal" type="text" data-key="cnpjPrincipal" data-mask="cnpj"></div><div><label class="field-label" for="men-razaoPrincipal">Razão social da empresa principal</label><input class="input input-lg" id="men-razaoPrincipal" type="text" data-key="razaoPrincipal"></div><div><label class="field-label" for="men-cnaePrincipal">CNAE da empresa principal</label><input class="input input-lg" id="men-cnaePrincipal" type="text" data-key="cnaePrincipal"></div></div></div></section><section class="screen" data-screen="5"><h1 class="screen-title">Hábitos e diagnóstico</h1><p class="screen-sub">Registre hábitos, o diagnóstico e o regime de tratamento.</p><div class="field-group"><div><label class="field-label" for="men-dataDiagnostico">Data do diagnóstico</label><input class="input input-lg" id="men-dataDiagnostico" type="date" data-key="dataDiagnostico" data-summary="Data do diagnóstico"></div><div><span class="field-label">Hábitos</span><div class="chip-grid" data-chips="habitos" data-multi="true" data-summary="Hábitos"><button type="button" class="chip" data-value="Álcool">Álcool</button><button type="button" class="chip" data-value="Drogas psicoativas">Drogas psicoativas</button><button type="button" class="chip" data-value="Psicofármacos">Psicofármacos</button></div><p class="field-help">Marque todos os hábitos presentes.</p></div><div><span class="field-label">Hábito de fumar</span><div class="chip-grid" data-chips="fumar" data-single="true" data-summary="Hábito de fumar"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ex-fumante">Ex-fumante</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Tempo de exposição ao tabaco</span><div class="unit-row" data-summary="Tempo de exposição ao tabaco"><input class="input input-lg" id="men-tabacoValor" type="number" min="0" data-key="tabacoValor"><select class="input input-lg" id="men-tabacoUnidade" data-key="tabacoUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div><div><label class="field-label" for="men-cid">Diagnóstico específico — CID-10</label><input class="input input-lg" id="men-cid" type="text" data-key="cid" placeholder="Ex.: F43.2"></div><div><span class="field-label">Regime de tratamento</span><div class="chip-grid" data-chips="regime" data-single="true" data-summary="Regime de tratamento"><button type="button" class="chip" data-value="Hospitalar">Hospitalar</button><button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button></div></div><div><span class="field-label">Tempo de exposição ao agente de risco</span><div class="unit-row" data-summary="Tempo de exposição ao agente de risco"><input class="input input-lg" id="men-agenteValor" type="number" min="0" data-key="agenteValor"><select class="input input-lg" id="men-agenteUnidade" data-key="agenteUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select></div></div></div></section><section class="screen" data-screen="6"><h1 class="screen-title">Conduta e encaminhamento</h1><p class="screen-sub">Registre as condutas adotadas e os encaminhamentos realizados.</p><div class="field-group"><div><span class="field-label">Conduta geral</span><div class="chip-grid" data-chips="condutas" data-multi="true" data-summary="Conduta geral"><button type="button" class="chip" data-value="Afastamento da situação de desgaste mental">Afastamento da situação de desgaste mental</button><button type="button" class="chip" data-value="Adoção de proteção individual">Adoção de proteção individual</button><button type="button" class="chip" data-value="Adoção de mudança na organização do trabalho">Adoção de mudança na organização do trabalho</button><button type="button" class="chip" data-value="Adoção de proteção coletiva">Adoção de proteção coletiva</button><button type="button" class="chip" data-value="Afastamento do local de trabalho">Afastamento do local de trabalho</button><button type="button" class="chip" data-value="Nenhum">Nenhum</button><button type="button" class="chip" data-value="Outros">Outros</button></div><p class="field-help">Marque todas as condutas adotadas.</p></div><div data-show-includes="condutas=Outros" hidden><div><label class="field-label" for="men-condutaOutros">Descreva a conduta</label><input class="input input-lg" id="men-condutaOutros" type="text" data-key="condutaOutros" placeholder="Descreva a conduta"></div></div><div><span class="field-label">O paciente foi encaminhado a um Centro de Atenção Psicossocial (CAPS) no SUS ou outro serviço especializado em tratamento de transtornos mentais?</span><div class="chip-grid" data-chips="caps" data-single="true" data-summary="O paciente foi encaminhado a um Centro de Atenção Psicossocial (CAPS) no SUS ou outro serviço especializado em tratamento de transtornos mentais?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><span class="field-label">Há ou houve outros trabalhadores com a mesma doença no local de trabalho?</span><div class="chip-grid" data-chips="outrosTrabalhadores" data-single="true" data-summary="Há ou houve outros trabalhadores com a mesma doença no local de trabalho?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div></div></section><section class="screen" data-screen="7"><h1 class="screen-title">Fechamento</h1><p class="screen-sub">Feche a notificação com a evolução do caso e o responsável pelo registro.</p><div class="field-group"><div><span class="field-label">Evolução do caso</span><div class="chip-grid" data-chips="evolucao" data-single="true" data-summary="Evolução do caso"><button type="button" class="chip" data-value="Cura">Cura</button><button type="button" class="chip" data-value="Cura não confirmada">Cura não confirmada</button><button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button><button type="button" class="chip" data-value="Incapacidade permanente parcial">Incapacidade permanente parcial</button><button type="button" class="chip" data-value="Incapacidade permanente total">Incapacidade permanente total</button><button type="button" class="chip" data-value="Óbito por doença relacionada ao trabalho">Óbito por doença relacionada ao trabalho</button><button type="button" class="chip" data-value="Óbito por outra causa">Óbito por outra causa</button><button type="button" class="chip" data-value="Outro">Outro</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div data-show-contains="evolucao=Óbito" hidden><div><label class="field-label" for="men-dataObito">Se óbito, data</label><input class="input input-lg" id="men-dataObito" type="date" data-key="dataObito"></div></div><div><span class="field-label">CAT emitida?</span><div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?"><button type="button" class="chip" data-value="Sim">Sim</button><button type="button" class="chip" data-value="Não">Não</button><button type="button" class="chip" data-value="Não se aplica">Não se aplica</button><button type="button" class="chip" data-value="Ignorado">Ignorado</button></div></div><div><label class="field-label" for="men-profissional">Profissional responsável</label><input class="input input-lg" id="men-profissional" type="text" data-key="profissional" placeholder="Nome do profissional"></div><div><label class="field-label" for="men-dataFinal">Data</label><input class="input input-lg" id="men-dataFinal" type="date" data-key="dataFinal"></div></div></section>
+<section class="screen" data-screen="8">
+<div class="success-card">
+<div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+<p class="screen-sub center-text">Os dados ficam neste navegador. Baixe o PDF e encaminhe para o e-mail indicado.</p>
+<div class="summary-grid" id="summaryGrid"></div>
+<div class="actions-row">
+<button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+<button type="button" class="btn" id="btnNova">Nova notificação</button>
+</div>
+<div class="actions-row">
+<button type="button" class="btn btn-print" id="btnImprimir">Imprimir ficha</button>
+</div>
+</div>
+</section>
+</main>
+<div class="bottom-bar" id="bottomBar">
+<div class="bottom-inner">
+<button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+<button type="button" class="btn" id="btnContinuar">Seguinte</button>
+</div>
+</div>
+<footer class="app-footer" id="form-status" role="status">Os dados ficam neste navegador e não são enviados automaticamente.</footer>
+</div>
+<div class="print-only" id="printArea">
+<div class="pf-head"><p class="pf-title">FICHA DE NOTIFICAÇÃO — TRANSTORNOS MENTAIS RELACIONADOS AO TRABALHO</p></div>
+<p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+<p class="pf-note">Cada campo mostra somente o valor informado.</p>
+<div id="pfBlocks"></div>
+<div class="pf-sign"><div>Assinatura do profissional responsável</div><div>Data</div></div>
+</div>
+<dialog class="dialog" id="dlgNova"><div>
+<header><h2>Iniciar nova notificação?</h2><p>Todos os dados preenchidos serão apagados.</p></header>
+<footer class="row justify-end gap-2">
+<button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+<button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+</footer>
+</div></dialog>
+</div>
+</template>

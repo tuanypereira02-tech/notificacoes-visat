@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://viacep.com.br https://brasilapi.com.br https://publica.cnpj.ws; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Notificação Compulsória — Vigilância em Saúde (DEMONSTRAÇÃO)</title>
+  <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261103-forms-item1">
+</head>
+<body>
+  <a class="pular" href="#principal">Pular para o conteúdo</a>
+
+  <div class="aviso" role="note">
+    <div class="wrap">
+      <strong>Aviso:</strong> Site não oficial, destinado exclusivamente a fins demonstrativos.
+    </div>
+  </div>
+
+  <main id="principal" class="wrap">
+    <div class="introducao">
+      <p class="sobretitulo">Consulta de direcionamento</p>
+      <h1>Notificações compulsórias</h1>
+      <p>Encontre um agravo e selecione seu perfil para consultar o direcionamento disponível.</p>
+    </div>
+
+    <section aria-labelledby="h-agravo">
+      <h2 id="h-agravo"><span class="etapa" aria-hidden="true">01</span> Escolha o agravo</h2>
+      <label for="busca">Buscar agravo pelo nome</label>
+      <input id="busca" type="search" autocomplete="off" aria-describedby="busca-status">
+      <p id="busca-status" role="status"></p>
+      <ul id="lista-agravos" class="lista-agravos" aria-label="Lista de agravos"></ul>
+      <div id="conceito-agravo" class="conceito-agravo" role="tooltip" hidden></div>
+    </section>
+
+    <section aria-labelledby="h-perfil">
+      <h2 id="h-perfil"><span class="etapa" aria-hidden="true">02</span> Escolha o perfil</h2>
+      <fieldset>
+        <legend>Quem está consultando?</legend>
+        <div id="perfis"></div>
+      </fieldset>
+    </section>
+
+    <section aria-labelledby="h-resultado">
+      <h2 id="h-resultado"><span class="etapa" aria-hidden="true">03</span> Direcionamento</h2>
+      <div id="resultado" class="resultado" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="wrap">
+      <p>Demonstração técnica. Conteúdo, órgãos e links devem ser validados pela equipe responsável antes de qualquer uso público.</p>
+    </div>
+  </footer>
+
+  <template id="form-acidente-template">
+  <div class="acidente-inline">
+  <div class="form-app">
+  <header class="top-bar">
+  <div class="progress-track" id="progressTrack" aria-hidden="true">
+  <div class="progress-seg" data-seg="1"></div>
+  <div class="progress-seg" data-seg="2"></div>
+  <div class="progress-seg" data-seg="3"></div>
+  <div class="progress-seg" data-seg="4"></div>
+  <div class="progress-seg" data-seg="5"></div>
+  <div class="progress-seg" data-seg="6"></div>
+  </div>
+  <div class="shell-container row between items-center">
+  <span class="pill">Notificação de Acidente</span>
+  <button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button><span class="step-counter" id="stepCounter">Tela 1 de 6</span>
+  </div>
+  <div class="shell-container hospital-alert-container">
+  <div class="alert hospital-alert" role="note">
+  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+  </div>
+  </div>
+  </header>
+
+  <main class="step-area" id="mainArea">
+
+  <!-- TELA 1 -->
+  <section class="screen active" data-screen="1">
+  <h1 class="screen-title">Quem foi atendido</h1>
+  <p class="screen-sub">Dados de identificação do trabalhador acidentado.</p>
+  <div class="field-group">
+  <div>
+  <label class="field-label" for="nome">Nome completo</label>
+  <input class="input input-lg" id="nome" type="text" placeholder="Ex.: Maria Aparecida Souza" data-required="Informe o nome completo" data-key="nome">
+  <div class="field-error" data-err="nome">Informe o nome completo</div>
+  </div>
+  <div>
+  <label class="field-label" for="nascimento">Data de nascimento</label>
+  <input class="input input-lg" id="nascimento" type="date" data-key="nascimento" data-required="Informe a data de nascimento">
+  <div class="field-error" data-err="nascimento">Informe a data de nascimento</div>
+  </div>
+  <div>
+  <label class="field-label" for="cpf">CPF</label>
+  <input class="input input-lg" id="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" data-key="cpf" data-required="Informe o CPF">
+  <div class="field-error" data-err="cpf">Informe o CPF</div>
+  <div class="auto-note">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+  <span>Preenche nome, nascimento, sexo e endereço automaticamente</span>
+  </div>
+  </div>
+  <div>
+  <span class="field-label">Sexo</span>
+  <div class="chip-row" data-chips="sexo" data-single="true" data-required="Selecione o sexo">
+  <button type="button" class="chip" data-value="Masculino">Masculino</button>
+  <button type="button" class="chip" data-value="Feminino">Feminino</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="sexo">Selecione o sexo</div>
+  </div>
+  </div>
+  </section>
+
+  <!-- TELA 2 -->
+  <section class="screen" data-screen="2">
+  <h1 class="screen-title">O trabalho</h1>
+  <p class="screen-sub">Vínculo e função exercida no momento do acidente.</p>
+  <div class="field-group">
+  <div>
+  <label class="field-label" for="ocupacao">Ocupação / cargo</label>
+  <input class="input input-lg" id="ocupacao" type="text" placeholder="Ex.: Auxiliar de produção" data-key="ocupacao" data-required="Informe a ocupação">
+  <div class="field-error" data-err="ocupacao">Informe a ocupação</div>
+  </div>
+  <div>
+  <label class="field-label" for="situacao">Situação no mercado de trabalho</label>
+  <select class="input input-lg" id="situacao" data-key="situacao" data-required="Selecione a situação">
+  <option value="">Selecione</option>
+  <option>Registrado</option>
+  <option>Não registrado</option>
+  <option>Autônomo</option>
+  <option>Servidor público</option>
+  <option>Aposentado</option>
+  <option>Desempregado</option>
+  <option>Temporário</option>
+  <option>Cooperativado</option>
+  <option>Trabalhador avulso</option>
+  <option>Empregador</option>
+  <option>Outros</option>
+  <option>Ignorado</option>
+  </select>
+  <div class="field-error" data-err="situacao">Selecione a situação</div>
+  </div>
+  <div>
+  <span class="field-label">Tempo nessa ocupação</span>
+  <div class="unit-row">
+  <input class="input input-lg" id="tempoNum" type="number" min="0" placeholder="Ex.: 4" data-key="tempoNum" data-required="Informe o tempo">
+  <select class="input input-lg" id="tempoUnidade" data-key="tempoUnidade">
+  <option>Dias</option>
+  <option>Meses</option>
+  <option selected>Anos</option>
+  </select>
+  </div>
+  <div class="field-error" data-err="tempoNum">Informe o tempo na ocupação</div>
+  </div>
+  <div>
+  <label class="field-label" for="cnpj">CNPJ ou CPF do empregador</label>
+  <input class="input input-lg" id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" data-key="cnpj" data-required="Informe o CNPJ ou CPF">
+  <div class="field-error" data-err="cnpj">Informe o CNPJ ou CPF</div>
+  <div class="auto-note">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+  <span>Preenche razão social, CNAE e endereço da empresa automaticamente</span>
+  </div>
+  </div>
+  </div>
+  </section>
+
+  <!-- TELA 3 -->
+  <section class="screen" data-screen="3">
+  <h1 class="screen-title">O acidente</h1>
+  <p class="screen-sub">Quando e onde o acidente aconteceu.</p>
+  <div class="field-group">
+  <div class="highlight-box">
+  <span class="field-label">Tipo de acidente</span>
+  <div class="chip-row" data-chips="tipoAcidente" data-single="true" data-required="Selecione o tipo de acidente" data-dynamic="tipo">
+  <button type="button" class="chip chip-lg" data-value="Típico">Típico</button>
+  <button type="button" class="chip chip-lg" data-value="Trajeto">Trajeto</button>
+  <button type="button" class="chip chip-lg" data-value="Ignorado">Ignorado</button>
+  </div>
+  <p class="hint-line">Esta escolha define quais campos são obrigatórios.</p>
+  <div class="field-error" data-err="tipoAcidente">Selecione o tipo de acidente</div>
+  </div>
+  <div>
+  <label class="field-label" for="dataAcidente">Data do acidente</label>
+  <input class="input input-lg" id="dataAcidente" type="date" data-key="dataAcidente" data-required="Informe a data do acidente">
+  <div class="field-error" data-err="dataAcidente">Informe a data do acidente</div>
+  </div>
+  <div>
+  <label class="field-label" for="horaAcidente">Hora do acidente</label>
+  <input class="input input-lg" id="horaAcidente" type="time" data-key="horaAcidente" data-required="Informe a hora do acidente">
+  <div class="field-error" data-err="horaAcidente">Informe a hora</div>
+  </div>
+  <div>
+  <span class="field-label">Local onde ocorreu</span>
+  <div class="chip-grid" data-chips="local" data-single="true" data-required="Selecione o local">
+  <button type="button" class="chip" data-value="Instalações do contratante">Instalações do contratante</button>
+  <button type="button" class="chip" data-value="Via pública">Via pública</button>
+  <button type="button" class="chip" data-value="Instalações de terceiros">Instalações de terceiros</button>
+  <button type="button" class="chip" data-value="Domicílio próprio">Domicílio próprio</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="local">Selecione o local</div>
+  </div>
+  </div>
+  </section>
+
+  <!-- TELA 4 -->
+  <section class="screen" data-screen="4">
+  <h1 class="screen-title">A lesão</h1>
+  <p class="screen-sub">Parte do corpo atingida e forma como ocorreu.</p>
+  <div class="field-group">
+  <div>
+  <span class="field-label">Parte do corpo atingida</span>
+  <div class="chip-grid" data-chips="parteCorpo" data-single="true" data-required="Selecione a parte do corpo">
+  <button type="button" class="chip" data-value="Olho">Olho</button>
+  <button type="button" class="chip" data-value="Cabeça">Cabeça</button>
+  <button type="button" class="chip" data-value="Pescoço">Pescoço</button>
+  <button type="button" class="chip" data-value="Tórax">Tórax</button>
+  <button type="button" class="chip" data-value="Abdome">Abdome</button>
+  <button type="button" class="chip" data-value="Mão">Mão</button>
+  <button type="button" class="chip" data-value="Membro superior">Membro superior</button>
+  <button type="button" class="chip" data-value="Membro inferior">Membro inferior</button>
+  <button type="button" class="chip" data-value="Pé">Pé</button>
+  <button type="button" class="chip" data-value="Todo o corpo">Todo o corpo</button>
+  <button type="button" class="chip" data-value="Outro">Outro</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="parteCorpo">Selecione a parte do corpo</div>
+  </div>
+  <div>
+  <span class="field-label">Como ocorreu</span>
+  <div class="chip-row" data-chips="comoOcorreu" data-single="true" data-required="Selecione como ocorreu">
+  <button type="button" class="chip" data-value="Queda">Queda</button>
+  <button type="button" class="chip" data-value="Corte">Corte</button>
+  <button type="button" class="chip" data-value="Prensamento">Prensamento</button>
+  <button type="button" class="chip" data-value="Impacto">Impacto</button>
+  <button type="button" class="chip" data-value="Queimadura">Queimadura</button>
+  <button type="button" class="chip" data-value="Exposição química">Exposição química</button>
+  <button type="button" class="chip" data-value="Choque elétrico">Choque elétrico</button>
+  <button type="button" class="chip" data-value="Atropelamento">Atropelamento</button>
+  <button type="button" class="chip" data-value="Agressão">Agressão</button>
+  <button type="button" class="chip" data-value="Outro">Outro</button>
+  </div>
+  <div class="field-error" data-err="comoOcorreu">Selecione como ocorreu</div>
+  </div>
+  <div>
+  <label class="field-label" for="cid">CID do diagnóstico</label>
+  <input class="input input-lg" id="cid" type="text" placeholder="Ex.: S61.0" maxlength="8" data-key="cid" data-required="Informe o CID">
+  <div class="field-error" data-err="cid">Informe o CID</div>
+  </div>
+  <div>
+  <span class="field-label">Regime de tratamento</span>
+  <div class="chip-row" data-chips="regime" data-single="true" data-required="Selecione o regime de tratamento">
+  <button type="button" class="chip" data-value="Hospitalar">Hospitalar</button>
+  <button type="button" class="chip" data-value="Ambulatorial">Ambulatorial</button>
+  <button type="button" class="chip" data-value="Ambos">Ambos</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="regime">Selecione o regime de tratamento</div>
+  </div>
+  </div>
+  </section>
+
+  <!-- TELA 5 -->
+  <section class="screen" data-screen="5">
+  <h1 class="screen-title">O que aconteceu</h1>
+  <p class="screen-sub">Descreva a atividade e os fatores envolvidos.</p>
+  <div class="field-group">
+  <div>
+  <label class="field-label" for="atividade">O que o trabalhador fazia no momento</label>
+  <textarea class="input input-lg" id="atividade" rows="3" placeholder="Ex.: Operava a prensa de chapas na linha 2" data-key="atividade" data-required="Descreva a atividade"></textarea>
+  <div class="field-error" data-err="atividade">Descreva a atividade</div>
+  </div>
+  <div>
+  <label class="field-label" for="maquina">Máquina, equipamento ou substância envolvida</label>
+  <textarea class="input input-lg" id="maquina" rows="2" placeholder="Ex.: Prensa hidráulica modelo P-40" data-key="maquina"></textarea>
+  </div>
+  <div>
+  <span class="field-label">Fatores que contribuíram</span>
+  <div class="chip-grid" data-chips="fatores" data-multi="true">
+  <button type="button" class="chip" data-value="Falta de EPI">Falta de EPI</button>
+  <button type="button" class="chip" data-value="EPI inadequado">EPI inadequado</button>
+  <button type="button" class="chip" data-value="Falta de treinamento">Falta de treinamento</button>
+  <button type="button" class="chip" data-value="Manutenção deficiente">Manutenção deficiente</button>
+  <button type="button" class="chip" data-value="Ritmo ou pressão por produtividade">Ritmo ou pressão por produtividade</button>
+  <button type="button" class="chip" data-value="Organização do trabalho">Organização do trabalho</button>
+  <button type="button" class="chip" data-value="Falta de sinalização">Falta de sinalização</button>
+  <button type="button" class="chip" data-value="Outro">Outro</button>
+  </div>
+  </div>
+  </div>
+  </section>
+
+  <!-- TELA 6 -->
+  <section class="screen" data-screen="6">
+  <h1 class="screen-title">Fechamento</h1>
+  <p class="screen-sub">Situação atual do caso e responsável pelo registro.</p>
+  <div class="field-group">
+  <div>
+  <span class="field-label">Evolução do caso</span>
+  <div class="chip-grid" data-chips="evolucao" data-single="true" data-required="Selecione a evolução">
+  <button type="button" class="chip" data-value="Cura">Cura</button>
+  <button type="button" class="chip" data-value="Incapacidade temporária">Incapacidade temporária</button>
+  <button type="button" class="chip" data-value="Incapacidade parcial permanente">Incapacidade parcial permanente</button>
+  <button type="button" class="chip" data-value="Incapacidade total permanente">Incapacidade total permanente</button>
+  <button type="button" class="chip" data-value="Óbito por acidente de trabalho">Óbito por acidente de trabalho</button>
+  <button type="button" class="chip" data-value="Óbito por outras causas">Óbito por outras causas</button>
+  <button type="button" class="chip" data-value="Outro">Outro</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="evolucao">Selecione a evolução</div>
+  </div>
+  <div>
+  <span class="field-label">CAT emitida?</span>
+  <div class="chip-row" data-chips="cat" data-single="true" data-required="Informe se a CAT foi emitida">
+  <button type="button" class="chip" data-value="Sim">Sim</button>
+  <button type="button" class="chip" data-value="Não">Não</button>
+  <button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+  </div>
+  <div class="field-error" data-err="cat">Informe se a CAT foi emitida</div>
+  </div>
+  <div class="pair-row">
+  <div>
+  <label class="field-label" for="profissional">Profissional responsável</label>
+  <input class="input input-lg" id="profissional" type="text" placeholder="Ex.: Dra. Helena Rocha" data-key="profissional" data-required="Informe o profissional responsável">
+  <div class="field-error" data-err="profissional">Informe o profissional responsável</div>
+  </div>
+  <div>
+  <label class="field-label" for="dataFechamento">Data</label>
+  <input class="input input-lg" id="dataFechamento" type="date" data-key="dataFechamento" data-required="Informe a data">
+  <div class="field-error" data-err="dataFechamento">Informe a data</div>
+  </div>
+  </div>
+  </div>
+  </section>
+
+  <!-- CONCLUSÃO -->
+  <section class="screen" data-screen="7">
+  <div class="success-card">
+  <div class="success-icon">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  </div>
+  <h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+  <p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div class="actions-row">
+  <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+  <button type="button" class="btn" id="btnNova">Nova notificação</button>
+  </div>
+  <div class="actions-row">
+  <button type="button" class="btn btn-print" id="btnImprimir"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Imprimir ficha</button>
+  </div>
+  </div>
+  </section>
+
+  </main>
+
+  <div class="bottom-bar" id="bottomBar">
+  <div class="bottom-inner">
+  <button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+  <button type="button" class="btn" id="btnContinuar">Seguinte</button>
+  </div>
+  </div>
+
+  <footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+  </div>
+
+  <div class="print-only" id="printArea">
+
+  <div class="pf-head">
+  <p class="pf-title">FORMULÁRIO COMPLETO — ACIDENTE DE TRABALHO</p>
+  </div>
+  <p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+  <p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+  <div id="pfBlocks"></div>
+  <div class="pf-sign">
+  <div>Assinatura do profissional responsável</div>
+  <div>Data</div>
+  </div>
+  </div>
+
+  <dialog class="dialog" id="dlgNova">
+  <div>
+  <header>
+  <h2>Iniciar nova notificação?</h2>
+  <p>Todos os dados preenchidos serão apagados.</p>
+  </header>
+  <footer class="row justify-end gap-2">
+  <button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+  <button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+  </footer>
+  </div>
+  </dialog>
+  </div>
+  </template>
+
+  <script src="js/formulario-acidente.js?v=20261103-forms-item1" defer></script>
+  <script src="js/app.js?v=20261103-forms-item1" defer></script>
+  <script src="js/autopreenchimento.js?v=20261111-auto2" defer></script>
+</body>
+</html>
