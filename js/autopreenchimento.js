@@ -241,7 +241,7 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (d) {
         return {
-          razao_social: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao,
+          razao_social: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
           uf: d.uf, municipio: d.municipio, ibge: d.codigo_municipio_ibge, bairro: d.bairro,
           tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero,
           telefone: d.ddd_telefone_1 && String(d.ddd_telefone_1).length >= 10
@@ -255,7 +255,8 @@
             var e = d.estabelecimento || {};
             var ap = e.atividade_principal || {};
             return {
-              razao_social: d.razao_social, cnae: ap.id, cnaeDescricao: ap.descricao,
+              razao_social: d.razao_social, cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
+              secundarios: (e.atividades_secundarias || []).map(function (x) { return { codigo: x.id, descricao: x.descricao }; }),
               uf: e.estado && e.estado.sigla, municipio: e.cidade && e.cidade.nome,
               ibge: e.cidade && e.cidade.ibge_id, bairro: e.bairro,
               tipoLogradouro: e.tipo_logradouro, logradouro: e.logradouro, numero: e.numero,
@@ -265,10 +266,49 @@
       });
   }
 
+  function oferecerCnaes(campoCnpj, campoCnae, dados) {
+    if (!campoCnae) return;
+    var opcoes = document.createElement('select');
+    opcoes.className = 'input';
+    opcoes.dataset.cnaesDoCnpj = '1';
+    opcoes.setAttribute('aria-label', 'Atividades econômicas cadastradas neste CNPJ');
+    opcoes.add(new Option('Selecionar atividade cadastrada neste CNPJ', ''));
+    var atividades = [{ codigo: dados.cnae, descricao: dados.cnaeDescricao }].concat(dados.secundarios || []);
+    atividades.forEach(function (atividade, i) {
+      var codigo = cnaeSinan(atividade.codigo);
+      if (!codigo) return;
+      var valor = codigo + (atividade.descricao ? ' – ' + atividade.descricao : '');
+      opcoes.add(new Option((i === 0 ? 'Principal: ' : 'Secundária: ') + valor, valor));
+    });
+    opcoes.addEventListener('change', function () { definir(campoCnae, opcoes.value, true); });
+    campoCnae.insertAdjacentElement('afterend', opcoes);
+    var cnpjConsultado = digitos(campoCnpj.value);
+    campoCnpj.addEventListener('input', function remover() {
+      if (digitos(campoCnpj.value) === cnpjConsultado) return;
+      opcoes.remove();
+      campoCnpj.removeEventListener('input', remover);
+    });
+  }
+
   function configurarCnpj(raiz, chavesCnpj, destino) {
     var el = campo(raiz, chavesCnpj);
     if (!el || el.dataset.autopreenchimentoCnpj) return;
     el.dataset.autopreenchimentoCnpj = '1';
+    var automaticos = new Map();
+    function preencher(chaves, valor) {
+      var alvo = campo(raiz, chaves);
+      if (definir(alvo, valor)) automaticos.set(alvo, alvo.value);
+    }
+    el.addEventListener('input', function () {
+      if (digitos(el.value) === el.dataset.ultimoCnpj) return;
+      delete el.dataset.ultimoCnpj;
+      automaticos.forEach(function (valor, campo) {
+        if (campo.value !== valor) return;
+        campo.value = '';
+        campo.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      automaticos.clear();
+    });
 
     function buscar() {
       var n = digitos(el.value);
@@ -277,22 +317,29 @@
       aviso(el, 'Consultando CNPJ…');
       consultarCnpj(n)
         .then(function (d) {
+          if (!el.isConnected || digitos(el.value) !== n) return;
           var codSinan = cnaeSinan(d.cnae);
           var cnae = codSinan ? codSinan + (d.cnaeDescricao ? ' – ' + d.cnaeDescricao : '') : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
           var mun = ibgeSinan(d.ibge) === PADRAO.ibge ? PADRAO.municipio : titulo(d.municipio);
-          definir(campo(raiz, destino.razao), d.razao_social);
-          definir(campo(raiz, destino.cnae), cnae);
-          if (destino.uf) definir(campo(raiz, destino.uf), d.uf);
-          if (destino.municipio) definir(campo(raiz, destino.municipio), mun);
-          if (destino.ibge) definir(campo(raiz, destino.ibge), ibgeSinan(d.ibge));
-          if (destino.bairro) definir(campo(raiz, destino.bairro), titulo(d.bairro));
-          if (destino.endereco) definir(campo(raiz, destino.endereco), titulo(logradouro));
-          if (destino.numero) definir(campo(raiz, destino.numero), d.numero);
-          if (destino.telefone) definir(campo(raiz, destino.telefone), d.telefone);
-          aviso(el, 'Dados da empresa preenchidos pelo CNPJ. Conferir antes de enviar.');
+          preencher(destino.razao, d.razao_social);
+          preencher(destino.cnae, cnae);
+          if (destino.uf) preencher(destino.uf, d.uf);
+          if (destino.municipio) preencher(destino.municipio, mun);
+          if (destino.ibge) preencher(destino.ibge, ibgeSinan(d.ibge));
+          if (destino.bairro) preencher(destino.bairro, titulo(d.bairro));
+          if (destino.endereco) preencher(destino.endereco, titulo(logradouro));
+          if (destino.numero) preencher(destino.numero, d.numero);
+          if (destino.telefone) preencher(destino.telefone, d.telefone);
+          if (destino.cep) preencher(destino.cep, d.cep);
+          oferecerCnaes(el, campo(raiz, destino.cnae), d);
+          aviso(el, 'Confira os dados e escolha a atividade econômica que corresponde ao caso.');
         })
-        .catch(function () { aviso(el, 'CNPJ não encontrado ou consulta indisponível. Preencher manualmente.', true); });
+        .catch(function () {
+          if (digitos(el.value) !== n) return;
+          delete el.dataset.ultimoCnpj;
+          aviso(el, 'CNPJ não encontrado ou consulta indisponível. Preencher manualmente.', true);
+        });
     }
     el.addEventListener('change', buscar);
     el.addEventListener('blur', buscar);
@@ -300,22 +347,25 @@
 
   function configurarEmpresas(raiz) {
     // Formulários com "ufNotif/ufNotificacao" usam "uf/municipio/bairro/endereco/numero" para a empresa.
-    var camposGenericosSaoDaEmpresa = !!campo(raiz, ['ufNotif', 'ufNotificacao']) && !campo(raiz, ['cep']);
-    var semEnderecoResidencia = !campo(raiz, ['cep', 'bairroRes']);
+    var camposGenericosSaoDaEmpresa = !!campo(raiz, ['ufNotificacao']);
+    var telefoneGenericoDaEmpresa = !!campo(raiz, ['telefoneRes']);
     configurarCnpj(raiz, ['cnpj'], {
       razao: ['empresa', 'empresaNome', 'razao'],
       cnae: ['cnae'],
       uf: camposGenericosSaoDaEmpresa ? ['ufEmp', 'uf'] : ['ufEmp'],
       municipio: camposGenericosSaoDaEmpresa ? ['munEmp', 'municipio'] : ['munEmp'],
       ibge: ['ibgeEmp'],
-      bairro: semEnderecoResidencia ? ['bairroEmp', 'bairro'] : ['bairroEmp'],
+      bairro: ['bairroEmp', 'bairro'],
       endereco: ['endEmp', 'endereco'],
-      numero: semEnderecoResidencia ? ['numEmp', 'numero'] : ['numEmp'],
-      telefone: ['telEmp']
+      numero: ['numEmp', 'numero'],
+      telefone: telefoneGenericoDaEmpresa ? ['telEmp', 'telefone'] : ['telEmp'],
+      cep: ['cepEmp']
     });
     configurarCnpj(raiz, ['cnpjPrincipal', 'cnpjPrinc'], {
       razao: ['razaoPrincipal', 'razaoPrinc'],
-      cnae: ['cnaePrincipal', 'cnaePrinc']
+      cnae: ['cnaePrincipal', 'cnaePrinc'],
+      uf: ['ufPrincipal'], municipio: ['munPrincipal'], ibge: ['ibgePrincipal'],
+      bairro: ['bairroPrincipal'], endereco: ['endPrincipal'], numero: ['numPrincipal'], cep: ['cepPrincipal']
     });
   }
 
