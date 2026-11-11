@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Vigilância em Saúde (DEMONSTRAÇÃO)</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-espaco-etapas">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-sinan">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -56,7 +56,278 @@
     </div>
   </footer>
 
-  <template id="form-acidente-template">
+  <template id="form-sinan-comum-template">
+<section class="screen active" data-screen="1">
+<h1 class="screen-title">Dados gerais</h1>
+<p class="screen-sub">Dados gerais do registro.</p>
+<div class="field-group">
+<div><label class="field-label" for="sinan-numeroNotificacao">Número da notificação, se disponível</label><input class="input input-lg" id="sinan-numeroNotificacao" type="text" data-key="numeroNotificacao" ></div>
+<div>
+<label class="field-label" for="sinan-tipo">Tipo de notificação</label>
+<input class="input input-lg" id="sinan-tipo" data-key="tipoNotif" value="Individual" readonly>
+</div>
+<div>
+<label class="field-label" for="sinan-agravo">Agravo / doença</label>
+<input class="input input-lg" id="sinan-agravo" type="text" data-key="agravo" readonly>
+</div>
+<div><label class="field-label" for="sinan-cidAgravo">Código do agravo (CID-10)</label><input class="input input-lg" id="sinan-cidAgravo" type="text" data-key="cidAgravo" ></div>
+<div>
+<label class="field-label" for="sinan-data-notif">Data da notificação</label>
+<input class="input input-lg" id="sinan-data-notif" type="date" data-key="dataNotificacao">
+</div>
+<div>
+<label class="field-label" for="sinan-uf-notif">UF</label>
+<select class="input input-lg" id="sinan-uf-notif" data-key="ufNotif">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="sinan-mun-notif">Município de notificação</label>
+<input class="input input-lg" id="sinan-mun-notif" type="text" data-key="munNotif">
+</div>
+<div>
+<label class="field-label" for="sinan-ibge-notif">Código IBGE</label>
+<input class="input input-lg" id="sinan-ibge-notif" type="text" data-key="ibgeNotif">
+</div>
+<div>
+<label class="field-label" for="sinan-unid">Unidade de saúde notificadora</label>
+<input class="input input-lg" id="sinan-unid" type="text" data-key="unidNotif">
+</div>
+<div>
+<label class="field-label" for="sinan-cod-unid">Código da unidade (CNES)</label>
+<input class="input input-lg" id="sinan-cod-unid" type="text" data-key="codUnidNotif">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="2">
+<h1 class="screen-title">Notificação individual</h1>
+<p class="screen-sub">Dados de identificação da pessoa notificada.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="sinan-nome">Nome completo</label>
+<input class="input input-lg" id="sinan-nome" type="text" data-key="nome" placeholder="Ex.: Ana Paula Ribeiro" data-summary="Nome completo">
+</div>
+<div>
+<label class="field-label" for="sinan-nasc">Data de nascimento</label>
+<input class="input input-lg" id="sinan-nasc" type="date" data-key="nascimento">
+</div>
+<div>
+<span class="field-label">Idade</span>
+<div class="unit-row" >
+<input class="input input-lg" id="sinan-idade" type="number" min="0" data-key="idade">
+<select class="input input-lg" id="sinan-idade-un" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+</div>
+</div>
+<div>
+<span class="field-label">Sexo</span>
+<div class="chip-grid" data-chips="sexo" data-single="true">
+<button type="button" class="chip" data-value="Masculino">Masculino</button>
+<button type="button" class="chip" data-value="Feminino">Feminino</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Gestante</span>
+<div class="chip-grid" data-chips="gestante" data-single="true">
+<button type="button" class="chip" data-value="1º trimestre">1º trimestre</button>
+<button type="button" class="chip" data-value="2º trimestre">2º trimestre</button>
+<button type="button" class="chip" data-value="3º trimestre">3º trimestre</button>
+<button type="button" class="chip" data-value="Idade gestacional ignorada">Idade gestacional ignorada</button>
+<button type="button" class="chip" data-value="Não">Não</button>
+<button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<span class="field-label">Raça/Cor</span>
+<div class="chip-grid" data-chips="raca" data-single="true">
+<button type="button" class="chip" data-value="Branca">Branca</button>
+<button type="button" class="chip" data-value="Preta">Preta</button>
+<button type="button" class="chip" data-value="Amarela">Amarela</button>
+<button type="button" class="chip" data-value="Parda">Parda</button>
+<button type="button" class="chip" data-value="Indígena">Indígena</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="sinan-esc">Escolaridade</label>
+<select class="input input-lg" id="sinan-esc" data-key="escolaridade">
+<option value="">Selecione</option><option>Analfabeto</option><option>1ª a 4ª série incompleta do EF</option><option>4ª série completa do EF</option><option>5ª a 8ª série incompleta do EF</option><option>Ensino fundamental completo</option><option>Ensino médio incompleto</option><option>Ensino médio completo</option><option>Ensino superior incompleto</option><option>Ensino superior completo</option><option>Ignorado</option><option>Não se aplica</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="sinan-cpf">CPF</label>
+<input class="input input-lg" id="sinan-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf" inputmode="numeric" maxlength="14">
+</div>
+
+<div>
+<label class="field-label" for="sinan-sus">Cartão SUS</label>
+<input class="input input-lg" id="sinan-sus" type="text" data-key="cartaoSus">
+</div><div>
+<label class="field-label" for="sinan-mae">Nome da mãe</label>
+<input class="input input-lg" id="sinan-mae" type="text" data-key="nomeMae">
+</div>
+</div>
+</section>
+<section class="screen" data-screen="3">
+<h1 class="screen-title">Dados de residência</h1>
+<p class="screen-sub">Endereço de residência da pessoa notificada.</p>
+<div class="field-group">
+<div>
+<label class="field-label" for="sinan-uf-res">UF</label>
+<select class="input input-lg" id="sinan-uf-res" data-key="ufRes">
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+</select>
+</div>
+<div>
+<label class="field-label" for="sinan-mun-res">Município de residência</label>
+<input class="input input-lg" id="sinan-mun-res" type="text" data-key="munRes">
+</div>
+<div>
+<label class="field-label" for="sinan-ibge-res">Código IBGE</label>
+<input class="input input-lg" id="sinan-ibge-res" type="text" data-key="ibgeRes">
+</div>
+<div>
+<label class="field-label" for="sinan-dist">Distrito</label>
+<input class="input input-lg" id="sinan-dist" type="text" data-key="distRes">
+</div>
+<div>
+<label class="field-label" for="sinan-bairro">Bairro</label>
+<input class="input input-lg" id="sinan-bairro" type="text" data-key="bairroRes">
+</div>
+<div>
+<label class="field-label" for="sinan-logr">Logradouro</label>
+<input class="input input-lg" id="sinan-logr" type="text" data-key="logRes">
+</div>
+<div>
+<label class="field-label" for="sinan-num">Número</label>
+<input class="input input-lg" id="sinan-num" type="text" data-key="numRes">
+</div>
+<div>
+<label class="field-label" for="sinan-comp">Complemento</label>
+<input class="input input-lg" id="sinan-comp" type="text" data-key="compRes">
+</div>
+<div>
+<label class="field-label" for="sinan-geo1">Geo campo 1</label>
+<input class="input input-lg" id="sinan-geo1" type="text" data-key="geo1">
+</div>
+<div>
+<label class="field-label" for="sinan-geo2">Geo campo 2</label>
+<input class="input input-lg" id="sinan-geo2" type="text" data-key="geo2">
+</div>
+<div>
+<label class="field-label" for="sinan-ref">Ponto de referência</label>
+<input class="input input-lg" id="sinan-ref" type="text" data-key="refRes">
+</div>
+<div>
+<label class="field-label" for="sinan-cep">CEP</label>
+<input class="input input-lg" id="sinan-cep" type="text" data-key="cep" placeholder="00000-000">
+</div>
+<div>
+<label class="field-label" for="sinan-tel">(DDD) Telefone</label>
+<input class="input input-lg" id="sinan-tel" type="tel" data-key="telefoneRes" placeholder="(00) 00000-0000">
+</div>
+<div>
+<span class="field-label">Zona</span>
+<div class="chip-grid" data-chips="zona" data-single="true">
+<button type="button" class="chip" data-value="Urbana">Urbana</button>
+<button type="button" class="chip" data-value="Rural">Rural</button>
+<button type="button" class="chip" data-value="Periurbana">Periurbana</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
+</div>
+<div>
+<label class="field-label" for="sinan-pais">País se residente fora do Brasil</label>
+<input class="input input-lg" id="sinan-pais" type="text" data-key="paisExterior">
+</div>
+</div>
+</section>
+</template>
+<template id="form-voz-template">
+  <div class="acidente-inline">
+  <div class="form-app">
+  <header class="top-bar">
+  <div class="progress-track" id="progressTrack" aria-hidden="true">
+  <div class="progress-seg" data-seg="1"></div>
+  <div class="progress-seg" data-seg="2"></div>
+  <div class="progress-seg" data-seg="3"></div>
+  <div class="progress-seg" data-seg="4"></div>
+  <div class="progress-seg" data-seg="5"></div>
+  <div class="progress-seg" data-seg="6"></div>
+  </div>
+  <div class="shell-container row between items-center">
+  <span class="pill">Distúrbio de voz relacionado ao trabalho</span>
+  <button type="button" class="btn btn-back-consulta" data-voltar-consulta>&larr; Voltar &#224; consulta</button><span class="step-counter" id="stepCounter">Tela 1 de 6</span>
+  </div>
+  <div class="shell-container hospital-alert-container">
+  <div class="alert hospital-alert" role="note">
+  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+  </div>
+  </div>
+  </header>
+
+  <main class="step-area" id="mainArea">
+
+  <!-- TELA 1 -->
+  <section class="screen" data-screen="1"><h1 class="screen-title">Dados do trabalho</h1><div class="field-group"><div><label class="field-label" for="ocupacao">Ocupação (CBO)</label><input class="input" id="ocupacao" data-key="ocupacao" type="text"></div><div><label class="field-label" for="cnae">Atividade econômica (CNAE)</label><input class="input" id="cnae" data-key="cnae" type="text"></div><div><label class="field-label" for="situacao">Situação no mercado de trabalho</label><input class="input" id="situacao" data-key="situacao" type="text"></div><div><label class="field-label" for="tempoOcup">Tempo de exercício na ocupação</label><input class="input" id="tempoOcup" data-key="tempoOcup" type="text"></div><div><label class="field-label" for="razao">Local de trabalho</label><input class="input" id="razao" data-key="razao" type="text"></div><div><label class="field-label" for="endEmp">Endereço do local de trabalho</label><input class="input" id="endEmp" data-key="endEmp" type="text"></div></div></section><section class="screen" data-screen="2"><h1 class="screen-title">Dados clínicos e relação com o trabalho</h1><div class="field-group"><div><label class="field-label" for="inicioSintomas">Data de início dos sintomas</label><input class="input" id="inicioSintomas" data-key="inicioSintomas" type="date"></div><div><label class="field-label" for="sintomas">Sinais e sintomas vocais</label><textarea class="input" id="sintomas" data-key="sintomas"></textarea></div><div><label class="field-label" for="tempoExp">Tempo de exposição às situações de risco</label><input class="input" id="tempoExp" data-key="tempoExp" type="text"></div><div><label class="field-label" for="exposicaoVocal">Situações de risco no trabalho</label><textarea class="input" id="exposicaoVocal" data-key="exposicaoVocal"></textarea></div><div><label class="field-label" for="historicoVocal">Histórico de saúde vocal e tratamentos</label><textarea class="input" id="historicoVocal" data-key="historicoVocal"></textarea></div><div><label class="field-label" for="relacaoTrabalho">Relação com o trabalho evidenciada?</label><select class="input" id="relacaoTrabalho" data-key="relacaoTrabalho"><option value="">Selecione</option><option>Sim</option><option>Não</option><option>Em investigação</option></select></div><div><label class="field-label" for="observacoes">Informações complementares</label><textarea class="input" id="observacoes" data-key="observacoes"></textarea></div></div></section><section class="screen" data-screen="7">
+  <div class="success-card">
+  <div class="success-icon">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  </div>
+  <h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
+  <p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div class="actions-row">
+  <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
+  <button type="button" class="btn" id="btnNova">Nova notificação</button>
+  </div>
+  <div class="actions-row">
+  <button type="button" class="btn btn-print" id="btnImprimir"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Imprimir ficha</button>
+  </div>
+  </div>
+  </section>
+
+  </main>
+
+  <div class="bottom-bar" id="bottomBar">
+  <div class="bottom-inner">
+  <button type="button" class="btn" data-variant="outline" id="btnVoltar">← Voltar</button>
+  <button type="button" class="btn" id="btnContinuar">Seguinte</button>
+  </div>
+  </div>
+
+  <footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+  </div>
+
+  <div class="print-only" id="printArea">
+
+  <div class="pf-head">
+  <p class="pf-title">FORMULÁRIO COMPLETO — ACIDENTE DE TRABALHO</p>
+  </div>
+  <p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
+  <p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+  <div id="pfBlocks"></div>
+  <div class="pf-sign">
+  <div>Assinatura do profissional responsável</div>
+  <div>Data</div>
+  </div>
+  </div>
+
+  <dialog class="dialog" id="dlgNova">
+  <div>
+  <header>
+  <h2>Iniciar nova notificação?</h2>
+  <p>Todos os dados preenchidos serão apagados.</p>
+  </header>
+  <footer class="row justify-end gap-2">
+  <button type="button" class="btn" data-variant="ghost" data-dialog-close>Cancelar</button>
+  <button type="button" class="btn" id="btnConfirmaNova">Apagar e recomeçar</button>
+  </footer>
+  </div>
+  </dialog>
+  </div>
+  </template>
+<template id="form-acidente-template">
   <div class="acidente-inline">
   <div class="form-app">
   <header class="top-bar">
@@ -82,40 +353,7 @@
   <main class="step-area" id="mainArea">
 
   <!-- TELA 1 -->
-  <section class="screen active" data-screen="1">
-  <h1 class="screen-title">Quem foi atendido</h1>
-  <p class="screen-sub">Dados de identificação do trabalhador acidentado.</p>
-  <div class="field-group">
-  <div>
-  <label class="field-label" for="nome">Nome completo</label>
-  <input class="input input-lg" id="nome" type="text" placeholder="Ex.: Maria Aparecida Souza" data-required="Informe o nome completo" data-key="nome">
-  <div class="field-error" data-err="nome">Informe o nome completo</div>
-  </div>
-  <div>
-  <label class="field-label" for="nascimento">Data de nascimento</label>
-  <input class="input input-lg" id="nascimento" type="date" data-key="nascimento" data-required="Informe a data de nascimento">
-  <div class="field-error" data-err="nascimento">Informe a data de nascimento</div>
-  </div>
-  <div>
-  <label class="field-label" for="cpf">CPF</label>
-  <input class="input input-lg" id="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" data-key="cpf" data-required="Informe o CPF">
-  <div class="field-error" data-err="cpf">Informe o CPF</div>
-  <div class="auto-note">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-  <span>Preenche nome, nascimento, sexo e endereço automaticamente</span>
-  </div>
-  </div>
-  <div>
-  <span class="field-label">Sexo</span>
-  <div class="chip-row" data-chips="sexo" data-single="true" data-required="Selecione o sexo">
-  <button type="button" class="chip" data-value="Masculino">Masculino</button>
-  <button type="button" class="chip" data-value="Feminino">Feminino</button>
-  <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
-  </div>
-  <div class="field-error" data-err="sexo">Selecione o sexo</div>
-  </div>
-  </div>
-  </section>
+  
 
   <!-- TELA 2 -->
   <section class="screen" data-screen="2">
@@ -400,8 +638,8 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261103-forms-item1" defer></script>
-  <script src="js/app.js?v=20261103-forms-item1" defer></script>
+  <script src="js/formulario-acidente.js?v=20261111-sinan" defer></script>
+  <script src="js/app.js?v=20261111-sinan" defer></script>
   <script src="js/autopreenchimento.js?v=20261111-auto2" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261111-listas1" defer></script>
 </body>
