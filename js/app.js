@@ -34,7 +34,6 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-biologico-template',
         storageKey: 'notificacao-biologico-v1-inline',
-        total: 8,
         defaults: { tipoNotif: 'Individual', idadeUnidade: 'Ano', tempoUnidade: 'Ano', dataNotificacao: hojeIso }
       })
     },
@@ -43,7 +42,6 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-cancer-template',
         storageKey: 'notificacao-cancer-v1-inline',
-        total: 8,
         defaults: {
           dataNotificacao: hojeIso,
           data: hojeIso,
@@ -58,16 +56,25 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-dermatose-template',
         storageKey: 'notificacao-dermatose-v1-inline',
-        total: 7,
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', expUnid: 'Ano', afastUnid: 'Ano' }
       })
+    },
+    '1-e-disturbio-de-voz-relacionado-ao-trabalho': {
+      titulo: '1.e - Distúrbio de voz relacionado ao trabalho',
+      montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
+        templateId: 'form-voz-template',
+        storageKey: 'notificacao-voz-v1-inline'
+      })
+    },
+    '1-j-obito-por-acidente-de-trabalho': {
+      titulo: '1.j - Óbito por acidente de trabalho',
+      montar: (caixa, voltar) => window.montarFormularioAcidente(caixa, voltar, true)
     },
     '1-f-lesoes-por-esforcos-repetitivos-dort': {
       titulo: '1.f - Lesões por Esforços Repetitivos/Distúrbios Osteomusculares Relacionados ao Trabalho (LER/DORT)',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-lerdort-template',
         storageKey: 'notificacao-lerdort-v1-inline',
-        total: 7,
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
@@ -76,7 +83,6 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pair-template',
         storageKey: 'notificacao-pair-v1-inline',
-        total: 7,
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
@@ -85,7 +91,6 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pneumo-template',
         storageKey: 'notificacao-pneumo-v1-inline',
-        total: 8,
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoTabacoUnid: 'Ano' }
       })
     },
@@ -94,7 +99,6 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-mental-template',
         storageKey: 'notificacao-mental-v1-inline',
-        total: 7,
         defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tabacoUnidade: 'Ano', agenteUnidade: 'Ano' }
       })
     }

@@ -1,9 +1,213 @@
-window.montarFormularioAcidente = function montarFormularioAcidente(container, onVoltar) {
+function completarCamposEmpresa(area) {
+  const grupos = [
+    {
+      chave: 'cnpj',
+      campos: [
+        [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
+        [['cnae'], 'Atividade econômica (CNAE)'],
+        [['ufEmp', 'uf'], 'UF da empresa'],
+        [['munEmp', 'municipio'], 'Município da empresa'],
+        [['ibgeEmp'], 'Código IBGE do município da empresa'],
+        [['bairroEmp', 'bairro'], 'Bairro da empresa'],
+        [['endEmp', 'endereco'], 'Logradouro da empresa'],
+        [['numEmp', 'numero'], 'Número do endereço da empresa'],
+        [['cepEmp'], 'CEP da empresa']
+      ]
+    },
+    {
+      chave: 'cnpjPrincipal',
+      campos: [
+        [['ufPrincipal'], 'UF da empresa principal'],
+        [['munPrincipal'], 'Município da empresa principal'],
+        [['ibgePrincipal'], 'Código IBGE da empresa principal'],
+        [['bairroPrincipal'], 'Bairro da empresa principal'],
+        [['endPrincipal'], 'Logradouro da empresa principal'],
+        [['numPrincipal'], 'Número do endereço da empresa principal'],
+        [['cepPrincipal'], 'CEP da empresa principal']
+      ]
+    }
+  ];
+  for (const grupo of grupos) {
+    const documento = area.querySelector('[data-key="' + grupo.chave + '"]' +
+      (grupo.chave === 'cnpjPrincipal' ? ', [data-key="cnpjPrinc"]' : ''));
+    if (!documento) continue;
+    const secao = documento.closest('.screen');
+    const destino = documento.closest('[data-show-when]') || documento.closest('.field-group');
+    for (const [chaves, texto] of grupo.campos) {
+      if (chaves.some(chave => secao.querySelector('[data-key="' + chave + '"]'))) continue;
+      const chave = chaves[0];
+      const caixa = document.createElement('div');
+      const label = document.createElement('label');
+      label.className = 'field-label';
+      label.htmlFor = 'empresa-' + chave;
+      label.textContent = texto;
+      const input = document.createElement('input');
+      input.className = 'input input-lg';
+      input.id = label.htmlFor;
+      input.dataset.key = chave;
+      caixa.append(label, input);
+      destino.append(caixa);
+    }
+  }
+}
+
+const blocosSinan = {
+  "form-acidente-template": {
+    "aliases": {},
+    "agravo": "Acidente de trabalho",
+    "cid": "Y96",
+    "event": "dataAcidente"
+  },
+  "form-biologico-template": {
+    "aliases": {
+      "telefoneRes": "telefone"
+    },
+    "agravo": "Acidente de trabalho com exposição a material biológico",
+    "cid": "Z20.9",
+    "event": "dataAcidente"
+  },
+  "form-cancer-template": {
+    "aliases": {
+      "tipoNotif": "tipoNotificacao",
+      "ufNotif": "ufNotificacao",
+      "munNotif": "municipioNotificacao",
+      "unidNotif": "unidadeNotificadora",
+      "cidAgravo": "cid10Notif"
+    },
+    "agravo": "Câncer relacionado ao trabalho",
+    "cid": "C80",
+    "event": "dataDiagnostico"
+  },
+  "form-dermatose-template": {
+    "aliases": {
+      "tipoNotif": "tipo",
+      "dataNotificacao": "dataNotif",
+      "ufNotif": "uf",
+      "munNotif": "municipioNotif",
+      "unidNotif": "unidade",
+      "cidAgravo": "cidFixo"
+    },
+    "agravo": "Dermatoses ocupacionais",
+    "cid": "L98.9",
+    "event": "dataDiag"
+  },
+  "form-lerdort-template": {
+    "aliases": {
+      "tipoNotif": "tipo",
+      "dataNotificacao": "dataNotif",
+      "ufNotif": "uf",
+      "munNotif": "municipio",
+      "unidNotif": "unidade",
+      "cidAgravo": "cidFixo"
+    },
+    "agravo": "LER/DORT",
+    "cid": "Z57.9",
+    "event": "dataDiag"
+  },
+  "form-pair-template": {
+    "aliases": {
+      "tipoNotif": "tipo",
+      "dataNotificacao": "dataNotif",
+      "ufNotif": "uf",
+      "munNotif": "municipio",
+      "unidNotif": "unidade",
+      "cidAgravo": "cidFixo"
+    },
+    "agravo": "PAIR — Perda auditiva induzida por ruído",
+    "cid": "H83.3",
+    "event": "dataDiag"
+  },
+  "form-pneumo-template": {
+    "aliases": {
+      "tipoNotif": "tipo",
+      "dataNotificacao": "dataNotif",
+      "ufNotif": "uf",
+      "munNotif": "municipio",
+      "unidNotif": "unidade",
+      "cidAgravo": "cidFixo"
+    },
+    "agravo": "Pneumoconioses",
+    "cid": "J64",
+    "event": "dataDiag"
+  },
+  "form-mental-template": {
+    "aliases": {
+      "tipoNotif": "tipo",
+      "dataNotificacao": "dataNotif",
+      "ufNotif": "uf",
+      "munNotif": "municipio",
+      "unidNotif": "unidade",
+      "cidAgravo": "cidFixo"
+    },
+    "agravo": "Transtornos mentais relacionados ao trabalho",
+    "cid": "F99",
+    "event": "dataDiagnostico"
+  },
+  "form-voz-template": {
+    "aliases": {},
+    "agravo": "Distúrbio de voz relacionado ao trabalho",
+    "cid": "R49",
+    "event": "inicioSintomas"
+  }
+};
+
+function montarBlocoSinan(root, options) {
+  const config = blocosSinan[options.templateId];
+  const area = root.querySelector('#mainArea');
+  const bloco = document.getElementById('form-sinan-comum-template').content.cloneNode(true);
+  bloco.querySelector('[data-key="agravo"]').value = config.agravo;
+  bloco.querySelector('[data-key="cidAgravo"]').value = config.cid;
+  const data = config.event && area.querySelector('[data-key="' + config.event + '"]');
+  if (data) bloco.querySelector('.field-group').append(data.parentElement);
+  for (const [key, alias] of Object.entries(config.aliases)) {
+    bloco.querySelector('[data-key="' + key + '"]').dataset.key = alias;
+  }
+  if (options.templateId === 'form-acidente-template') {
+    const campos = { nome: 'Informe o nome completo', nascimento: 'Informe a data de nascimento', cpf: 'Informe o CPF', sexo: 'Selecione o sexo' };
+    for (const [key, message] of Object.entries(campos)) {
+      const control = bloco.querySelector('[data-key="' + key + '"], [data-chips="' + key + '"]');
+      control.dataset.required = message;
+      const error = document.createElement('div');
+      error.className = 'field-error';
+      error.dataset.err = key;
+      error.textContent = message;
+      control.after(error);
+    }
+  }
+  if (options.obito) {
+    root.querySelector('.pill').textContent = 'Óbito por acidente de trabalho';
+    const evolucao = root.querySelector('[data-chips="evolucao"]');
+    evolucao.parentElement.insertAdjacentHTML('afterend', '<div><label class="field-label" for="dataObito">Data do óbito</label><input class="input" id="dataObito" data-key="dataObito" type="date"></div><div><label class="field-label" for="numeroDO">Número da Declaração de Óbito, se disponível</label><input class="input" id="numeroDO" data-key="numeroDO" type="text"></div>');
+    evolucao.querySelectorAll('.chip').forEach(chip => {
+      if (chip.dataset.value !== 'Óbito por acidente de trabalho') chip.remove();
+    });
+  }
+  area.prepend(bloco);
+  completarCamposEmpresa(area);
+  const screens = area.querySelectorAll('.screen');
+  screens.forEach((screen, index) => {
+    screen.dataset.screen = index + 1;
+    screen.classList.toggle('active', index === 0);
+  });
+  const total = screens.length - 1;
+  const track = root.querySelector('.progress-track');
+  track.replaceChildren();
+  track.style.gridTemplateColumns = 'repeat(' + total + ', 1fr)';
+  for (let index = 1; index <= total; index++) {
+    const segment = document.createElement('div');
+    segment.className = 'progress-seg';
+    segment.dataset.seg = index;
+    track.append(segment);
+  }
+  return total;
+}
+
+window.montarFormularioAcidente = function montarFormularioAcidente(container, onVoltar, obito = false) {
   return window.montarFormulario(container, onVoltar, {
     templateId: 'form-acidente-template',
-    storageKey: 'notificacao-acidente-v1-inline',
-    total: 6,
-    defaults: { tempoUnidade: 'Anos' }
+    storageKey: obito ? 'notificacao-obito-v1-inline' : 'notificacao-acidente-v1-inline',
+    obito,
+    defaults: { tempoUnidade: 'Anos', ...(obito ? { evolucao: 'Óbito por acidente de trabalho' } : {}) }
   });
 };
 
@@ -12,9 +216,13 @@ const template = document.getElementById(options.templateId);
 if (!template) throw new Error('Modelo do formulario nao encontrado.');
 container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
-const TOTAL = options.total;
+const TOTAL = montarBlocoSinan(root, options);
 const STORAGE_KEY = options.storageKey;
-const defaults = options.defaults || {};
+const config = blocosSinan[options.templateId];
+const defaults = {
+  [config.aliases.dataNotificacao || 'dataNotificacao']: new Date().toISOString().slice(0, 10),
+  ...options.defaults
+};
 const defaultState = () => ({ screen: 1, values: {}, calcManual: false });
 const status = root.querySelector('#form-status');
 const setStatus = (message) => { status.textContent = message; };
@@ -28,6 +236,10 @@ try {
 }
 if (!state || typeof state !== 'object') state = defaultState();
 if (!state.values) state.values = {};
+if (state.sinanLayout !== 1) {
+  state.screen = 1;
+  state.sinanLayout = 1;
+}
 if (!state.screen) state.screen = 1;
 
 const today = new Date().toISOString().slice(0, 10);
@@ -375,7 +587,7 @@ root.querySelector('[data-dialog-close]').addEventListener('click', () => dlg.cl
 root.querySelector('[data-voltar-consulta]').addEventListener('click', onVoltar);
 root.querySelector('#btnNova').addEventListener('click', () => dlg.showModal());
 root.querySelector('#btnConfirmaNova').addEventListener('click', () => {
-state = { screen: 1, values: { ...defaults }, calcManual: false };
+state = { screen: 1, values: { ...defaults }, calcManual: false, sinanLayout: 1 };
 if (root.querySelector('[data-key="dataFechamento"]')) state.values.dataFechamento = today;
 save();
 root.querySelectorAll('[data-key]').forEach(el => {

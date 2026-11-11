@@ -58,6 +58,16 @@
         return l;
       });
     },
+    cnae: function () {
+      return fetch('https://servicodados.ibge.gov.br/api/v2/cnae/classes')
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (classes) {
+          return classes.map(function (x) {
+            var codigo = String(x.id).replace(/\D/g, '').padStart(5, '0');
+            return { c: codigo, d: x.descricao, v: codigo + ' – ' + x.descricao };
+          });
+        });
+    },
     cid: function () {
       var u = GH + 'msrodrigues/cid10/master/data-raw/';
       return Promise.all([csv(u + 'CID-10-CATEGORIAS.CSV', 'iso-8859-1'), csv(u + 'CID-10-SUBCATEGORIAS.CSV', 'iso-8859-1')])
@@ -218,7 +228,7 @@
     atualizarDicaCnpj(raiz);
 
     // Unidade notificadora -> código CNES
-    [['unidNotif', 'codUnidNotif'], ['unidade', null], ['unidadeNotificadora', null], ['munInvestigadora', 'codUnidInv']]
+    [['unidNotif', 'codUnidNotif'], ['unidade', 'codUnidNotif'], ['unidadeNotificadora', 'codUnidNotif'], ['munInvestigadora', 'codUnidInv']]
       .forEach(function (par) {
         var nome = campo(raiz, [par[0]]);
         var cod = par[1] ? campo(raiz, [par[1]]) : null;
@@ -229,8 +239,8 @@
       });
 
     // Município -> código IBGE (6 dígitos) e UF
-    [['munRes', 'ibgeRes', 'ufRes'], ['munEmp', 'ibgeEmp', 'ufEmp'], ['municipioNotif', null, null],
-     ['munNotif', 'ibgeNotif', 'ufNotif'], ['municipioNotificacao', null, 'ufNotificacao']]
+    [['munRes', 'ibgeRes', 'ufRes'], ['munEmp', 'ibgeEmp', 'ufEmp'], ['municipioNotif', 'ibgeNotif', 'uf'],
+     ['munNotif', 'ibgeNotif', 'ufNotif'], ['municipioNotificacao', 'ibgeNotif', 'ufNotificacao'], ['munPrincipal', 'ibgePrincipal', 'ufPrincipal']]
       .forEach(function (t) {
         var mun = campo(raiz, [t[0]]);
         var ibge = t[1] ? campo(raiz, [t[1]]) : null;
@@ -238,12 +248,23 @@
         anexarLista(mun, 'mun', function (item) {
           if (norm(mun.value) !== norm(item.v)) definir(mun, item.v, true);
           if (ibge) definir(ibge, item.c, true);
-          if (uf) definir(uf, item.uf);
+          if (uf) definir(uf, item.uf, true);
         });
       });
 
     // Ocupação -> CBO
     anexarLista(campo(raiz, ['ocupacao']), 'cbo', null);
+
+    ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (k) {
+      anexarLista(campo(raiz, [k]), 'cnae', null);
+    });
+    if (!campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao'])) {
+      var municipio = campo(raiz, ['municipio']);
+      anexarLista(municipio, 'mun', function (item) {
+        definir(campo(raiz, ['ibgeNotif']), item.c, true);
+        definir(campo(raiz, ['uf']), item.uf, true);
+      });
+    }
 
     // Diagnóstico -> CID-10 (campos editáveis; o CID fixo do agravo não é alterado)
     ['cid', 'cid10', 'cid10Notif'].forEach(function (k) {
