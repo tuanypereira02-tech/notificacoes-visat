@@ -418,6 +418,26 @@ persistInputs();
 if (el.type === 'date') el.addEventListener('change', persistInputs);
 });
 
+// P16: retorno imediato no campo de nome, ao sair do campo.
+{
+  const campoNome = root.querySelector('#sinan-nome');
+  const retorno = document.createElement('p');
+  retorno.className = 'field-help';
+  retorno.dataset.visatNome = '1';
+  retorno.setAttribute('role', 'status');
+  (root.querySelector('#sinan-nome-ajuda') || campoNome).insertAdjacentElement('afterend', retorno);
+  const conferirNome = () => {
+    const valor = campoNome.value.trim();
+    const problema = valor ? problemaNome(valor) : '';
+    const aviso = valor ? avisoNome(valor) : '';
+    retorno.textContent = problema ? problema + '.' : aviso;
+    retorno.style.color = problema ? '#B3261E' : '#7d4000';
+    campoNome.toggleAttribute('aria-invalid', !!problema);
+  };
+  campoNome.addEventListener('blur', conferirNome);
+  campoNome.addEventListener('input', () => { if (retorno.textContent) conferirNome(); });
+}
+
 // Masks
 function mascaraCpf(valor) {
   const d = String(valor).replace(/\D/g, '').slice(0, 11);
@@ -450,6 +470,30 @@ const input = root.querySelector('[data-key="' + key + '"]');
 if (input) input.classList.remove('invalid');
 }
 
+// P16: nome da pessoa notificada. Bloqueia apenas entradas sem conteúdo útil; nomes curtos,
+// compostos, com partículas, apóstrofo, hífen ou acentos de outras línguas continuam aceitos.
+const NOMES_GENERICOS = /^(teste|testes|ignorado|ignorada|nao informado|nao informada|desconhecido|desconhecida|paciente|fulano|fulana|fulano de tal|sem nome|nome|nenhum|xxx+|n ?a|n ?d|s ?n|anonimo|anonima)$/;
+function problemaNome(valor) {
+  const texto = String(valor || '').trim().replace(/\s+/g, ' ');
+  if (!/\p{L}/u.test(texto)) return 'Nome completo: informe o nome da pessoa notificada';
+  if (/[^\p{L}\p{M} '’.-]/u.test(texto)) return 'Nome completo: retire números e símbolos';
+  const letras = texto.replace(/[^\p{L}]/gu, '');
+  if (letras.length < 2) return 'Nome completo: "' + texto + '" é uma abreviação. Informe o nome sem abreviações';
+  const partes = texto.split(' ').map(parte => parte.replace(/[^\p{L}]/gu, '')).filter(Boolean);
+  if (partes.every(parte => parte.length === 1)) return 'Nome completo: informe o nome por extenso, não apenas as iniciais';
+  if (/^(.)\1+$/u.test(letras.toLowerCase())) return 'Nome completo: o texto informado não é um nome';
+  const normal = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[.'’-]/g, '');
+  if (NOMES_GENERICOS.test(normal)) return 'Nome completo: informe o nome da pessoa, não um termo genérico';
+  return '';
+}
+function avisoNome(valor) {
+  const texto = String(valor || '').trim().replace(/\s+/g, ' ');
+  if (!texto || problemaNome(texto)) return '';
+  if (texto.split(' ').length === 1) return 'O nome tem uma só palavra. Confirme se é o nome completo da pessoa, sem abreviações.';
+  if (/(^|\s)\p{L}\.(\s|$)/u.test(texto)) return 'O nome parece conter abreviação (letra seguida de ponto). Confirme se é possível escrevê-lo por extenso.';
+  return '';
+}
+
 function preenchidoComLetras(campo) {
   return /\p{L}/u.test(campo.value);
 }
@@ -470,7 +514,8 @@ function camposBasicosPendentes() {
     ['#sinan-unid', 'Nome da unidade de saúde ou fonte notificadora', faltaNome('#sinan-unid')],
     ['#' + campoEvento.id, rotuloEvento, !dataEvento],
     ['#' + campoEvento.id, 'A data de referência do agravo deve ser igual ou anterior à notificação', dataEvento && notificacao.value && dataEvento > notificacao.value],
-    ['#sinan-nome', 'Nome completo, sem abreviações', faltaNome('#sinan-nome')],
+    ['#sinan-nome', problemaNome(root.querySelector('#sinan-nome').value) || 'Nome completo, sem abreviações',
+      !!problemaNome(root.querySelector('#sinan-nome').value)],
     ['#sinan-nasc', 'Data de nascimento ou idade com unidade', !nascimento.value && idadeEmAnos() === null],
     ['#sinan-nasc', 'A data de nascimento deve ser igual ou anterior à data de referência do agravo', nascimento.value && dataEvento && nascimento.value > dataEvento],
     ['[data-chips="sexo"]', 'Sexo', !state.values.sexo],
@@ -579,6 +624,9 @@ function datasIncoerentes() {
 function checarDadosDigitados() {
   const avisos = [];
   const input = campoPorChave;
+  const campoNome = root.querySelector('#sinan-nome');
+  const aviso = avisoNome(campoNome.value);
+  if (aviso) avisos.push({ campo: campoNome, mensagem: aviso });
   const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
   const obito = input('dataObito');
   if (obito?.value && fechamento?.value && fechamento.value < obito.value &&
@@ -837,10 +885,11 @@ root.querySelector('#btnImprimir').addEventListener('click', () => {
 
 btnPdfConferencia.addEventListener('click', () => {
   const nome = root.querySelector('#sinan-nome');
-  if (!preenchidoComLetras(nome)) {
-    showScreen(2);
-    mostrarPendencias([{ tela: 2, rotulo: 'Nome completo', campo: nome }],
-      'Informe o nome completo para gerar o PDF');
+  const problema = problemaNome(nome.value);
+  if (problema) {
+    showScreen(Number(nome.closest('.screen').dataset.screen));
+    mostrarPendencias([{ tela: Number(nome.closest('.screen').dataset.screen), rotulo: problema, campo: nome }],
+      'Corrija o nome para gerar o PDF');
     return;
   }
   persistInputs();

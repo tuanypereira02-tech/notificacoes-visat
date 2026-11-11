@@ -26,5 +26,7 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
 - P13: atalhos validados junto ao rótulo (CBO/MTE, CNAE/IBGE, CNPJ/Receita, códigos IBGE, CNES, CAT/INSS), em nova aba, sem perder o preenchimento.
 - P14: município (tabela local data/municipios.json) e unidade (CNES) confirmados por escolha na lista, por texto ou código digitado e saída do campo;
   o campo informa se o código foi validado na tabela, se o preenchimento ficou manual ou se há mais de uma opção.
+- P16: o nome completo bloqueia o PDF apenas sem conteúdo útil (letra única, só iniciais, números ou símbolos,
+  letra repetida, termo genérico como "teste" ou "ignorado"); nome de uma só palavra ou com abreviação gera aviso.
 - Homologação: acrescentar ?homologacao=1 ao endereço marca a tela, o PDF e o assunto do e-mail como HOMOLOGAÇÃO (usar só dados fictícios).
 - notificacao.html: liberação, na regra de segurança, das consultas de CEP (ViaCEP) e CNPJ (BrasilAPI e CNPJ.ws).
