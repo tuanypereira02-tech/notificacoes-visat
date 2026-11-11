@@ -494,25 +494,36 @@ function documentoValido(valor, tipo) {
   });
 }
 
+const seletorDocumentos = '[data-key="cpf"], [data-key="cnpj"], [data-key="cnpjPrincipal"], [data-key="cnpjPrinc"]';
+
+function documentosPendentes() {
+  const pendentes = [];
+  const campos = root.querySelectorAll(seletorDocumentos);
+  for (const campo of campos) {
+    const valor = campo.value.trim();
+    if (!valor || campo.closest('[hidden]')) continue;
+    const chave = campo.dataset.key;
+    const permiteCpf = chave === 'cpf' || chave === 'cnpj';
+    const digitos = valor.replace(/[.\/\s-]/g, '');
+    const tipo = chave === 'cpf' || (permiteCpf && /^\d{11}$/.test(digitos)) ? 'cpf' : 'cnpj';
+    if (documentoValido(valor, tipo)) continue;
+    const nome = chave === 'cpf' ? 'CPF da pessoa notificada'
+      : chave === 'cnpj' ? 'CPF ou CNPJ do empregador' : 'CNPJ da empresa principal';
+    pendentes.push({
+      tela: Number(campo.closest('.screen').dataset.screen),
+      rotulo: nome + ' inválido. Corrija ou deixe em branco.',
+      campo
+    });
+  }
+  return pendentes;
+}
+
 function checarDadosDigitados() {
   const avisos = [];
   const input = chave => root.querySelector('[data-key="' + chave + '"]');
   const nascimento = input('nascimento');
   const notificacao = input('dataNotificacao') || input('dataNotif');
   const evento = config.event && input(config.event);
-  const cpf = input('cpf');
-  if (cpf?.value && !documentoValido(cpf.value, 'cpf')) {
-    avisos.push({ campo: cpf, mensagem: 'Confira os dígitos do CPF da pessoa notificada.' });
-  }
-  for (const chave of ['cnpj', 'cnpjPrincipal', 'cnpjPrinc']) {
-    const campo = input(chave);
-    if (!campo?.value) continue;
-    const valor = campo.value.replace(/[.\/\s-]/g, '');
-    const tipo = chave === 'cnpj' && /^\d{11}$/.test(valor) ? 'cpf' : 'cnpj';
-    if (!documentoValido(valor, tipo)) {
-      avisos.push({ campo, mensagem: 'Confira o documento do empregador ou da empresa principal.' });
-    }
-  }
   const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
   const obito = input('dataObito');
   if (fechamento?.value && notificacao?.value && fechamento.value < notificacao.value) {
@@ -584,7 +595,7 @@ let emCorrecao = false;
 async function finalizarFicha() {
   if (conferindoCoerencia) return;
   persistInputs();
-  const pendentes = camposBasicosPendentes();
+  const pendentes = camposBasicosPendentes().concat(documentosPendentes());
   if (!pendentes.length) {
     conferindoCoerencia = true;
     btnContinuar.disabled = true;
@@ -606,7 +617,7 @@ async function finalizarFicha() {
     return;
   }
   emCorrecao = true;
-  mostrarPendencias(pendentes, 'Complete os dados básicos para finalizar');
+  mostrarPendencias(pendentes, 'Revise as pendências para gerar o PDF final');
 }
 
 function mostrarPendencias(pendentes, mensagem) {
@@ -734,7 +745,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
 
     if (fieldLabel instanceof HTMLLabelElement && fieldLabel.htmlFor) {
       const control = root.querySelector(`#${fieldLabel.htmlFor}`);
-      if (!control) return;
+      if (!control || (control.matches(seletorDocumentos) && control.closest('[hidden]'))) return;
       const field = addField(block, labelText);
       if (control === residencia && residencia.value === 'exterior') {
         addAnswer(field, state.values.paisExterior);
@@ -759,8 +770,15 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
 }
 
 root.querySelector('#btnImprimir').addEventListener('click', () => {
-buildPrint();
-window.print();
+  persistInputs();
+  const pendentes = camposBasicosPendentes().concat(documentosPendentes());
+  if (pendentes.length) {
+    emCorrecao = true;
+    mostrarPendencias(pendentes, 'Revise as pendências para gerar o PDF final');
+    return;
+  }
+  buildPrint();
+  window.print();
 });
 
 btnPdfConferencia.addEventListener('click', () => {
