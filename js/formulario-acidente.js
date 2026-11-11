@@ -1,3 +1,56 @@
+function completarCamposEmpresa(area) {
+  const grupos = [
+    {
+      chave: 'cnpj',
+      campos: [
+        [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
+        [['cnae'], 'Atividade econômica (CNAE)'],
+        [['ufEmp', 'uf'], 'UF da empresa'],
+        [['munEmp', 'municipio'], 'Município da empresa'],
+        [['ibgeEmp'], 'Código IBGE do município da empresa'],
+        [['bairroEmp', 'bairro'], 'Bairro da empresa'],
+        [['endEmp', 'endereco'], 'Logradouro da empresa'],
+        [['numEmp', 'numero'], 'Número do endereço da empresa'],
+        [['cepEmp'], 'CEP da empresa']
+      ]
+    },
+    {
+      chave: 'cnpjPrincipal',
+      campos: [
+        [['ufPrincipal'], 'UF da empresa principal'],
+        [['munPrincipal'], 'Município da empresa principal'],
+        [['ibgePrincipal'], 'Código IBGE da empresa principal'],
+        [['bairroPrincipal'], 'Bairro da empresa principal'],
+        [['endPrincipal'], 'Logradouro da empresa principal'],
+        [['numPrincipal'], 'Número do endereço da empresa principal'],
+        [['cepPrincipal'], 'CEP da empresa principal']
+      ]
+    }
+  ];
+  for (const grupo of grupos) {
+    const documento = area.querySelector('[data-key="' + grupo.chave + '"]' +
+      (grupo.chave === 'cnpjPrincipal' ? ', [data-key="cnpjPrinc"]' : ''));
+    if (!documento) continue;
+    const secao = documento.closest('.screen');
+    const destino = documento.closest('[data-show-when]') || documento.closest('.field-group');
+    for (const [chaves, texto] of grupo.campos) {
+      if (chaves.some(chave => secao.querySelector('[data-key="' + chave + '"]'))) continue;
+      const chave = chaves[0];
+      const caixa = document.createElement('div');
+      const label = document.createElement('label');
+      label.className = 'field-label';
+      label.htmlFor = 'empresa-' + chave;
+      label.textContent = texto;
+      const input = document.createElement('input');
+      input.className = 'input input-lg';
+      input.id = label.htmlFor;
+      input.dataset.key = chave;
+      caixa.append(label, input);
+      destino.append(caixa);
+    }
+  }
+}
+
 const blocosSinan = {
   "form-acidente-template": {
     "aliases": {},
@@ -130,6 +183,7 @@ function montarBlocoSinan(root, options) {
     });
   }
   area.prepend(bloco);
+  completarCamposEmpresa(area);
   const screens = area.querySelectorAll('.screen');
   screens.forEach((screen, index) => {
     screen.dataset.screen = index + 1;
