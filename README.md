@@ -1,10 +1,22 @@
 # Notificações compulsórias — VISAT Florianópolis
 
-Cópia do site de direcionamento de notificações compulsórias (notificacao-sms.onrender.com), desenvolvido por Luana Lenzi, mantida pela VISAT/SMS Florianópolis com o preenchimento automático dos formulários (js/autopreenchimento.js).
+Cópia do site de direcionamento de notificações compulsórias (notificacao-sms.onrender.com), desenvolvido por Luana Lenzi, mantida pela VISAT/SMS Florianópolis com preenchimento automático e regras de qualidade dos formulários de Saúde do Trabalhador.
 
-Alterações em relação ao original:
+Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucional saudetrab.sms.pmf@floripa.sc.gov.br.
 
-- inclusão de js/autopreenchimento.js em index.html e notificacao.html;
-- liberação, na regra de segurança de notificacao.html, das consultas de CEP (ViaCEP) e CNPJ (BrasilAPI e CNPJ.ws).
+## Alterações em relação ao original
 
-Os demais arquivos são cópias sem alteração do site original, obtidas em 11/11/2026.
+- js/autopreenchimento.js e js/autopreenchimento-listas.js: idade, CEP, CNPJ, unidade (CNES), município, CBO e CNAE.
+- js/cid-qualificado.js (modelo VISAT 2026.11-1):
+  - doenças relacionadas ao trabalho: o diagnóstico específico aceita somente CID do escopo da ficha
+    (câncer C00–C97 e D00–D48; dermatose L00–L99; LER/DORT M00–M99 e G50–G59; PAIR H83.3, H90, H91 e H93;
+    pneumoconiose J60–J65 e J92; transtorno mental F00–F99 e Z73.0);
+    CID que consta da LDRT (Portaria GM/MS nº 5.674/2024) mostra capítulo, página e agentes;
+    CID do escopo fora da LDRT é aceito com aviso; CID fora do escopo impede o PDF final;
+  - acidente de trabalho: CID da lesão pela CID-10 cap. XIX (S00–T98) e CID da causa externa pelo cap. XX (V01–Y98).
+- data/cid-dart.json e data/cid-at.json: gerados da Lista-base CID LDRT/CELK VISAT 2024–2026 v3 e da tabela CID-10 do DATASUS.
+- js/formulario-acidente.js: o PDF final exige os campos básicos aplicáveis e é bloqueado por data impossível ou incoerente,
+  agravo incompatível, CPF/CNPJ inválido e CID fora do escopo; a prévia sai com a marca "PRÉVIA — NÃO ENCAMINHAR";
+  o PDF final traz título, agravo, CID do agravo e versão do modelo; campos condicionais ocultos não são impressos.
+- Homologação: acrescentar ?homologacao=1 ao endereço marca a tela, o PDF e o assunto do e-mail como HOMOLOGAÇÃO (usar só dados fictícios).
+- notificacao.html: liberação, na regra de segurança, das consultas de CEP (ViaCEP) e CNPJ (BrasilAPI e CNPJ.ws).

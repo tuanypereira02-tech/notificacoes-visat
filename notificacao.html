@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fichario.app https://viacep.com.br https://brasilapi.com.br https://publica.cnpj.ws https://servicodados.ibge.gov.br https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>Notificação Compulsória — Vigilância em Saúde (DEMONSTRAÇÃO)</title>
+  <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-cadastro-v1">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-cid-v1">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -16,7 +16,7 @@
 
   <div class="aviso" role="note">
     <div class="wrap">
-      <strong>Aviso:</strong> Site não oficial, destinado exclusivamente a fins demonstrativos.
+      <strong>VISAT/SMS Florianópolis.</strong> Fichas de Saúde do Trabalhador: preencha, salve o PDF final e encaminhe ao e-mail institucional <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.
     </div>
   </div>
 
@@ -52,7 +52,7 @@
 
   <footer class="rodape">
     <div class="wrap">
-      <p>Demonstração técnica. Conteúdo, órgãos e links devem ser validados pela equipe responsável antes de qualquer uso público.</p>
+      <p>Vigilância em Saúde do Trabalhador (VISAT) — Secretaria Municipal de Saúde de Florianópolis. Os dados preenchidos não são armazenados neste site.</p>
     </div>
   </footer>
 
@@ -70,7 +70,7 @@
 <label class="field-label" for="sinan-agravo">Agravo / doença</label>
 <input class="input input-lg" id="sinan-agravo" type="text" data-key="agravo" readonly>
 </div>
-<div><label class="field-label" for="sinan-cidAgravo">Código do agravo (CID-10)</label><input class="input input-lg" id="sinan-cidAgravo" type="text" data-key="cidAgravo" ></div>
+<div><label class="field-label" for="sinan-cidAgravo">Código do agravo (CID-10)</label><input class="input input-lg" id="sinan-cidAgravo" type="text" data-key="cidAgravo" readonly></div>
 <div>
 <label class="field-label" for="sinan-data-notif">Data da notificação</label>
 <input class="input input-lg" id="sinan-data-notif" type="date" data-key="dataNotificacao">
@@ -273,7 +273,7 @@
   </div>
   <div class="shell-container hospital-alert-container">
   <div class="alert hospital-alert" role="note">
-  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
   </div>
   </div>
   </header>
@@ -286,8 +286,8 @@
   <div class="success-icon">
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
   </div>
-  <h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
-  <p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+  <h1 class="screen-title center-text">Ficha concluída</h1>
+  <p class="screen-sub center-text">O envio não é automático. Salve o PDF final e encaminhe-o ao e-mail institucional da VISAT.</p>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="actions-row">
   <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
@@ -308,7 +308,7 @@
   </div>
   </div>
 
-  <footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+  <footer class="app-footer" id="form-status" role="status">Os dados ficam somente neste navegador · O encaminhamento é feito pelo e-mail institucional da VISAT</footer>
   </div>
 
   <div class="print-only" id="printArea">
@@ -317,7 +317,7 @@
   <p class="pf-title">FORMULÁRIO COMPLETO — ACIDENTE DE TRABALHO</p>
   </div>
   <p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
-  <p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+  <p class="pf-note">Cada campo mostra somente o valor informado.</p>
   <div id="pfBlocks"></div>
   <div class="pf-sign">
   <div>Assinatura do profissional responsável</div>
@@ -357,7 +357,7 @@
   </div>
   <div class="shell-container hospital-alert-container">
   <div class="alert hospital-alert" role="note">
-  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms@floripa.sc.gov.br">saudetrab.sms@floripa.sc.gov.br</a>.</p>
+  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
   </div>
   </div>
   </header>
@@ -499,9 +499,13 @@
   <div class="field-error" data-err="comoOcorreu">Selecione como ocorreu</div>
   </div>
   <div>
-  <label class="field-label" for="cid">CID do diagnóstico</label>
-  <input class="input input-lg" id="cid" type="text" maxlength="8" data-key="cid" data-required="Informe o CID">
-  <div class="field-error" data-err="cid">Informe o CID</div>
+  <label class="field-label" for="cid">CID da lesão (cap. XIX — S00 a T98)</label>
+  <input class="input input-lg" id="cid" type="text" data-key="cid" data-summary="CID da lesão">
+  <div class="field-error" data-err="cid">Informe o CID da lesão</div>
+  </div>
+  <div>
+  <label class="field-label" for="cidCausa">CID da causa externa (cap. XX — V01 a Y98)</label>
+  <input class="input input-lg" id="cidCausa" type="text" data-key="cidCausa" data-summary="CID da causa externa">
   </div>
   <div>
   <span class="field-label">Regime de tratamento</span>
@@ -596,8 +600,8 @@
   <div class="success-icon">
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
   </div>
-  <h1 class="screen-title center-text">Ficha demonstrativa preenchida</h1>
-  <p class="screen-sub center-text">Este protótipo não enviou a notificação. Não use esta ficha como comprovante de comunicação.</p>
+  <h1 class="screen-title center-text">Ficha concluída</h1>
+  <p class="screen-sub center-text">O envio não é automático. Salve o PDF final e encaminhe-o ao e-mail institucional da VISAT.</p>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="actions-row">
   <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
@@ -618,7 +622,7 @@
   </div>
   </div>
 
-  <footer class="app-footer" id="form-status" role="status">Protótipo navegável para validação de fluxo · Os dados não são enviados a nenhum sistema</footer>
+  <footer class="app-footer" id="form-status" role="status">Os dados ficam somente neste navegador · O encaminhamento é feito pelo e-mail institucional da VISAT</footer>
   </div>
 
   <div class="print-only" id="printArea">
@@ -627,7 +631,7 @@
   <p class="pf-title">FORMULÁRIO COMPLETO — ACIDENTE DE TRABALHO</p>
   </div>
   <p class="pf-date">Data de impressão: <span id="pfDataImpressao"></span></p>
-  <p class="pf-note">Este protótipo não envia notificações. Cada campo mostra somente o valor informado.</p>
+  <p class="pf-note">Cada campo mostra somente o valor informado.</p>
   <div id="pfBlocks"></div>
   <div class="pf-sign">
   <div>Assinatura do profissional responsável</div>
@@ -650,9 +654,10 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261111-pdf-documentos" defer></script>
-  <script src="js/app.js?v=20261111-cadastro-v1" defer></script>
-  <script src="js/autopreenchimento.js?v=20261111-cadastro-v1" defer></script>
-  <script src="js/autopreenchimento-listas.js?v=20261111-coerencia" defer></script>
+  <script src="js/formulario-acidente.js?v=20261111-cid-v1" defer></script>
+  <script src="js/app.js?v=20261111-cid-v1" defer></script>
+  <script src="js/autopreenchimento.js?v=20261111-cid-v1" defer></script>
+  <script src="js/autopreenchimento-listas.js?v=20261111-cid-v1" defer></script>
+  <script src="js/cid-qualificado.js?v=20261111-cid-v1" defer></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
  *   - Unidade de saúde: lista CNES da rede de Florianópolis (data/cnes-florianopolis.json); código CNES com 7 dígitos.
  *   - Município: API de localidades do IBGE; código com 6 dígitos (sem o dígito verificador).
  *   - Ocupação: CBO 2002 (MTE) + códigos adaptados pelo DATASUS (data/cbo-datasus-adicional.json); 6 caracteres.
- *   - CID-10: tabela do DATASUS; código sem ponto, com 3 ou 4 caracteres.
+ *   - CID-10: tratado em js/cid-qualificado.js (escopo por ficha, LDRT e cap. XIX/XX no acidente de trabalho).
  * Ao escolher um item da lista, o campo recebe "código – descrição" (ou o nome, no caso de unidade e município)
  * e o campo de código correspondente é preenchido. Nada já digitado é apagado.
  */
@@ -496,11 +496,7 @@
     ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (k) {
       anexarLista(campo(raiz, [k]), 'cnae', null);
     });
-    // Diagnóstico -> CID-10 (campos editáveis; o CID fixo do agravo não é alterado)
-    ['cid', 'cid10', 'cid10Notif'].forEach(function (k) {
-      var el = campo(raiz, [k]);
-      if (el && !el.readOnly && !el.disabled) anexarLista(el, 'cid', null);
-    });
+    // Diagnóstico -> CID-10: busca restrita ao escopo de cada ficha em js/cid-qualificado.js.
   }
 
   function raizDoFormulario(el) {

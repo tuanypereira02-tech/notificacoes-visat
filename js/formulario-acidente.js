@@ -11,6 +11,12 @@ window.addEventListener('pageshow', evento => {
   if (evento.persisted) window.location.reload();
 });
 
+const VISAT_MODELO = 'Modelo VISAT 2026.11-1';
+const VISAT_EMAIL = 'saudetrab.sms.pmf@floripa.sc.gov.br';
+const VISAT_HOMOLOGACAO = (() => {
+  try { return new URLSearchParams(window.location.search).has('homologacao'); } catch { return false; }
+})();
+
 function completarCamposEmpresa(area) {
   const grupos = [
     {
@@ -234,6 +240,13 @@ if (root.querySelector('[data-key="dataFechamento"]') && !state.values.dataFecha
 }
 
 const area = root.querySelector('#mainArea');
+if (VISAT_HOMOLOGACAO) {
+  const faixa = document.createElement('p');
+  faixa.className = 'highlight-box';
+  faixa.dataset.visatHomologacao = '1';
+  faixa.textContent = 'Ambiente de homologação: use somente dados fictícios. O PDF e o e-mail saem marcados como HOMOLOGAÇÃO.';
+  area.before(faixa);
+}
 const counter = root.querySelector('#stepCounter');
 const btnVoltar = root.querySelector('#btnVoltar');
 const btnContinuar = root.querySelector('#btnContinuar');
@@ -463,6 +476,27 @@ function camposBasicosPendentes() {
     ['[data-chips="sexo"]', 'Sexo', !state.values.sexo],
     ['[data-chips="gestante"]', 'Situação gestacional', state.values.sexo === 'Feminino' && !state.values.gestante]
   ];
+  const agravoCampo = root.querySelector('#sinan-agravo');
+  const cidAgravoCampo = root.querySelector('#sinan-cidAgravo');
+  regras.push(['#sinan-agravo', 'Agravo incompatível com esta ficha',
+    agravoCampo.value !== config.agravo || cidAgravoCampo.value.trim().toUpperCase() !== config.cid]);
+  // Datas impossíveis ou incoerentes impedem o PDF final.
+  root.querySelectorAll('input[type="date"][data-key]').forEach((campo, indice) => {
+    if (!campo.value || campo.closest('[hidden]') || campo.id === 'sinan-data-notif') return;
+    if (!campo.id) campo.id = 'visat-data-' + indice;
+    const rotulo = (campo.labels?.[0]?.textContent || 'Data').trim();
+    if (!campo.validity.valid || campo.value < '1900-01-01') regras.push(['#' + campo.id, rotulo + ': data impossível', true]);
+    else if (campo.value > today) regras.push(['#' + campo.id, rotulo + ': a data não pode ser posterior a hoje', true]);
+  });
+  if (nascimento.value && notificacao.value && nascimento.value > notificacao.value) {
+    regras.push(['#sinan-nasc', 'A data de nascimento deve ser igual ou anterior à data da notificação', true]);
+  }
+  const idadeAnos = idadeEmAnos();
+  if (idadeAnos !== null && idadeAnos > 120) regras.push(['#sinan-nasc', 'Idade acima de 120 anos: confira o nascimento ou a idade', true]);
+  for (const { campo, mensagem } of datasIncoerentes()) {
+    if (!campo.id) campo.id = 'visat-' + (campo.dataset.key || 'campo');
+    regras.push(['#' + campo.id, mensagem, true]);
+  }
   if (residencia.value === 'BR') {
     regras.push(['#sinan-uf-res', 'UF de residência', !root.querySelector('#sinan-uf-res').value],
       ['#sinan-mun-res', 'Nome do município de residência', faltaNome('#sinan-mun-res')]);
@@ -471,10 +505,14 @@ function camposBasicosPendentes() {
     regras.push(['#sinan-pais', 'Nome do país de residência fora do Brasil',
       !preenchidoComLetras(pais) || /^bra[sz]il$/i.test(pais.value.trim())]);
   }
-  return regras.filter(([, , pendente]) => pendente).map(([seletor, rotulo]) => {
+  const pendentes = regras.filter(([, , pendente]) => pendente).map(([seletor, rotulo]) => {
     const campo = root.querySelector(seletor);
     return { tela: Number(campo.closest('.screen').dataset.screen), rotulo, campo };
   });
+  for (const { campo, rotulo } of window.visatPendenciasCid?.(root) || []) {
+    pendentes.push({ tela: Number(campo.closest('.screen').dataset.screen), rotulo, campo });
+  }
+  return pendentes;
 }
 
 function documentoValido(valor, tipo) {
@@ -518,21 +556,31 @@ function documentosPendentes() {
   return pendentes;
 }
 
-function checarDadosDigitados() {
-  const avisos = [];
-  const input = chave => root.querySelector('[data-key="' + chave + '"]');
-  const nascimento = input('nascimento');
-  const notificacao = input('dataNotificacao') || input('dataNotif');
-  const evento = config.event && input(config.event);
-  const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
-  const obito = input('dataObito');
+function campoPorChave(chave) { return root.querySelector('[data-key="' + chave + '"]'); }
+
+// Datas incoerentes entre si impedem o PDF final.
+function datasIncoerentes() {
+  const erros = [];
+  const nascimento = campoPorChave('nascimento');
+  const notificacao = campoPorChave('dataNotificacao') || campoPorChave('dataNotif');
+  const evento = config.event && campoPorChave(config.event);
+  const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(campoPorChave).find(campo => campo?.type === 'date');
+  const obito = campoPorChave('dataObito');
   if (fechamento?.value && notificacao?.value && fechamento.value < notificacao.value) {
-    avisos.push({ campo: fechamento, mensagem: 'A data de encerramento está antes da notificação.' });
+    erros.push({ campo: fechamento, mensagem: 'A data de encerramento está antes da notificação' });
   }
   if (obito?.value && [nascimento, config.event === 'dataAcidente' ? evento : null]
       .some(campo => campo?.value && obito.value < campo.value)) {
-    avisos.push({ campo: obito, mensagem: 'A data do óbito está antes do nascimento ou do acidente. Confira as datas.' });
+    erros.push({ campo: obito, mensagem: 'A data do óbito está antes do nascimento ou do acidente' });
   }
+  return erros;
+}
+
+function checarDadosDigitados() {
+  const avisos = [];
+  const input = campoPorChave;
+  const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
+  const obito = input('dataObito');
   if (obito?.value && fechamento?.value && fechamento.value < obito.value &&
       /^óbito/i.test(String(state.values.evolucao || ''))) {
     avisos.push({ campo: fechamento, mensagem: 'Confira o encerramento: a evolução por óbito foi registrada com data posterior ao encerramento.' });
@@ -543,7 +591,7 @@ function checarDadosDigitados() {
 let avisosCoerencia = [];
 let conferindoCoerencia = false;
 async function verificarCoerencia() {
-  const avisos = checarDadosDigitados().concat(window.visatConferirEmpresas?.(root) || []);
+  const avisos = checarDadosDigitados().concat(window.visatConferirEmpresas?.(root) || [], window.visatAvisosCid?.(root) || []);
   if (!window.visatConferirTabelas) return avisos;
   let temporizador;
   try {
@@ -670,14 +718,20 @@ if (isDone) buildSummary();
 
 function buildPrint(paraConferencia = false) {
 const tituloAgravo = options.obito ? 'Óbito por acidente de trabalho' : config.agravo;
+const area_impressao = root.querySelector('#printArea');
+area_impressao.classList.toggle('pf-preliminar', paraConferencia);
+area_impressao.classList.toggle('pf-homologacao', VISAT_HOMOLOGACAO);
+area_impressao.dataset.marca = paraConferencia ? 'PRÉVIA — NÃO ENCAMINHAR' : VISAT_HOMOLOGACAO ? 'HOMOLOGAÇÃO' : '';
 const tituloImpressao = root.querySelector('.pf-title');
-if (tituloImpressao) tituloImpressao.textContent = paraConferencia
-  ? 'PARA CONFERÊNCIA — ' + tituloAgravo : tituloAgravo;
+if (tituloImpressao) tituloImpressao.textContent = (VISAT_HOMOLOGACAO ? 'HOMOLOGAÇÃO — ' : '') + (paraConferencia
+  ? 'PRÉVIA PARA CONFERÊNCIA — ' + tituloAgravo
+  : 'NOTIFICAÇÃO INDIVIDUAL — ' + tituloAgravo.toUpperCase() + ' (CID-10 ' + config.cid + ')');
 root.querySelector('.pf-note').textContent = paraConferencia
-  ? 'Ficha em preenchimento. Complete os campos obrigatórios antes de encaminhar a notificação.'
-  : 'Este protótipo não envia notificações. Cada campo mostra somente o valor informado.';
+  ? 'Prévia da ficha em preenchimento, sem validade como notificação. Não encaminhe este arquivo: finalize a ficha e gere o PDF final.'
+  : (VISAT_HOMOLOGACAO ? 'Teste de homologação com dados fictícios. ' : '') +
+    'Cada campo mostra somente o valor informado. Encaminhar este PDF ao e-mail institucional ' + VISAT_EMAIL + '.';
 root.querySelector('.pf-sign').hidden = paraConferencia;
-root.querySelector('#pfDataImpressao').textContent = formatDate(today);
+root.querySelector('#pfDataImpressao').textContent = formatDate(today) + ' · ' + VISAT_MODELO;
 const blocks = root.querySelector('#pfBlocks');
 blocks.replaceChildren();
 
@@ -715,7 +769,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
   block.appendChild(title);
 
   screen.querySelectorAll('.field-label').forEach((fieldLabel) => {
-    if (screen === endereco && (fieldLabel.closest('[hidden]') || fieldLabel.htmlFor === 'sinan-pais')) return;
+    if (fieldLabel.closest('[hidden]') || (screen === endereco && fieldLabel.htmlFor === 'sinan-pais')) return;
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
@@ -881,7 +935,10 @@ if (email && !acoes.querySelector('[data-visat-email]')) {
   link.className = 'btn';
   link.dataset.variant = 'outline';
   link.dataset.visatEmail = '1';
-  link.href = email.href;
+  const assunto = (VISAT_HOMOLOGACAO ? '[HOMOLOGAÇÃO] ' : '') + 'Notificação — ' +
+    (options.obito ? 'Óbito por acidente de trabalho' : config.agravo) + ' — ' + formatDate(state.values[config.aliases.dataNotificacao || 'dataNotificacao'] || today);
+  const corpo = 'Segue em anexo o PDF final da ficha de notificação (' + VISAT_MODELO + ').';
+  link.href = 'mailto:' + VISAT_EMAIL + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
   link.textContent = 'Abrir e-mail';
   acoes.append(link);
   const instrucao = document.createElement('p');

@@ -527,8 +527,8 @@
       instrucao.className = 'resultado-painel-texto';
       instrucao.append(document.createTextNode('Para registrar a notificação, preencha o formulário abaixo. Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail '));
       const email = document.createElement('a');
-      email.href = 'mailto:saudetrab.sms@floripa.sc.gov.br';
-      email.textContent = 'saudetrab.sms@floripa.sc.gov.br';
+      email.href = 'mailto:saudetrab.sms.pmf@floripa.sc.gov.br';
+      email.textContent = 'saudetrab.sms.pmf@floripa.sc.gov.br';
       instrucao.append(email, document.createTextNode('.'));
       painel.appendChild(instrucao);
       if (formularioInline) {

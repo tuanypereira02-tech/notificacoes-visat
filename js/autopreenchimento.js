@@ -10,7 +10,7 @@
  *   3. Calcula a idade a partir da data de nascimento.
  *   4. CEP de residência -> logradouro, bairro, município, UF e IBGE (ViaCEP).
  *   5. CNPJ do empregador / da empresa principal -> razão social, CNAE no código do Sinan e endereço (BrasilAPI; reserva: CNPJ.ws).
- *   6. Link direto: ?agravo=1-a&perfil=municipal já seleciona o agravo e o perfil.
+ *   6. Link direto: ?agravo=1-a&perfil=municipal já seleciona o agravo e o perfil; ?homologacao=1 marca o ambiente de teste.
  */
 (function () {
   'use strict';
@@ -428,14 +428,14 @@
 
   function parametros() {
     var p = new URLSearchParams(window.location.search);
-    return { agravo: p.get('agravo'), perfil: p.get('perfil') };
+    return { agravo: p.get('agravo'), perfil: p.get('perfil'), homologacao: p.has('homologacao') };
   }
 
   function repassarAoQuadro() {
     var quadro = document.getElementById('aplicacao-notificacao');
     if (!quadro) return;
     var p = parametros();
-    if (!p.agravo && !p.perfil) return;
+    if (!p.agravo && !p.perfil && !p.homologacao) return;
     var base = (quadro.getAttribute('src') || 'notificacao.html').split('?')[0];
     quadro.setAttribute('src', base + window.location.search);
   }
