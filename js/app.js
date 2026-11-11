@@ -466,7 +466,7 @@
 
       const linkCelk = document.createElement('a');
       linkCelk.className = 'botao-celk';
-      linkCelk.href = 'https://florianopolis.celk.com.br/vigilancia/registroagravo/cadastroRegistroAgravo?7';
+      linkCelk.href = 'https://florianopolis.celk.com.br/vigilancia/registroagravo/cadastroRegistroAgravo';
       linkCelk.target = '_blank';
       linkCelk.rel = 'noopener noreferrer';
       linkCelk.appendChild(document.createTextNode('Acessar Celk Saúde'));
