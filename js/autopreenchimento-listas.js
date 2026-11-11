@@ -58,13 +58,14 @@
         return l;
       });
     },
+    // Tabela efetivamente usada no registro: CNAE do Sinan, classe de 5 dígitos
+    // (classes da CNAE 1.0 e classes da CNAE 2.0 de denominação distinta) — data/cnae-sinan.json.
     cnae: function () {
-      return fetch('https://servicodados.ibge.gov.br/api/v2/cnae/classes')
+      return fetch('data/cnae-sinan.json')
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(function (classes) {
-          return classes.map(function (x) {
-            var codigo = String(x.id).replace(/\D/g, '').padStart(5, '0');
-            return { c: codigo, d: x.descricao, v: codigo + ' – ' + x.descricao };
+        .then(function (j) {
+          return j.classes.map(function (x) {
+            return { c: x[0], d: x[2] + ' (CNAE ' + x[1] + ')', v: x[0] + ' – ' + x[2], origem: x[1] };
           });
         });
     },
@@ -400,9 +401,8 @@
     camposCnae.forEach(function (el) {
       var partes = el.value.match(/^\s*(\d{2})\.?(\d{2})-?(\d)(?:\/?\d{2})?\b/);
       var codigo = partes && partes.slice(1).join('');
-      if (!codigo || (atividades.length && !atividades.some(function (x) { return x.c === codigo; }) &&
-          !window.visatCnaeLegado?.(codigo))) {
-        avisos.push({ campo: el, mensagem: 'Confira o código CNAE e a versão usada pela ficha.' });
+      if (!codigo || (atividades.length && !atividades.some(function (x) { return x.c === codigo; }))) {
+        avisos.push({ campo: el, mensagem: 'O CNAE informado não consta da tabela CNAE do Sinan (classe com 5 dígitos). Confira o código e a versão.' });
       }
     });
     if (cnes?.value) {
@@ -425,6 +425,44 @@
     }
     return avisos;
   };
+
+  /* CNAE: tabela usada no registro e consulta ao IBGE na versão correspondente (P12). */
+  var IBGE_CNAE = 'https://cnae.ibge.gov.br/?option=com_cnae&view=atividades&Itemid=6160&tipo=cnae&chave=';
+  function apoioCnae(el) {
+    if (!el || el.dataset.visatApoioCnae) return;
+    el.dataset.visatApoioCnae = '1';
+    var caixa = document.createElement('div');
+    caixa.className = 'field-help';
+    caixa.dataset.visatApoioCnae = '1';
+    var texto = document.createElement('p');
+    texto.style.margin = '4px 0';
+    texto.textContent = 'Tabela usada no registro: CNAE do Sinan, classe com 5 dígitos (CNAE 1.0 e classes da CNAE 2.0 com denominação distinta). ' +
+      'Pelo CNPJ, a subclasse da Receita (CNAE 2.3, 7 dígitos) é convertida automaticamente. Conferência: código de origem CNAE 1.0 na busca do IBGE em CNAE 1.0; código de origem CNAE 2.0 na busca em CNAE 2.0.';
+    var link = document.createElement('a');
+    link.className = 'btn';
+    link.dataset.variant = 'outline';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    caixa.append(link, texto);
+    (el.parentNode.querySelector('datalist') || el).insertAdjacentElement('afterend', caixa);
+    function atualizar() {
+      var m = String(el.value || '').match(/^\s*(\d{2})\.?(\d{2})-?(\d)/);
+      var codigo = m ? m[1] + m[2] + m[3] : '';
+      var termo = codigo || String(el.value || '').trim();
+      carregar('cnae').then(function (lista) {
+        var item = codigo && lista.find(function (x) { return x.c === codigo; });
+        var v2 = item && item.origem === '2.0';
+        link.href = IBGE_CNAE + encodeURIComponent(codigo ? codigo.slice(0, 4) + '-' + codigo[4] : termo) +
+          '&versao_classe=' + (v2 ? '5.0.1' : '3.0.1') + '&versao_subclasse=';
+        link.textContent = 'Consultar CNAE no IBGE' + (v2 ? ' (CNAE 2.0)' : ' (CNAE 1.0)');
+      });
+    }
+    link.href = IBGE_CNAE + '&versao_classe=3.0.1&versao_subclasse=';
+    link.textContent = 'Consultar CNAE no IBGE (CNAE 1.0)';
+    el.addEventListener('input', atualizar);
+    el.addEventListener('change', atualizar);
+    atualizar();
+  }
 
   /* ---------- configuração por formulário ---------- */
 
@@ -494,7 +532,9 @@
     anexarLista(campo(raiz, ['ocupacao']), 'cbo', null);
 
     ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (k) {
-      anexarLista(campo(raiz, [k]), 'cnae', null);
+      var el = campo(raiz, [k]);
+      anexarLista(el, 'cnae', null);
+      apoioCnae(el);
     });
     // Diagnóstico -> CID-10: busca restrita ao escopo de cada ficha em js/cid-qualificado.js.
   }
