@@ -170,6 +170,31 @@ const blocosSinan = {
   }
 };
 
+function criarComplementares(titulo) {
+  const detalhes = document.createElement('details');
+  detalhes.className = 'highlight-box';
+  detalhes.dataset.visatComplementares = '';
+  const resumo = document.createElement('summary');
+  resumo.textContent = titulo;
+  detalhes.append(resumo);
+  return detalhes;
+}
+
+function recolherCamposDaEntrada(secao, obrigatorios) {
+  const grupo = secao.querySelector('.field-group');
+  const opcionais = [...grupo.children].filter((bloco) => {
+    const campo = bloco.querySelector('[data-key], [data-chips]');
+    return campo && !obrigatorios.includes(campo.id) && !obrigatorios.includes(campo.dataset.chips);
+  });
+  if (!opcionais.length) return;
+  const detalhes = criarComplementares('Dados complementares · opcionais');
+  const campos = document.createElement('div');
+  campos.className = 'field-group';
+  campos.append(...opcionais);
+  detalhes.append(campos);
+  grupo.after(detalhes);
+}
+
 function montarBlocoSinan(root, options) {
   const config = blocosSinan[options.templateId];
   const area = root.querySelector('#mainArea');
@@ -181,14 +206,47 @@ function montarBlocoSinan(root, options) {
   for (const [key, alias] of Object.entries(config.aliases)) {
     bloco.querySelector('[data-key="' + key + '"]').dataset.key = alias;
   }
+  const [gerais, individual, residencia] = bloco.querySelectorAll('.screen');
   if (options.obito) {
     root.querySelector('.pill').textContent = 'Óbito por acidente de trabalho';
     const evolucao = root.querySelector('[data-chips="evolucao"]');
-    evolucao.parentElement.insertAdjacentHTML('afterend', '<div><label class="field-label" for="dataObito">Data do óbito</label><input class="input" id="dataObito" data-key="dataObito" type="date"></div><div><label class="field-label" for="numeroDO">Número da Declaração de Óbito, se disponível</label><input class="input" id="numeroDO" data-key="numeroDO" type="text"></div>');
     evolucao.querySelectorAll('.chip').forEach(chip => {
       if (chip.dataset.value !== 'Óbito por acidente de trabalho') chip.remove();
     });
+    const grupoGeral = gerais.querySelector('.field-group');
+    grupoGeral.append(evolucao.parentElement);
+    grupoGeral.insertAdjacentHTML('beforeend',
+      '<div><label class="field-label" for="dataObito">Data do óbito</label><input class="input" id="dataObito" data-key="dataObito" type="date"></div>' +
+      '<div><label class="field-label" for="numeroDO">Número da Declaração de Óbito, se disponível</label><input class="input" id="numeroDO" data-key="numeroDO" type="text"></div>');
   }
+
+  const etapasDoAgravo = [...area.querySelectorAll('.screen')].slice(0, -1);
+  const detalhesAgravo = criarComplementares('Dados específicos do agravo · opcionais');
+  const cat = area.querySelector('[data-chips="cat"]');
+  if (cat) etapasDoAgravo[0].querySelector('.field-group').append(cat.parentElement);
+  for (const etapa of etapasDoAgravo) {
+    const titulo = etapa.querySelector('.screen-title').textContent;
+    if (/fechamento|paciente fonte|conduta e encaminhamento/i.test(titulo)) {
+      etapa.remove();
+      continue;
+    }
+    etapa.classList.remove('screen', 'active');
+    etapa.removeAttribute('data-screen');
+    etapa.dataset.visatSecaoComplementar = '';
+    detalhesAgravo.append(etapa);
+  }
+
+  recolherCamposDaEntrada(gerais, [
+    'sinan-tipo', 'sinan-agravo', 'sinan-cidAgravo', 'sinan-data-notif', 'sinan-uf-notif',
+    'sinan-mun-notif', 'sinan-unid', data?.id, 'dataObito', 'evolucao'
+  ]);
+  recolherCamposDaEntrada(individual, ['sinan-nome', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
+  recolherCamposDaEntrada(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-uf-res', 'sinan-mun-res']);
+  residencia.append(detalhesAgravo);
+  const orientacao = document.createElement('p');
+  orientacao.className = 'field-help';
+  orientacao.textContent = 'Use esta ficha para a notificação inicial. Registre a investigação, o seguimento e o encerramento no instrumento oficial do agravo.';
+  residencia.append(orientacao);
   area.prepend(bloco);
   completarCamposEmpresa(area);
   const screens = area.querySelectorAll('.screen');
@@ -380,6 +438,7 @@ residencia.addEventListener('change', () => {
   '#sinan-mun-notif', '#sinan-unid', '#sinan-nome', '[data-chips="sexo"]'
 ].map(seletor => root.querySelector(seletor)).concat(campoEvento)
   .forEach(campo => marcarObrigatorio(campo));
+if (options.obito) marcarObrigatorio(root.querySelector('#dataObito'));
 
 
 // Chip interactions
@@ -521,6 +580,9 @@ function camposBasicosPendentes() {
     ['[data-chips="sexo"]', 'Sexo', !state.values.sexo],
     ['[data-chips="gestante"]', 'Situação gestacional', state.values.sexo === 'Feminino' && !state.values.gestante]
   ];
+  if (options.obito) {
+    regras.push(['#dataObito', 'Data do óbito', !root.querySelector('#dataObito').value]);
+  }
   const agravoCampo = root.querySelector('#sinan-agravo');
   const cidAgravoCampo = root.querySelector('#sinan-cidAgravo');
   regras.push(['#sinan-agravo', 'Agravo incompatível com esta ficha',
@@ -657,6 +719,12 @@ async function verificarCoerencia() {
   }
 }
 
+function focarCampo(campo) {
+  const detalhes = campo.closest('details[data-visat-complementares]');
+  if (detalhes) detalhes.open = true;
+  (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
+}
+
 function mostrarCoerencia(ancora) {
   root.querySelector('[data-visat-coerencia]')?.remove();
   if (!avisosCoerencia.length) return;
@@ -677,7 +745,7 @@ function mostrarCoerencia(ancora) {
       botao.addEventListener('click', () => {
         emCorrecao = true;
         showScreen(Number(campo.closest('.screen').dataset.screen));
-        (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
+        focarCampo(campo);
       });
       linha.append(botao);
     } else linha.textContent = mensagem;
@@ -734,7 +802,7 @@ function mostrarPendencias(pendentes, mensagem) {
     botao.textContent = rotulo;
     botao.addEventListener('click', () => {
       showScreen(tela);
-      (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
+      focarCampo(campo);
     });
     item.append(botao);
     lista.append(item);
@@ -783,9 +851,10 @@ root.querySelector('#pfDataImpressao').textContent = formatDate(today) + ' · ' 
 const blocks = root.querySelector('#pfBlocks');
 blocks.replaceChildren();
 
-function addField(block, labelText) {
+function addField(block, labelText, opcional) {
   const field = document.createElement('div');
   field.className = 'pf-field';
+  field.toggleAttribute('data-visat-opcional', opcional);
   const label = document.createElement('h4');
   label.textContent = labelText;
   field.appendChild(label);
@@ -801,13 +870,17 @@ function addChoices(field, choices, selectedValues) {
 }
 
 function addAnswer(field, value) {
+  if (field.hasAttribute('data-visat-opcional') && !value.trim()) {
+    field.remove();
+    return;
+  }
   const answer = document.createElement('p');
   answer.className = 'pf-answer';
   answer.textContent = value || '________________________________';
   field.appendChild(answer);
 }
 
-root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
+root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').forEach((screen) => {
   if (Number(screen.dataset.screen) > TOTAL) return;
 
   const block = document.createElement('section');
@@ -817,13 +890,16 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
   block.appendChild(title);
 
   screen.querySelectorAll('.field-label').forEach((fieldLabel) => {
-    if (fieldLabel.closest('[hidden]') || (screen === endereco && fieldLabel.htmlFor === 'sinan-pais')) return;
+    const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
+    if ((secaoComplementar && secaoComplementar !== screen) ||
+        fieldLabel.closest('[hidden]') || (screen === endereco && fieldLabel.htmlFor === 'sinan-pais')) return;
+    const opcional = Boolean(fieldLabel.closest('details[data-visat-complementares]'));
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
 
     if (following.matches('[data-chips]')) {
-      const field = addField(block, labelText);
+      const field = addField(block, labelText, opcional);
       const choices = Array.from(following.querySelectorAll('.chip')).map((chip) => ({
         value: chip.dataset.value,
         label: chip.textContent.trim()
@@ -840,7 +916,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
     if (following.matches('.unit-row')) {
       const quantity = following.querySelector('[data-key]');
       const unit = following.querySelector('select[data-key]');
-      const field = addField(block, labelText);
+      const field = addField(block, labelText, opcional);
       addAnswer(field, quantity.value ? `${quantity.value} ${unit.value}` : '');
       return;
     }
@@ -848,7 +924,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
     if (fieldLabel instanceof HTMLLabelElement && fieldLabel.htmlFor) {
       const control = root.querySelector(`#${fieldLabel.htmlFor}`);
       if (!control || (control.matches(seletorDocumentos) && control.closest('[hidden]'))) return;
-      const field = addField(block, labelText);
+      const field = addField(block, labelText, opcional);
       if (control === residencia && residencia.value === 'exterior') {
         addAnswer(field, state.values.paisExterior);
         return;
@@ -867,7 +943,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
     }
   });
 
-  blocks.appendChild(block);
+  if (block.children.length > 1) blocks.appendChild(block);
 });
 }
 
