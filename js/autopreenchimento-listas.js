@@ -127,6 +127,77 @@
     input.insertAdjacentElement('afterend', dl);
     input.setAttribute('list', dl.id);
     input.setAttribute('autocomplete', 'off');
+    input.title = 'Pressione espaço duas vezes para abrir a lista de apoio.';
+    var listaRapida;
+    var abertura = 0;
+
+    function fecharListaRapida() {
+      abertura++;
+      if (listaRapida) listaRapida.remove();
+      listaRapida = null;
+    }
+
+    function abrirListaRapida() {
+      fecharListaRapida();
+      var atual = abertura;
+      var termo = norm(input.value);
+      carregar(tipo).then(function (lista) {
+        if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
+        var palavras = termo.split(' ').filter(Boolean);
+        var itens = lista.filter(function (item) {
+          var alvo = norm(item.c + ' ' + item.d);
+          return palavras.every(function (p) { return alvo.includes(p); });
+        }).slice(0, 12);
+        listaRapida = document.createElement('div');
+        listaRapida.className = 'highlight-box';
+        var aviso = document.createElement('p');
+        aviso.setAttribute('role', 'status');
+        aviso.textContent = itens.length ? 'Lista de apoio. Digite no campo para filtrar.' :
+          'Nenhuma opção disponível para esta busca.';
+        listaRapida.append(aviso);
+        var opcoes = document.createElement('ul');
+        itens.forEach(function (item) {
+          var li = document.createElement('li');
+          var botao = document.createElement('button');
+          botao.type = 'button';
+          botao.className = 'btn';
+          botao.dataset.variant = 'outline';
+          botao.textContent = item.d + ' · ' + item.c;
+          botao.addEventListener('click', function () {
+            fecharListaRapida();
+            if (aoEscolher) aoEscolher(item);
+            else definir(input, item.v, true);
+            input.focus();
+          });
+          li.append(botao);
+          opcoes.append(li);
+        });
+        listaRapida.append(opcoes);
+        listaRapida.addEventListener('keydown', function (evento) {
+          if (evento.key !== 'Escape') return;
+          evento.preventDefault();
+          fecharListaRapida();
+          input.focus();
+        });
+        dl.after(listaRapida);
+      });
+    }
+
+    input.addEventListener('keydown', function (evento) {
+      if (evento.key === 'Escape' && listaRapida) {
+        evento.preventDefault();
+        fecharListaRapida();
+      }
+      if (evento.key !== ' ' || evento.repeat || evento.ctrlKey || evento.altKey || evento.metaKey ||
+          input.selectionStart !== input.value.length || input.selectionEnd !== input.value.length ||
+          !input.value.endsWith(' ')) return;
+      evento.preventDefault();
+      input.value = input.value.trimEnd();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      abrirListaRapida();
+    });
+    input.addEventListener('input', fecharListaRapida);
+
 
     function atualizar() {
       var termo = norm(input.value);
@@ -305,7 +376,7 @@
       var confirmados = new Map();
       origens.filter(Boolean).forEach(function (origem) {
         origem.addEventListener('input', function (evento) {
-          if (!evento.isTrusted || !confirmados.has(origem) || confirmados.get(origem) === origem.value) return;
+          if (!evento.isTrusted || !confirmados.has(origem) || confirmados.get(origem) === norm(origem.value)) return;
           confirmados.clear();
           vinculados.forEach(function (el) {
             if (!el || el === origem || !el.value) return;
@@ -315,7 +386,7 @@
         });
       });
       return function () {
-        origens.filter(Boolean).forEach(function (origem) { confirmados.set(origem, origem.value); });
+        origens.filter(Boolean).forEach(function (origem) { confirmados.set(origem, norm(origem.value)); });
       };
     }
     var confirmarUnidade = vincularCampos([nomeUnidade, cnes], [nomeUnidade, cnes, municipioNotif, ufNotif, ibgeNotif]);
