@@ -201,7 +201,8 @@
     var cep = campo(raiz, ['cep']);
     if (!cep || cep.dataset.autopreenchimentoCep) return;
     cep.dataset.autopreenchimentoCep = '1';
-    var ultimoCep = digitos(cep.value);
+    var cepDoEndereco = digitos(cep.value);
+    var ultimoCep = cepDoEndereco;
     var consulta = 0;
 
     function buscar() {
@@ -229,6 +230,14 @@
             munRes: d.localidade,
             ibgeRes: ibgeSinan(d.ibge)
           };
+          var mudouEndereco = cepDoEndereco.length === 8 && cepDoEndereco !== n;
+          if (mudouEndereco) {
+            // Estes campos descrevem o endereço anterior e não são fornecidos pelo CEP.
+            ['distRes', 'numRes', 'compRes', 'geo1', 'geo2', 'refRes', 'paisExterior'].forEach(function (chave) {
+              dados[chave] = '';
+            });
+          }
+          cepDoEndereco = n;
           Object.entries(dados).forEach(function (item) {
             var el = campo(raiz, [item[0]]);
             if (!el) return;
@@ -239,9 +248,9 @@
               el.dispatchEvent(new Event('input', { bubbles: true }));
             }
           });
-          aviso(cep, d.logradouro && d.bairro
-            ? 'Endereço atualizado. Confira número e complemento.'
-            : 'Endereço atualizado com os dados disponíveis. Complete os campos que faltam.');
+          aviso(cep, mudouEndereco
+            ? 'Endereço atualizado pelo novo CEP. Preencha os detalhes da nova residência.'
+            : 'Endereço preenchido com os dados disponíveis. Confira antes de enviar.');
         })
         .catch(function () {
           if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
