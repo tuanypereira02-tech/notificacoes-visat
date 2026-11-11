@@ -422,7 +422,7 @@ body.modo-formulario-acidente .form-app {
 }
 body.modo-formulario-acidente .form-app .top-bar { position: static; flex: none; }
 body.modo-formulario-acidente .step-area {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   overflow: auto;
 }
