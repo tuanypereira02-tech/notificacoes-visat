@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Vigilância em Saúde (DEMONSTRAÇÃO)</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-sinan">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261111-cadastro-v1">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -59,12 +59,12 @@
   <template id="form-sinan-comum-template">
 <section class="screen active" data-screen="1">
 <h1 class="screen-title">Dados gerais</h1>
-<p class="screen-sub">Dados gerais do registro.</p>
+<p class="screen-sub">Os campos marcados com * são obrigatórios para finalizar.</p>
 <div class="field-group">
 <div><label class="field-label" for="sinan-numeroNotificacao">Número da notificação, se disponível</label><input class="input input-lg" id="sinan-numeroNotificacao" type="text" data-key="numeroNotificacao" ></div>
 <div>
 <label class="field-label" for="sinan-tipo">Tipo de notificação</label>
-<input class="input input-lg" id="sinan-tipo" data-key="tipoNotif" value="Individual" readonly>
+<input class="input input-lg" id="sinan-tipo" data-key="tipoNotif" value="2 – Individual" readonly>
 </div>
 <div>
 <label class="field-label" for="sinan-agravo">Agravo / doença</label>
@@ -76,7 +76,7 @@
 <input class="input input-lg" id="sinan-data-notif" type="date" data-key="dataNotificacao">
 </div>
 <div>
-<label class="field-label" for="sinan-uf-notif">UF</label>
+<label class="field-label" for="sinan-uf-notif">UF de notificação</label>
 <select class="input input-lg" id="sinan-uf-notif" data-key="ufNotif">
 <option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
 </select>
@@ -90,7 +90,7 @@
 <input class="input input-lg" id="sinan-ibge-notif" type="text" data-key="ibgeNotif">
 </div>
 <div>
-<label class="field-label" for="sinan-unid">Unidade de saúde notificadora</label>
+<label class="field-label" for="sinan-unid">Unidade de saúde ou fonte notificadora</label>
 <input class="input input-lg" id="sinan-unid" type="text" data-key="unidNotif">
 </div>
 <div>
@@ -106,30 +106,32 @@
 <div class="field-group">
 <div>
 <label class="field-label" for="sinan-nome">Nome completo</label>
-<input class="input input-lg" id="sinan-nome" type="text" data-key="nome" data-summary="Nome completo">
+<input class="input input-lg" id="sinan-nome" type="text" data-key="nome" data-summary="Nome completo" aria-describedby="sinan-nome-ajuda">
+<p class="field-help" id="sinan-nome-ajuda">Informe o nome completo, sem abreviações.</p>
 </div>
 <div>
 <label class="field-label" for="sinan-nasc">Data de nascimento</label>
 <input class="input input-lg" id="sinan-nasc" type="date" data-key="nascimento">
+<p class="field-help">Se a data de nascimento for desconhecida, informe a idade abaixo.</p>
 </div>
 <div>
-<span class="field-label">Idade</span>
+<label class="field-label" for="sinan-idade">Idade</label>
 <div class="unit-row" >
 <input class="input input-lg" id="sinan-idade" type="number" min="0" data-key="idade">
 <select class="input input-lg" id="sinan-idade-un" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
 </div>
 </div>
 <div>
-<span class="field-label">Sexo</span>
-<div class="chip-grid" data-chips="sexo" data-single="true">
+<span class="field-label" id="sinan-sexo-rotulo">Sexo</span>
+<div class="chip-grid" role="group" aria-labelledby="sinan-sexo-rotulo" data-chips="sexo" data-single="true">
 <button type="button" class="chip" data-value="Masculino">Masculino</button>
 <button type="button" class="chip" data-value="Feminino">Feminino</button>
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
 <div>
-<span class="field-label">Gestante</span>
-<div class="chip-grid" data-chips="gestante" data-single="true">
+<span class="field-label" id="sinan-gestante-rotulo">Gestante</span>
+<div class="chip-grid" role="group" aria-labelledby="sinan-gestante-rotulo" data-chips="gestante" data-single="true">
 <button type="button" class="chip" data-value="1º trimestre">1º trimestre</button>
 <button type="button" class="chip" data-value="2º trimestre">2º trimestre</button>
 <button type="button" class="chip" data-value="3º trimestre">3º trimestre</button>
@@ -171,30 +173,41 @@
 </div>
 </div>
 </section>
-<section class="screen" data-screen="3">
+<section class="screen" id="sinan-residencia" data-screen="3">
 <h1 class="screen-title">Dados de residência</h1>
 <p class="screen-sub">Endereço de residência da pessoa notificada.</p>
 <div class="field-group">
 <div>
+<label class="field-label" for="sinan-residencia-pais">País de residência</label>
+<select class="input input-lg" id="sinan-residencia-pais" data-key="residencia">
+<option value="BR">Brasil</option>
+<option value="exterior">Outro país</option>
+</select>
+</div>
+<div data-show-when="residencia=exterior" hidden>
+<label class="field-label" for="sinan-pais">Nome do país de residência</label>
+<input class="input input-lg" id="sinan-pais" type="text" data-key="paisExterior">
+</div>
+<div data-show-when="residencia=BR">
 <label class="field-label" for="sinan-cep">CEP</label>
 <input class="input input-lg" id="sinan-cep" type="text" data-key="cep" placeholder="00000-000" inputmode="numeric" maxlength="9">
 <p class="field-help">Informe o CEP para preencher o endereço. Ao editar o CEP consultado, os campos vinculados serão limpos.</p>
 </div>
-<div>
-<label class="field-label" for="sinan-uf-res">UF</label>
+<div data-show-when="residencia=BR">
+<label class="field-label" for="sinan-uf-res">UF de residência</label>
 <select class="input input-lg" id="sinan-uf-res" data-key="ufRes">
 <option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
 </select>
 </div>
-<div>
+<div data-show-when="residencia=BR">
 <label class="field-label" for="sinan-mun-res">Município de residência</label>
 <input class="input input-lg" id="sinan-mun-res" type="text" data-key="munRes">
 </div>
-<div>
+<div data-show-when="residencia=BR">
 <label class="field-label" for="sinan-ibge-res">Código IBGE</label>
 <input class="input input-lg" id="sinan-ibge-res" type="text" data-key="ibgeRes">
 </div>
-<div>
+<div data-show-when="residencia=BR">
 <label class="field-label" for="sinan-dist">Distrito</label>
 <input class="input input-lg" id="sinan-dist" type="text" data-key="distRes">
 </div>
@@ -238,10 +251,6 @@
 <button type="button" class="chip" data-value="Periurbana">Periurbana</button>
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
-</div>
-<div>
-<label class="field-label" for="sinan-pais">País se residente fora do Brasil</label>
-<input class="input input-lg" id="sinan-pais" type="text" data-key="paisExterior">
 </div>
 </div>
 </section>
@@ -641,9 +650,9 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261111-cronologia" defer></script>
-  <script src="js/app.js?v=20261111-sem-rascunho" defer></script>
-  <script src="js/autopreenchimento.js?v=20261111-cronologia" defer></script>
+  <script src="js/formulario-acidente.js?v=20261111-cadastro-v1" defer></script>
+  <script src="js/app.js?v=20261111-cadastro-v1" defer></script>
+  <script src="js/autopreenchimento.js?v=20261111-cadastro-v1" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261111-coerencia" defer></script>
 </body>
 </html>

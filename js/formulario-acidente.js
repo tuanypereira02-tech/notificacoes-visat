@@ -175,18 +175,6 @@ function montarBlocoSinan(root, options) {
   for (const [key, alias] of Object.entries(config.aliases)) {
     bloco.querySelector('[data-key="' + key + '"]').dataset.key = alias;
   }
-  if (options.templateId === 'form-acidente-template') {
-    const campos = { nome: 'Informe o nome completo', nascimento: 'Informe a data de nascimento', cpf: 'Informe o CPF', sexo: 'Selecione o sexo' };
-    for (const [key, message] of Object.entries(campos)) {
-      const control = bloco.querySelector('[data-key="' + key + '"], [data-chips="' + key + '"]');
-      control.dataset.required = message;
-      const error = document.createElement('div');
-      error.className = 'field-error';
-      error.dataset.err = key;
-      error.textContent = message;
-      control.after(error);
-    }
-  }
   if (options.obito) {
     root.querySelector('.pill').textContent = 'Óbito por acidente de trabalho';
     const evolucao = root.querySelector('[data-chips="evolucao"]');
@@ -230,17 +218,16 @@ container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
 const TOTAL = montarBlocoSinan(root, options);
 const config = blocosSinan[options.templateId];
+const today = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date());
 const defaults = {
-  [config.aliases.dataNotificacao || 'dataNotificacao']: new Date().toISOString().slice(0, 10),
+  [config.aliases.dataNotificacao || 'dataNotificacao']: today,
   ...options.defaults
 };
 const state = { screen: 1, values: { ...defaults } };
 root.querySelectorAll('input[data-key], textarea[data-key]').forEach(campo => {
   campo.setAttribute('autocomplete', 'off');
-});
-const today = new Date().toISOString().slice(0, 10);
-Object.entries(defaults).forEach(([key, value]) => {
-  if (!state.values[key]) state.values[key] = value;
 });
 if (root.querySelector('[data-key="dataFechamento"]') && !state.values.dataFechamento) {
   state.values.dataFechamento = today;
@@ -250,8 +237,19 @@ const area = root.querySelector('#mainArea');
 const counter = root.querySelector('#stepCounter');
 const btnVoltar = root.querySelector('#btnVoltar');
 const btnContinuar = root.querySelector('#btnContinuar');
+const btnPdfConferencia = document.createElement('button');
+btnPdfConferencia.type = 'button';
+btnPdfConferencia.className = 'btn';
+btnPdfConferencia.dataset.variant = 'ghost';
+btnPdfConferencia.dataset.visatPdfConferencia = '1';
+btnPdfConferencia.textContent = 'PDF para conferência';
+btnContinuar.before(btnPdfConferencia);
 const bottomBar = root.querySelector('#bottomBar');
 const progSegs = root.querySelectorAll('.progress-seg');
+const campoEvento = root.querySelector('[data-key="' + config.event + '"]');
+const residencia = root.querySelector('#sinan-residencia-pais');
+const endereco = residencia.closest('.screen');
+const gestante = root.querySelector('[data-chips="gestante"]');
 
 
 function getScreens() { return Array.from(root.querySelectorAll('.screen')); }
@@ -286,6 +284,12 @@ aplicarCondicoes();
 }
 
 function aplicarCondicoes() {
+  atualizarGestante();
+  const noBrasil = residencia.value === 'BR';
+  marcarObrigatorio(root.querySelector('#sinan-uf-res'), noBrasil);
+  marcarObrigatorio(root.querySelector('#sinan-mun-res'), noBrasil);
+  marcarObrigatorio(root.querySelector('#sinan-pais'), !noBrasil);
+
   root.querySelectorAll('[data-show-when]').forEach((el) => {
     const separador = el.dataset.showWhen.indexOf('=');
     const key = el.dataset.showWhen.slice(0, separador);
@@ -309,12 +313,69 @@ function aplicarCondicoes() {
   });
 }
 
+function marcarObrigatorio(campo, ativo = true) {
+  const rotulo = campo.labels?.[0] || campo.previousElementSibling;
+  rotulo?.toggleAttribute('data-visat-obrigatorio', ativo);
+  if (campo.matches('input, select')) {
+    if (ativo) campo.setAttribute('aria-required', 'true');
+    else campo.removeAttribute('aria-required');
+  }
+}
+
+function idadeEmAnos() {
+  const nascimento = root.querySelector('#sinan-nasc').value;
+  const referencia = campoEvento.value || root.querySelector('#sinan-data-notif').value;
+  if (nascimento) {
+    if (!referencia || nascimento > referencia) return null;
+    const ano = Number(referencia.slice(0, 4)) - Number(nascimento.slice(0, 4));
+    return ano - Number(referencia.slice(5) < nascimento.slice(5));
+  }
+  const idade = root.querySelector('#sinan-idade');
+  const unidade = root.querySelector('#sinan-idade-un').value;
+  const unidadesPorAno = { Hora: 365.25 * 24, Dia: 365.25, 'Mês': 12, Ano: 1 };
+  if (!idade.value || !idade.validity.valid || !unidadesPorAno[unidade]) return null;
+  return Math.floor(Number(idade.value) / unidadesPorAno[unidade]);
+}
+
+function atualizarGestante() {
+  const idade = idadeEmAnos();
+  const feminino = state.values.sexo === 'Feminino';
+  const automatico = state.values.sexo === 'Masculino' || (feminino && idade !== null && idade <= 10);
+  if (automatico) state.values.gestante = 'Não se aplica';
+  else if (gestante.hasAttribute('data-automatico')) state.values.gestante = '';
+  gestante.toggleAttribute('data-automatico', automatico);
+  gestante.querySelectorAll('.chip').forEach(chip => {
+    const selecionado = chip.dataset.value === state.values.gestante;
+    chip.disabled = automatico;
+    chip.classList.toggle('selected', selecionado);
+    chip.setAttribute('aria-pressed', String(selecionado));
+  });
+  marcarObrigatorio(gestante, feminino && !automatico);
+}
+
+residencia.addEventListener('change', () => {
+  endereco.querySelectorAll('[data-key]').forEach(campo => {
+    if (!['residencia', 'telefoneRes', 'telefone'].includes(campo.dataset.key)) campo.value = '';
+  });
+  endereco.querySelectorAll('[data-chips="zona"] .selected').forEach(chip => chip.classList.remove('selected'));
+  // Invalida inclusive uma consulta de CEP que ainda esteja em andamento.
+  endereco.querySelector('#sinan-cep').dispatchEvent(new Event('input', { bubbles: true }));
+});
+
+[
+  '#sinan-tipo', '#sinan-agravo', '#sinan-data-notif', '#sinan-uf-notif',
+  '#sinan-mun-notif', '#sinan-unid', '#sinan-nome', '[data-chips="sexo"]'
+].map(seletor => root.querySelector(seletor)).concat(campoEvento)
+  .forEach(campo => marcarObrigatorio(campo));
 
 
 // Chip interactions
 root.querySelectorAll('[data-chips]').forEach(group => {
 group.querySelectorAll('.chip').forEach(chip => {
 chip.addEventListener('click', () => {
+if (group.dataset.chips === 'sexo' && state.values.sexo !== chip.dataset.value) {
+  gestante.querySelector('.chip.selected')?.classList.remove('selected');
+}
 if (group.dataset.multi) {
 chip.classList.toggle('selected');
 } else {
@@ -341,6 +402,7 @@ clearErrorFor(el.dataset.key);
 persistInputs();
 
 });
+if (el.type === 'date') el.addEventListener('change', persistInputs);
 });
 
 // Masks
@@ -375,35 +437,43 @@ const input = root.querySelector('[data-key="' + key + '"]');
 if (input) input.classList.remove('invalid');
 }
 
+function preenchidoComLetras(campo) {
+  return /\p{L}/u.test(campo.value);
+}
+
 function camposBasicosPendentes() {
-  const grupos = [
-    [1, ['dataNotificacao', 'dataNotif'], 'Data da notificação'],
-    [1, ['ufNotif', 'ufNotificacao', 'uf'], 'UF notificadora'],
-    [1, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio', 'ibgeNotif'], 'Município notificador ou código IBGE'],
-    [1, ['unidNotif', 'unidadeNotificadora', 'unidade', 'codUnidNotif'], 'Unidade notificadora ou código CNES'],
-    [2, ['nome'], 'Nome completo'],
-    [2, ['nascimento', 'idade'], 'Data de nascimento ou idade'],
-    [2, ['sexo'], 'Sexo']
+  const notificacao = root.querySelector('#sinan-data-notif');
+  const nascimento = root.querySelector('#sinan-nasc');
+  const dataEvento = campoEvento.value;
+  const rotuloEvento = campoEvento.labels[0].textContent.trim();
+  const faltaNome = seletor => !preenchidoComLetras(root.querySelector(seletor));
+  const regras = [
+    ['#sinan-tipo', 'Tipo de notificação: 2 – Individual', root.querySelector('#sinan-tipo').value !== '2 – Individual'],
+    ['#sinan-agravo', 'Agravo ou doença', !root.querySelector('#sinan-agravo').value],
+    ['#sinan-data-notif', 'Data da notificação', !notificacao.value],
+    ['#sinan-data-notif', 'A data da notificação deve ser igual ou anterior à data de hoje', notificacao.value > today],
+    ['#sinan-uf-notif', 'UF de notificação', !root.querySelector('#sinan-uf-notif').value],
+    ['#sinan-mun-notif', 'Nome do município de notificação', faltaNome('#sinan-mun-notif')],
+    ['#sinan-unid', 'Nome da unidade de saúde ou fonte notificadora', faltaNome('#sinan-unid')],
+    ['#' + campoEvento.id, rotuloEvento, !dataEvento],
+    ['#' + campoEvento.id, 'A data de referência do agravo deve ser igual ou anterior à notificação', dataEvento && notificacao.value && dataEvento > notificacao.value],
+    ['#sinan-nome', 'Nome completo, sem abreviações', faltaNome('#sinan-nome')],
+    ['#sinan-nasc', 'Data de nascimento ou idade com unidade', !nascimento.value && idadeEmAnos() === null],
+    ['#sinan-nasc', 'A data de nascimento deve ser igual ou anterior à data de referência do agravo', nascimento.value && dataEvento && nascimento.value > dataEvento],
+    ['[data-chips="sexo"]', 'Sexo', !state.values.sexo],
+    ['[data-chips="gestante"]', 'Situação gestacional', state.values.sexo === 'Feminino' && !state.values.gestante]
   ];
-  if (!String(state.values.paisExterior || '').trim()) {
-    grupos.push([3, ['ufRes'], 'UF de residência'],
-      [3, ['munRes', 'ibgeRes'], 'Município de residência ou código IBGE']);
+  if (residencia.value === 'BR') {
+    regras.push(['#sinan-uf-res', 'UF de residência', !root.querySelector('#sinan-uf-res').value],
+      ['#sinan-mun-res', 'Nome do município de residência', faltaNome('#sinan-mun-res')]);
+  } else {
+    const pais = root.querySelector('#sinan-pais');
+    regras.push(['#sinan-pais', 'Nome do país de residência fora do Brasil',
+      !preenchidoComLetras(pais) || /^bra[sz]il$/i.test(pais.value.trim())]);
   }
-  if (options.templateId !== 'form-voz-template' && state.values.sexo === 'Feminino') {
-    grupos.push([2, ['gestante'], 'Situação gestacional']);
-  }
-  return grupos.flatMap(([tela, chaves, rotulo]) => {
-    const secao = getScreens()[tela - 1];
-    const campos = chaves.map(chave => secao.querySelector(
-      '[data-key="' + chave + '"], [data-chips="' + chave + '"]'
-    )).filter(Boolean);
-    if (!campos.length || campos.some(campo => {
-      const valor = String(state.values[campo.dataset.key || campo.dataset.chips] ?? '').trim();
-      if (campo.dataset.key === 'codUnidNotif') return /^\d{7}$/.test(valor);
-      if (campo.dataset.key === 'ibgeNotif' || campo.dataset.key === 'ibgeRes') return /^\d{6,7}$/.test(valor);
-      return valor !== '';
-    })) return [];
-    return [{ tela, rotulo, campo: campos[0] }];
+  return regras.filter(([, , pendente]) => pendente).map(([seletor, rotulo]) => {
+    const campo = root.querySelector(seletor);
+    return { tela: Number(campo.closest('.screen').dataset.screen), rotulo, campo };
   });
 }
 
@@ -431,10 +501,6 @@ function checarDadosDigitados() {
   const notificacao = input('dataNotificacao') || input('dataNotif');
   const evento = config.event && input(config.event);
   const cpf = input('cpf');
-  const nome = input('nome');
-  if (nome?.value && !/\p{L}/u.test(nome.value)) {
-    avisos.push({ campo: nome, mensagem: 'Confira o nome da pessoa notificada.' });
-  }
   if (cpf?.value && !documentoValido(cpf.value, 'cpf')) {
     avisos.push({ campo: cpf, mensagem: 'Confira os dígitos do CPF da pessoa notificada.' });
   }
@@ -446,13 +512,6 @@ function checarDadosDigitados() {
     if (!documentoValido(valor, tipo)) {
       avisos.push({ campo, mensagem: 'Confira o documento do empregador ou da empresa principal.' });
     }
-  }
-  if (nascimento?.value && [notificacao, evento].some(campo => campo?.value && nascimento.value > campo.value)) {
-    avisos.push({ campo: nascimento, mensagem: 'A data de nascimento está depois da data da notificação ou do evento. Confira as datas.' });
-  }
-  if (evento?.value && notificacao?.value && evento.value > notificacao.value &&
-      ['dataAcidente', 'inicioSintomas'].includes(config.event)) {
-    avisos.push({ campo: evento, mensagem: 'Confira a cronologia: o acidente ou início dos sintomas está depois da notificação.' });
   }
   const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
   const obito = input('dataObito');
@@ -466,23 +525,6 @@ function checarDadosDigitados() {
   if (obito?.value && fechamento?.value && fechamento.value < obito.value &&
       /^óbito/i.test(String(state.values.evolucao || ''))) {
     avisos.push({ campo: fechamento, mensagem: 'Confira o encerramento: a evolução por óbito foi registrada com data posterior ao encerramento.' });
-  }
-  const gestante = root.querySelector('[data-chips="gestante"]');
-  if (gestante && state.values.sexo === 'Masculino' && /trimestre|idade gestacional/i.test(String(state.values.gestante || ''))) {
-    avisos.push({ campo: gestante, mensagem: 'Confira a situação gestacional em relação ao sexo registrado e às opções da ficha.' });
-  }
-  const idade = input('idade');
-  const unidade = input('idadeUnidade');
-  const referenciaIdade = evento?.value || notificacao?.value;
-  if (nascimento?.value && referenciaIdade && idade?.value && /^anos?$/i.test(unidade?.value || '') &&
-      nascimento.value <= referenciaIdade) {
-    const [anoNasc, mesNasc, diaNasc] = nascimento.value.split('-').map(Number);
-    const [anoNotif, mesNotif, diaNotif] = referenciaIdade.split('-').map(Number);
-    const antesDoAniversario = mesNotif < mesNasc || (mesNotif === mesNasc && diaNotif < diaNasc);
-    const anos = anoNotif - anoNasc - Number(antesDoAniversario);
-    if (Number(idade.value) !== anos) {
-      avisos.push({ campo: idade, mensagem: 'Confira a idade em anos na data de referência do agravo.' });
-    }
   }
   return avisos;
 }
@@ -547,6 +589,8 @@ async function finalizarFicha() {
     conferindoCoerencia = true;
     btnContinuar.disabled = true;
     btnVoltar.disabled = true;
+    btnPdfConferencia.disabled = true;
+    area.inert = true;
     try {
       avisosCoerencia = await verificarCoerencia();
       if (!root.isConnected) return;
@@ -556,16 +600,22 @@ async function finalizarFicha() {
       conferindoCoerencia = false;
       btnContinuar.disabled = false;
       btnVoltar.disabled = false;
+      btnPdfConferencia.disabled = false;
+      area.inert = false;
     }
     return;
   }
   emCorrecao = true;
+  mostrarPendencias(pendentes, 'Complete os dados básicos para finalizar');
+}
+
+function mostrarPendencias(pendentes, mensagem) {
   root.querySelector('[data-visat-pendencias]')?.remove();
   const caixa = document.createElement('section');
   caixa.className = 'highlight-box';
   caixa.dataset.visatPendencias = '1';
   const titulo = document.createElement('h2');
-  titulo.textContent = 'Complete os dados básicos para finalizar';
+  titulo.textContent = mensagem;
   titulo.tabIndex = -1;
   const lista = document.createElement('ul');
   pendentes.forEach(({ tela, rotulo, campo }) => {
@@ -607,11 +657,16 @@ area.scrollTop = 0;
 if (isDone) buildSummary();
 }
 
-function buildPrint() {
+function buildPrint(paraConferencia = false) {
+const tituloAgravo = options.obito ? 'Óbito por acidente de trabalho' : config.agravo;
 const tituloImpressao = root.querySelector('.pf-title');
-if (tituloImpressao) tituloImpressao.textContent = options.obito
-  ? 'Óbito por acidente de trabalho' : config.agravo;
-root.querySelector('#pfDataImpressao').textContent = formatDate(new Date().toISOString().slice(0, 10));
+if (tituloImpressao) tituloImpressao.textContent = paraConferencia
+  ? 'PARA CONFERÊNCIA — ' + tituloAgravo : tituloAgravo;
+root.querySelector('.pf-note').textContent = paraConferencia
+  ? 'Ficha em preenchimento. Complete os campos obrigatórios antes de encaminhar a notificação.'
+  : 'Este protótipo não envia notificações. Cada campo mostra somente o valor informado.';
+root.querySelector('.pf-sign').hidden = paraConferencia;
+root.querySelector('#pfDataImpressao').textContent = formatDate(today);
 const blocks = root.querySelector('#pfBlocks');
 blocks.replaceChildren();
 
@@ -649,6 +704,7 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
   block.appendChild(title);
 
   screen.querySelectorAll('.field-label').forEach((fieldLabel) => {
+    if (screen === endereco && (fieldLabel.closest('[hidden]') || fieldLabel.htmlFor === 'sinan-pais')) return;
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
@@ -680,6 +736,10 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
       const control = root.querySelector(`#${fieldLabel.htmlFor}`);
       if (!control) return;
       const field = addField(block, labelText);
+      if (control === residencia && residencia.value === 'exterior') {
+        addAnswer(field, state.values.paisExterior);
+        return;
+      }
       if (control instanceof HTMLSelectElement) {
         const selected = control.value
           ? Array.from(control.selectedOptions).map((option) => option.textContent.trim())
@@ -701,6 +761,19 @@ root.querySelectorAll('.screen[data-screen]').forEach((screen) => {
 root.querySelector('#btnImprimir').addEventListener('click', () => {
 buildPrint();
 window.print();
+});
+
+btnPdfConferencia.addEventListener('click', () => {
+  const nome = root.querySelector('#sinan-nome');
+  if (!preenchidoComLetras(nome)) {
+    showScreen(2);
+    mostrarPendencias([{ tela: 2, rotulo: 'Nome completo', campo: nome }],
+      'Informe o nome completo para gerar o PDF');
+    return;
+  }
+  persistInputs();
+  buildPrint(true);
+  window.print();
 });
 
 function rotuloResumo(el) {
@@ -725,22 +798,11 @@ function mostrarRevisaoDeCampos() {
   root.querySelector('[data-visat-revisao]')?.remove();
   const grupos = [
     { tela: 1, campos: [
-      [['dataNotificacao', 'dataNotif'], 'Data da notificação'],
-      [['ufNotif', 'ufNotificacao', 'uf'], 'UF notificadora'],
-      [['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio'], 'Município notificador'],
-      [['unidNotif', 'unidadeNotificadora', 'unidade'], 'Unidade notificadora'],
       [['codUnidNotif'], 'Código CNES']
     ] },
     { tela: 2, campos: [
-      [['nome'], 'Nome completo'],
-      [['nascimento', 'idade'], 'Data de nascimento ou idade'],
-      [['sexo'], 'Sexo'],
       [['raca'], 'Raça/cor'],
       [['escolaridade'], 'Escolaridade']
-    ] },
-    { tela: 3, campos: [
-      [['ufRes'], 'UF de residência'],
-      [['munRes'], 'Município de residência']
     ] }
   ];
   const secaoEvolucao = root.querySelector('[data-chips="evolucao"]')?.closest('.screen');

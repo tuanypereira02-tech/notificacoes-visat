@@ -6,7 +6,7 @@
  *   - notificacao.html  (formulários e link direto para o agravo)
  *   - index.html        (repassa ?agravo= e ?perfil= ao quadro da aplicação)
  *
- * Sugere a data da notificação e consulta dados de apoio na ficha em uso.
+ * Consulta dados de apoio na ficha em uso.
  *   3. Calcula a idade a partir da data de nascimento.
  *   4. CEP de residência -> logradouro, bairro, município, UF e IBGE (ViaCEP).
  *   5. CNPJ do empregador / da empresa principal -> razão social, CNAE no código do Sinan e endereço (BrasilAPI; reserva: CNPJ.ws).
@@ -72,11 +72,6 @@
     return true;
   }
 
-  function hoje() {
-    var d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
-
   function digitos(v) { return String(v || '').replace(/\D/g, ''); }
 
   function aviso(el, texto, erro) {
@@ -96,12 +91,6 @@
     span.textContent = texto;
   }
 
-  /* ---------- 1. valores padrão da notificação ---------- */
-
-  function preencherPadrao(raiz) {
-    definir(campo(raiz, ['dataNotificacao', 'dataNotif']), hoje());
-  }
-
   /* ---------- 3. idade a partir da data de nascimento ---------- */
 
   function configurarIdade(raiz) {
@@ -112,38 +101,39 @@
     nasc.dataset.autopreenchimentoIdade = '1';
 
     function calcular() {
-      if (!nasc.value) {
+      idade.readOnly = !!nasc.value;
+      if (unidade) unidade.disabled = !!nasc.value;
+      var referencia = [campo(raiz, ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico']),
+        campo(raiz, ['dataNotificacao', 'dataNotif'])].find(function (el) { return el && el.value; });
+      if (!nasc.value || !referencia || nasc.value > referencia.value) {
         if (idade.dataset.autopreenchido === '1') {
           limparCampo(idade);
-          limparCampo(unidade);
+          if (unidade) definir(unidade, 'Ano', true);
           delete idade.dataset.autopreenchido;
         }
         return;
       }
-      if (!vazio(idade) && idade.dataset.autopreenchido !== '1') return; // respeita valor digitado
-      var n = new Date(nasc.value + 'T00:00:00');
-      var ref = new Date();
-      var referencia = [campo(raiz, ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico']),
-        campo(raiz, ['dataNotificacao', 'dataNotif'])].find(function (el) { return el && el.value; });
-      if (referencia) ref = new Date(referencia.value + 'T00:00:00');
-      if (isNaN(n) || n > ref) return;
-      var anos = ref.getFullYear() - n.getFullYear();
-      if (ref.getMonth() < n.getMonth() || (ref.getMonth() === n.getMonth() && ref.getDate() < n.getDate())) anos--;
+      var n = new Date(nasc.value + 'T00:00:00Z');
+      var ref = new Date(referencia.value + 'T00:00:00Z');
+      var anos = ref.getUTCFullYear() - n.getUTCFullYear() - Number(referencia.value.slice(5) < nasc.value.slice(5));
       var valor = anos, un = 'Ano';
       if (anos < 1) {
-        var meses = (ref.getFullYear() - n.getFullYear()) * 12 + ref.getMonth() - n.getMonth() - (ref.getDate() < n.getDate() ? 1 : 0);
+        var meses = (ref.getUTCFullYear() - n.getUTCFullYear()) * 12 + ref.getUTCMonth() - n.getUTCMonth() -
+          Number(ref.getUTCDate() < n.getUTCDate());
         if (meses >= 1) { valor = meses; un = 'Mês'; } else { valor = Math.floor((ref - n) / 86400000); un = 'Dia'; }
       }
       definir(idade, valor, true);
       idade.dataset.autopreenchido = '1';
       if (unidade) definir(unidade, un, true);
     }
-    idade.addEventListener('input', function (ev) { if (ev.isTrusted) idade.dataset.autopreenchido = '0'; });
     nasc.addEventListener('input', calcular);
     nasc.addEventListener('change', calcular);
     ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico', 'dataNotificacao', 'dataNotif'].forEach(function (chave) {
       var data = campo(raiz, [chave]);
-      if (data) data.addEventListener('change', calcular);
+      if (data) {
+        data.addEventListener('input', calcular);
+        data.addEventListener('change', calcular);
+      }
     });
     calcular();
   }
@@ -418,7 +408,6 @@
 
   function aplicar(raiz) {
     if (!raiz.querySelector('[data-key]')) return;
-    preencherPadrao(raiz);
     configurarIdade(raiz);
     configurarCep(raiz);
     configurarEmpresas(raiz);

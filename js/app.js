@@ -34,7 +34,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-biologico-template',
 
-        defaults: { tipoNotif: 'Individual', idadeUnidade: 'Ano', tempoUnidade: 'Ano', dataNotificacao: hojeIso }
+        defaults: { tempoUnidade: 'Ano' }
       })
     },
     '1-c-cancer-relacionado-ao-trabalho': {
@@ -43,7 +43,6 @@
         templateId: 'form-cancer-template',
 
         defaults: {
-          dataNotificacao: hojeIso,
           data: hojeIso,
           tempoOcupacaoUn: 'Ano',
           tempoExposicaoUn: 'Ano',
@@ -56,7 +55,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-dermatose-template',
 
-        defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', expUnid: 'Ano', afastUnid: 'Ano' }
+        defaults: { dataFinal: hojeIso, tempoOcupUnid: 'Ano', expUnid: 'Ano', afastUnid: 'Ano' }
       })
     },
     '1-e-disturbio-de-voz-relacionado-ao-trabalho': {
@@ -75,7 +74,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-lerdort-template',
 
-        defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
+        defaults: { dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
     '1-g-perda-auditiva-relacionada-ao-trabalho': {
@@ -83,7 +82,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pair-template',
 
-        defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
+        defaults: { dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoAfastUnid: 'Ano' }
       })
     },
     '1-h-pneumoconioses-relacionadas-ao-trabalho': {
@@ -91,7 +90,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-pneumo-template',
 
-        defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoTabacoUnid: 'Ano' }
+        defaults: { dataFinal: hojeIso, tempoOcupUnid: 'Ano', tempoExpUnid: 'Ano', tempoTabacoUnid: 'Ano' }
       })
     },
     '1-i-transtornos-mentais-relacionados-ao-trabalho': {
@@ -99,7 +98,7 @@
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-mental-template',
 
-        defaults: { dataNotif: hojeIso, dataFinal: hojeIso, tempoOcupUnid: 'Ano', tabacoUnidade: 'Ano', agenteUnidade: 'Ano' }
+        defaults: { dataFinal: hojeIso, tempoOcupUnid: 'Ano', tabacoUnidade: 'Ano', agenteUnidade: 'Ano' }
       })
     }
   };
