@@ -18,5 +18,10 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
 - js/formulario-acidente.js: o PDF final exige os campos básicos aplicáveis e é bloqueado por data impossível ou incoerente,
   agravo incompatível, CPF/CNPJ inválido e CID fora do escopo; a prévia sai com a marca "PRÉVIA — NÃO ENCAMINHAR";
   o PDF final traz título, agravo, CID do agravo e versão do modelo; campos condicionais ocultos não são impressos.
+- CNAE (P12): lista e conferência pela tabela CNAE do Sinan (data/cnae-sinan.json, classe com 5 dígitos);
+  ao lado de cada campo, "Consultar CNAE no IBGE" abre a busca do IBGE na CNAE 1.0 (versão 3.0.1) ou na CNAE 2.0,
+  conforme a origem do código; a conversão CNPJ -> Sinan segue a planilha Tabelas_codigos_Sinan_VISAT.
+- P01: o contador de "Como notificar" usa o total selecionável calculado da lista (106 na versão auditada);
+  a conferência de integridade fica no console.
 - Homologação: acrescentar ?homologacao=1 ao endereço marca a tela, o PDF e o assunto do e-mail como HOMOLOGAÇÃO (usar só dados fictícios).
 - notificacao.html: liberação, na regra de segurança, das consultas de CEP (ViaCEP) e CNPJ (BrasilAPI e CNPJ.ws).
