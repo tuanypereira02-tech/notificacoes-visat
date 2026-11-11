@@ -539,7 +539,76 @@ function valorResumo(el) {
   return valor || '';
 }
 
+function mostrarRevisaoDeCampos() {
+  const resumo = root.querySelector('#summaryGrid');
+  root.querySelector('[data-visat-revisao]')?.remove();
+  const grupos = [
+    { tela: 1, campos: [
+      [['dataNotificacao', 'dataNotif'], 'Data da notificação'],
+      [['ufNotif', 'ufNotificacao', 'uf'], 'UF notificadora'],
+      [['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio'], 'Município notificador'],
+      [['unidNotif', 'unidadeNotificadora', 'unidade'], 'Unidade notificadora'],
+      [['codUnidNotif'], 'Código CNES']
+    ] },
+    { tela: 2, campos: [
+      [['nome'], 'Nome completo'],
+      [['nascimento', 'idade'], 'Data de nascimento ou idade'],
+      [['sexo'], 'Sexo'],
+      [['raca'], 'Raça/cor'],
+      [['escolaridade'], 'Escolaridade']
+    ] },
+    { tela: 3, campos: [
+      [['ufRes'], 'UF de residência'],
+      [['munRes'], 'Município de residência']
+    ] }
+  ];
+  const secaoOcupacao = root.querySelector('[data-key="ocupacao"]')?.closest('.screen');
+  if (secaoOcupacao) grupos.push({ tela: Number(secaoOcupacao.dataset.screen), campos: [[['ocupacao'], 'Ocupação / CBO']] });
+
+  const caixa = document.createElement('section');
+  caixa.dataset.visatRevisao = '1';
+  caixa.className = 'highlight-box';
+  const titulo = document.createElement('h2');
+  titulo.textContent = 'Conferência dos campos prioritários';
+  const texto = document.createElement('p');
+  const lista = document.createElement('ul');
+  let total = 0;
+  let preenchidos = 0;
+  let revisar = 0;
+  const semInformacao = /^(ignorado|não informado|desconhecido)$/i;
+  for (const grupo of grupos) {
+    for (const [chaves, rotulo] of grupo.campos) {
+      const secao = getScreens()[grupo.tela - 1];
+      const valores = chaves.filter(chave => secao.querySelector(
+        '[data-key="' + chave + '"], [data-chips="' + chave + '"]'
+      )).map(chave => String(state.values[chave] ?? '').trim());
+      if (!valores.length) continue;
+      total++;
+      if (valores.some(v => v && !semInformacao.test(v))) {
+        preenchidos++;
+        continue;
+      }
+      revisar++;
+      const item = document.createElement('li');
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'btn';
+      botao.dataset.variant = 'outline';
+      botao.textContent = rotulo + (valores.some(v => semInformacao.test(v)) ? ' · ignorado' : ' · em branco');
+      botao.addEventListener('click', () => showScreen(grupo.tela));
+      item.append(botao);
+      lista.append(item);
+    }
+  }
+  texto.textContent = preenchidos + ' de ' + total + ' itens prioritários com informação. ' +
+    (revisar ? 'Selecione um item para conferir na etapa correspondente.' : 'Confira também os dados específicos do agravo.');
+  caixa.append(titulo, texto);
+  if (revisar) caixa.append(lista);
+  resumo.before(caixa);
+}
+
 function buildSummary() {
+mostrarRevisaoDeCampos();
 const marcados = root.querySelectorAll('[data-summary]');
 const items = marcados.length
   ? Array.from(marcados).map((el) => [rotuloResumo(el), valorResumo(el)])
