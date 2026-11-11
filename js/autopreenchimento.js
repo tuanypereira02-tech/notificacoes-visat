@@ -6,10 +6,7 @@
  *   - notificacao.html  (formulários e link direto para o agravo)
  *   - index.html        (repassa ?agravo= e ?perfil= ao quadro da aplicação)
  *
- * O que faz, sempre sem sobrescrever o que já foi digitado:
- *   1. Data da notificação = hoje; UF = SC; município de notificação = Florianópolis; IBGE (Sinan, 6 dígitos) = 420540.
- *   2. Lembra no navegador SOMENTE os dados do notificante (profissional, função, unidade,
- *      códigos da unidade) e os repõe na próxima notificação. Dados do trabalhador não são guardados.
+ * Sugere a data da notificação e consulta dados de apoio na ficha em uso.
  *   3. Calcula a idade a partir da data de nascimento.
  *   4. CEP de residência -> logradouro, bairro, município, UF e IBGE (ViaCEP).
  *   5. CNPJ do empregador / da empresa principal -> razão social, CNAE no código do Sinan e endereço (BrasilAPI; reserva: CNPJ.ws).
@@ -18,7 +15,6 @@
 (function () {
   'use strict';
 
-  var CHAVE_NOTIFICANTE = 'visat-notificante-v1';
   var PADRAO = { uf: 'SC', municipio: 'Florianópolis', ibge: '420540' }; // Sinan: código IBGE com 6 dígitos
 
   /* Conversão CNAE (Receita) -> código de atividade do Sinan.
@@ -38,16 +34,6 @@
   }
 
   function ibgeSinan(codigo) { return String(codigo || '').replace(/\D/g, '').slice(0, 6); }
-
-  /* Campos do notificante que podem ser lembrados (data-key -> grupo). */
-  var NOTIFICANTE = {
-    profissional: 'profissional', investigador: 'profissional',
-    funcao: 'funcao',
-    unidade: 'unidade', unidNotif: 'unidade', unidadeNotificadora: 'unidade',
-    codUnidNotif: 'codUnidade',
-    munInvestigadora: 'unidadeInvestigadora',
-    codUnidInv: 'codUnidadeInvestigadora'
-  };
 
   /* ---------- utilidades ---------- */
 
@@ -108,52 +94,10 @@
     span.textContent = texto;
   }
 
-  function lerNotificante() {
-    try { return JSON.parse(localStorage.getItem(CHAVE_NOTIFICANTE)) || {}; } catch (e) { return {}; }
-  }
-
-  function gravarNotificante(dados) {
-    try { localStorage.setItem(CHAVE_NOTIFICANTE, JSON.stringify(dados)); } catch (e) { /* navegador sem armazenamento */ }
-  }
-
   /* ---------- 1. valores padrão da notificação ---------- */
 
   function preencherPadrao(raiz) {
     definir(campo(raiz, ['dataNotificacao', 'dataNotif']), hoje());
-  }
-
-  /* ---------- 2. dados do notificante ---------- */
-
-  function preencherNotificante(raiz) {
-    var salvos = lerNotificante();
-    Object.keys(NOTIFICANTE).forEach(function (chave) {
-      var el = campo(raiz, [chave]);
-      if (!el) return;
-      definir(el, salvos[NOTIFICANTE[chave]]);
-      if (el.dataset.autopreenchimentoNotificante) return;
-      el.dataset.autopreenchimentoNotificante = '1';
-      el.addEventListener('change', function () {
-        var dados = lerNotificante();
-        dados[NOTIFICANTE[chave]] = el.value.trim();
-        gravarNotificante(dados);
-      });
-    });
-
-    if (Object.keys(salvos).length && !raiz.querySelector('[data-autopreenchimento-limpar]')) {
-      var ancora = campo(raiz, ['profissional', 'investigador']) || campo(raiz, ['unidade', 'unidNotif', 'unidadeNotificadora']);
-      if (!ancora) return;
-      var botao = document.createElement('button');
-      botao.type = 'button';
-      botao.setAttribute('data-autopreenchimento-limpar', '1');
-      botao.textContent = 'Esquecer os dados do notificante neste navegador';
-      botao.style.cssText = 'display:block;margin-top:6px;padding:0;border:0;background:none;color:#CC6A00;font-size:12px;text-decoration:underline;cursor:pointer';
-      botao.addEventListener('click', function () {
-        try { localStorage.removeItem(CHAVE_NOTIFICANTE); } catch (e) { /* sem armazenamento */ }
-        botao.textContent = 'Dados do notificante apagados deste navegador.';
-        botao.disabled = true;
-      });
-      ancora.insertAdjacentElement('afterend', botao);
-    }
   }
 
   /* ---------- 3. idade a partir da data de nascimento ---------- */
@@ -166,7 +110,14 @@
     nasc.dataset.autopreenchimentoIdade = '1';
 
     function calcular() {
-      if (!nasc.value) return;
+      if (!nasc.value) {
+        if (idade.dataset.autopreenchido === '1') {
+          limparCampo(idade);
+          limparCampo(unidade);
+          delete idade.dataset.autopreenchido;
+        }
+        return;
+      }
       if (!vazio(idade) && idade.dataset.autopreenchido !== '1') return; // respeita valor digitado
       var n = new Date(nasc.value + 'T00:00:00');
       var ref = new Date();
@@ -185,6 +136,7 @@
       if (unidade) definir(unidade, un, true);
     }
     idade.addEventListener('input', function (ev) { if (ev.isTrusted) idade.dataset.autopreenchido = '0'; });
+    nasc.addEventListener('input', calcular);
     nasc.addEventListener('change', calcular);
     var dataNotif = campo(raiz, ['dataNotificacao', 'dataNotif']);
     if (dataNotif) dataNotif.addEventListener('change', calcular);
@@ -192,6 +144,12 @@
   }
 
   /* ---------- 4. CEP de residência (ViaCEP) ---------- */
+
+  function limparCampo(el) {
+    if (!el || !el.value) return;
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 
   function configurarCep(raiz) {
     var cep = campo(raiz, ['cep']);
@@ -204,6 +162,18 @@
     function buscar() {
       var n = digitos(cep.value);
       if (n === ultimoCep) return;
+      if (cepDoEndereco.length === 8 && cepDoEndereco !== n) {
+        ['logRes', 'bairroRes', 'ufRes', 'munRes', 'ibgeRes', 'distRes', 'numRes', 'compRes',
+          'geo1', 'geo2', 'refRes', 'paisExterior'].forEach(function (chave) {
+          limparCampo(campo(raiz, [chave]));
+        });
+        var zona = raiz.querySelector('[data-chips="zona"]');
+        if (zona) {
+          zona.querySelectorAll('.chip.selected').forEach(function (chip) { chip.classList.remove('selected'); });
+          zona.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        cepDoEndereco = '';
+      }
       ultimoCep = n;
       var atual = ++consulta;
       if (n.length !== 8) {
@@ -226,13 +196,6 @@
             munRes: d.localidade,
             ibgeRes: ibgeSinan(d.ibge)
           };
-          var mudouEndereco = cepDoEndereco.length === 8 && cepDoEndereco !== n;
-          if (mudouEndereco) {
-            // Estes campos descrevem o endereço anterior e não são fornecidos pelo CEP.
-            ['distRes', 'numRes', 'compRes', 'geo1', 'geo2', 'refRes', 'paisExterior'].forEach(function (chave) {
-              dados[chave] = '';
-            });
-          }
           cepDoEndereco = n;
           Object.entries(dados).forEach(function (item) {
             var el = campo(raiz, [item[0]]);
@@ -244,9 +207,7 @@
               el.dispatchEvent(new Event('input', { bubbles: true }));
             }
           });
-          aviso(cep, mudouEndereco
-            ? 'Endereço atualizado pelo novo CEP. Preencha os detalhes da nova residência.'
-            : 'Endereço preenchido com os dados disponíveis. Confira antes de enviar.');
+          aviso(cep, 'Endereço preenchido com os dados disponíveis. Confira antes de enviar.');
         })
         .catch(function () {
           if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
@@ -329,30 +290,34 @@
     var el = campo(raiz, chavesCnpj);
     if (!el || el.dataset.autopreenchimentoCnpj) return;
     el.dataset.autopreenchimentoCnpj = '1';
-    var automaticos = new Map();
+    var documentoVinculado = '';
+    var consulta = 0;
     function preencher(chaves, valor) {
-      var alvo = campo(raiz, chaves);
-      if (definir(alvo, valor)) automaticos.set(alvo, alvo.value);
+      definir(campo(raiz, chaves), valor);
     }
     el.addEventListener('input', function () {
-      if (digitos(el.value) === el.dataset.ultimoCnpj) return;
+      var n = digitos(el.value);
+      if (n === el.dataset.ultimoCnpj) return;
+      consulta++;
       delete el.dataset.ultimoCnpj;
-      automaticos.forEach(function (valor, campo) {
-        if (campo.value !== valor) return;
-        campo.value = '';
-        campo.dispatchEvent(new Event('input', { bubbles: true }));
+      if (!documentoVinculado || documentoVinculado === n) return;
+      documentoVinculado = '';
+      Object.values(destino).forEach(function (chaves) {
+        limparCampo(campo(raiz, chaves));
       });
-      automaticos.clear();
+      aviso(el, '');
     });
 
     function buscar() {
       var n = digitos(el.value);
       if (n.length !== 14 || el.dataset.ultimoCnpj === n) return; // CPF (11 dígitos) não é consultado
       el.dataset.ultimoCnpj = n;
+      var atual = ++consulta;
       aviso(el, 'Consultando CNPJ…');
       consultarCnpj(n)
         .then(function (d) {
-          if (!el.isConnected || digitos(el.value) !== n) return;
+          if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
+          documentoVinculado = n;
           var codSinan = cnaeSinan(d.cnae);
           var cnae = codSinan ? codSinan + (d.cnaeDescricao ? ' – ' + d.cnaeDescricao : '') : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
@@ -371,7 +336,7 @@
           aviso(el, 'Confira os dados e escolha a atividade econômica que corresponde ao caso.');
         })
         .catch(function () {
-          if (digitos(el.value) !== n) return;
+          if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
           delete el.dataset.ultimoCnpj;
           aviso(el, 'CNPJ não encontrado ou consulta indisponível. Preencher manualmente.', true);
         });
@@ -414,7 +379,6 @@
   function aplicar(raiz) {
     if (!raiz.querySelector('[data-key]')) return;
     preencherPadrao(raiz);
-    preencherNotificante(raiz);
     configurarIdade(raiz);
     configurarCep(raiz);
     configurarEmpresas(raiz);
@@ -423,7 +387,7 @@
   var agendado = null;
   function examinar() {
     clearTimeout(agendado);
-    // Aguarda o formulário restaurar o rascunho antes de preencher só o que ficou vazio.
+    // Aguarda a montagem dos campos do formulário.
     agendado = setTimeout(function () {
       var raizes = new Set();
       document.querySelectorAll('[data-key]').forEach(function (el) { raizes.add(raizDoFormulario(el)); });
