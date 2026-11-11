@@ -33,6 +33,8 @@
     return CNAE_SINAN[classe] || classe;
   }
 
+  window.visatCnaeLegado = function (codigo) { return Object.values(CNAE_SINAN).includes(codigo); };
+
   function ibgeSinan(codigo) { return String(codigo || '').replace(/\D/g, '').slice(0, 6); }
 
   /* ---------- utilidades ---------- */
@@ -286,6 +288,40 @@
     });
   }
 
+  var empresasConsultadas = new WeakMap();
+
+  window.visatConferirEmpresas = function (raiz) {
+    var avisos = [];
+    raiz.querySelectorAll('[data-autopreenchimento-cnpj]').forEach(function (el) {
+      var registro = empresasConsultadas.get(el);
+      if (!registro || digitos(el.value) !== registro.cnpj) return;
+      var dados = registro.dados;
+      var destino = registro.destino;
+      var razao = campo(raiz, destino.razao);
+      var cnae = campo(raiz, destino.cnae);
+      var uf = destino.uf && campo(raiz, destino.uf);
+      var municipio = destino.municipio && campo(raiz, destino.municipio);
+      function normalizar(v) {
+        return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      }
+      var codigo = cnae && cnae.value.match(/^\s*(\d{4})[-.]?(\d)\b/);
+      var cadastrados = [dados.cnae].concat((dados.secundarios || []).map(function (x) { return x.codigo; }));
+      if (razao && razao.value && dados.razao_social && normalizar(razao.value) !== normalizar(dados.razao_social)) {
+        avisos.push({ campo: razao, mensagem: 'Confira a razão social com o CNPJ selecionado.' });
+      }
+      if (codigo && cadastrados.some(Boolean) && !cadastrados.some(function (x) {
+        return cnaeSinan(x) === codigo[1] + codigo[2] || digitos(x).padStart(7, '0').slice(0, 5) === codigo[1] + codigo[2];
+      })) avisos.push({ campo: cnae, mensagem: 'O CNAE informado difere das atividades retornadas para este CNPJ. Confira a atividade pertinente ao caso.' });
+      if (uf && uf.value && dados.uf && normalizar(uf.value) !== normalizar(dados.uf)) {
+        avisos.push({ campo: uf, mensagem: 'A UF informada difere do cadastro consultado pelo CNPJ.' });
+      }
+      if (municipio && municipio.value && dados.municipio && normalizar(municipio.value) !== normalizar(dados.municipio)) {
+        avisos.push({ campo: municipio, mensagem: 'O município informado difere do cadastro consultado pelo CNPJ.' });
+      }
+    });
+    return avisos;
+  };
+
   function configurarCnpj(raiz, chavesCnpj, destino) {
     var el = campo(raiz, chavesCnpj);
     if (!el || el.dataset.autopreenchimentoCnpj) return;
@@ -310,7 +346,7 @@
 
     function buscar() {
       var n = digitos(el.value);
-      if (n.length !== 14 || el.dataset.ultimoCnpj === n) return; // CPF (11 dígitos) não é consultado
+      if (n.length !== 14 || el.dataset.ultimoCnpj === n) return; // CPF e CNPJ alfanumérico não são consultados neste serviço
       el.dataset.ultimoCnpj = n;
       var atual = ++consulta;
       aviso(el, 'Consultando CNPJ…');
@@ -318,6 +354,7 @@
         .then(function (d) {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
           documentoVinculado = n;
+          empresasConsultadas.set(el, { cnpj: n, dados: d, destino: destino });
           var codSinan = cnaeSinan(d.cnae);
           var cnae = codSinan ? codSinan + (d.cnaeDescricao ? ' – ' + d.cnaeDescricao : '') : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
