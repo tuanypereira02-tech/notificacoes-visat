@@ -123,8 +123,9 @@
       if (!vazio(idade) && idade.dataset.autopreenchido !== '1') return; // respeita valor digitado
       var n = new Date(nasc.value + 'T00:00:00');
       var ref = new Date();
-      var dataNotif = campo(raiz, ['dataNotificacao', 'dataNotif']);
-      if (dataNotif && dataNotif.value) ref = new Date(dataNotif.value + 'T00:00:00');
+      var referencia = [campo(raiz, ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico']),
+        campo(raiz, ['dataNotificacao', 'dataNotif'])].find(function (el) { return el && el.value; });
+      if (referencia) ref = new Date(referencia.value + 'T00:00:00');
       if (isNaN(n) || n > ref) return;
       var anos = ref.getFullYear() - n.getFullYear();
       if (ref.getMonth() < n.getMonth() || (ref.getMonth() === n.getMonth() && ref.getDate() < n.getDate())) anos--;
@@ -140,8 +141,10 @@
     idade.addEventListener('input', function (ev) { if (ev.isTrusted) idade.dataset.autopreenchido = '0'; });
     nasc.addEventListener('input', calcular);
     nasc.addEventListener('change', calcular);
-    var dataNotif = campo(raiz, ['dataNotificacao', 'dataNotif']);
-    if (dataNotif) dataNotif.addEventListener('change', calcular);
+    ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico', 'dataNotificacao', 'dataNotif'].forEach(function (chave) {
+      var data = campo(raiz, [chave]);
+      if (data) data.addEventListener('change', calcular);
+    });
     calcular();
   }
 
