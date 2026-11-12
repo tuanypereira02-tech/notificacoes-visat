@@ -292,148 +292,17 @@
     el.textContent = {
       '': '',
       digitando: 'Escolha uma sugestão da lista para preencher o código automaticamente.',
-      validado: '✓ Código validado na tabela de referência: ' + extra + '.',
+      validado: tipo === 'mun' ? 'Município identificado.' : 'Unidade identificada.',
       varios: 'Há ' + extra + ' opções com este nome. Escolha uma sugestão da lista para preencher o código.',
       manual: 'Preenchimento manual: o código não foi validado. Escolha uma sugestão da lista da ' + FONTE_OFICIAL[tipo] + '.',
       indisponivel: 'Tabela de referência indisponível. Confira o município ou a unidade e tente novamente.'
     }[estado];
   }
 
-  /* P13: atalhos validados junto ao rótulo do campo; abrem em nova aba e preservam o preenchimento. */
-  var ATALHOS = {
-    cbo: ['Consultar CBO (MTE)', 'https://cbo.mte.gov.br/cbosite/pages/pesquisas/BuscaPorTitulo.jsf'],
-    cnpj: ['Comprovante CNPJ (Receita)', 'https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/'],
-    cnes: ['Consultar CNES', 'https://cnes.datasus.gov.br/pages/estabelecimentos/consulta.jsp'],
-    cat: ['Registrar CAT (INSS)', 'https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat']
-  };
-  function rotuloDe(el) {
-    if (!el) return null;
-    if (el.labels && el.labels[0]) return el.labels[0];
-    var anterior = el.previousElementSibling;
-    return anterior && anterior.classList.contains('field-label') ? anterior : null;
-  }
-  function atalho(el, chave, href) {
-    var rotulo = rotuloDe(el);
-    if (!rotulo || rotulo.parentNode.querySelector('[data-visat-atalho="' + chave + '"]')) return null;
-    var a = document.createElement('a');
-    a.className = 'visat-atalho';
-    a.dataset.visatAtalho = chave;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.href = href || ATALHOS[chave][1];
-    a.textContent = (ATALHOS[chave] ? ATALHOS[chave][0] : '') + ' ↗';
-    a.title = 'Abre em nova aba; o formulário continua preenchido nesta aba.';
-    rotulo.before(a);
-    return a;
-  }
-
-  /* Busca de estabelecimentos nos dados públicos do CNPJ. */
-  function configurarBuscaEmpresa(raiz, chavesNome, chavesCnpj) {
-    var nome = campo(raiz, chavesNome);
-    var cnpj = campo(raiz, chavesCnpj);
-    if (!nome || !cnpj || nome.dataset.visatBuscaCnpj) return;
-    nome.dataset.visatBuscaCnpj = '1';
-
-    var caixa = document.createElement('div');
-    caixa.style.cssText = 'display:grid;gap:6px;margin-top:6px';
-    var ajuda = document.createElement('small');
-    ajuda.textContent = 'Digite pelo menos 3 caracteres da razão social ou do nome fantasia. Consulte apenas pessoas jurídicas.';
-    var regiao = document.createElement('select');
-    regiao.className = 'input';
-    regiao.setAttribute('aria-label', 'Abrangência da busca de empresas');
-    regiao.add(new Option('Buscar em Santa Catarina', 'SC'));
-    regiao.add(new Option('Buscar no Brasil', ''));
-    var estado = document.createElement('small');
-    estado.setAttribute('role', 'status');
-    var resultados = document.createElement('ul');
-    resultados.style.cssText = 'display:grid;gap:4px;list-style:none;margin:0;padding:0';
-    resultados.setAttribute('aria-label', 'Estabelecimentos encontrados');
-    var fonte = document.createElement('a');
-    fonte.href = 'https://fichario.app/api';
-    fonte.target = '_blank';
-    fonte.rel = 'noopener noreferrer';
-    fonte.style.fontSize = '12px';
-    fonte.textContent = 'Fonte: Fichário · Dados abertos do CNPJ';
-    caixa.append(ajuda, regiao, estado, resultados, fonte);
-    nome.insertAdjacentElement('afterend', caixa);
-
-    var espera;
-    var consulta;
-    function cancelar() {
-      clearTimeout(espera);
-      if (consulta) consulta.abort();
-      consulta = null;
-      resultados.replaceChildren();
-    }
-
-    function agendar() {
-      cancelar();
-      estado.textContent = '';
-      var termo = nome.value.trim().slice(0, 100);
-      if (!termo || termo.length < 3 || !/\p{L}/u.test(termo) || /\d{11,}/.test(termo.replace(/\D/g, ''))) return;
-      espera = setTimeout(function () {
-        var atual = new AbortController();
-        consulta = atual;
-        var parametros = new URLSearchParams({ q: termo });
-        if (regiao.value) parametros.set('uf', regiao.value);
-        estado.textContent = 'Buscando estabelecimentos…';
-        fetch('https://fichario.app/api/v1/busca?' + parametros, {
-          signal: atual.signal,
-          credentials: 'omit',
-          referrerPolicy: 'no-referrer'
-        }).then(function (resposta) {
-          if (!resposta.ok) throw new Error(resposta.status);
-          return resposta.json();
-        }).then(function (dados) {
-          if (consulta !== atual || !nome.isConnected) return;
-          var encontrados = (Array.isArray(dados.resultados) ? dados.resultados : []).filter(function (item) {
-            return /^\d{14}$/.test(item.cnpj) && (item.razao_social || item.nome_fantasia);
-          }).slice(0, 10);
-          estado.textContent = encontrados.length ? 'Selecione o estabelecimento correto.' :
-            'Nenhum estabelecimento encontrado. Ajuste o início do nome, amplie a região ou informe o CNPJ.';
-          encontrados.forEach(function (item) {
-            var linha = document.createElement('li');
-            var botao = document.createElement('button');
-            botao.type = 'button';
-            botao.className = 'btn';
-            botao.dataset.variant = 'outline';
-            botao.textContent = [item.razao_social, item.nome_fantasia !== item.razao_social ? item.nome_fantasia : '',
-              item.cnpj, [item.municipio, item.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ');
-            botao.addEventListener('click', function () {
-              cancelar();
-              definir(cnpj, item.cnpj, true);
-              nome.value = item.razao_social || item.nome_fantasia;
-              nome.dispatchEvent(new Event('change', { bubbles: true }));
-              estado.textContent = 'CNPJ selecionado. Confira o estabelecimento, o endereço e a atividade econômica.';
-              cnpj.focus();
-            });
-            linha.append(botao);
-            resultados.append(linha);
-          });
-        }).catch(function () {
-          if (consulta !== atual || !nome.isConnected) return;
-          estado.textContent = 'Busca indisponível. Tente novamente ou informe o CNPJ.';
-        });
-      }, 550);
-    }
-    nome.addEventListener('input', function (evento) {
-      if (!evento.isTrusted) return;
-      if (cnpj.value && cnpj.dataset.ultimoCnpj) {
-        var termoDigitado = nome.value;
-        cnpj.value = '';
-        cnpj.dispatchEvent(new Event('input', { bubbles: true }));
-        nome.value = termoDigitado;
-      }
-      agendar();
-    });
-    regiao.addEventListener('change', agendar);
-  }
-
   function atualizarDicaCnpj(raiz) {
-    raiz.querySelectorAll('small, p, span, .hint, .ajuda').forEach(function (el) {
-      if (/Preencha o documento e os dados da empresa manualmente/i.test(el.textContent) && !el.dataset.visatDica) {
-        el.dataset.visatDica = '1';
-        el.textContent = 'Digite o CNPJ: nome, atividade econômica e endereço da empresa são preenchidos automaticamente. Para CPF, preencha os dados manualmente.';
+    raiz.querySelectorAll('.field-help, .hint, .ajuda').forEach(function (el) {
+      if (/Preencha o documento e os dados da empresa manualmente/i.test(el.textContent)) {
+        el.textContent = 'Informe o CNPJ para preencher o CNAE e os dados da empresa.';
       }
     });
   }
@@ -503,47 +372,9 @@
     return avisos;
   };
 
-  /* CNAE: tabela usada no registro e consulta ao IBGE na versão correspondente (P12). */
-  var IBGE_CNAE = 'https://cnae.ibge.gov.br/?option=com_cnae&view=atividades&Itemid=6160&tipo=cnae&chave=';
-  function apoioCnae(el) {
-    if (!el || el.dataset.visatApoioCnae) return;
-    el.dataset.visatApoioCnae = '1';
-    var caixa = document.createElement('details');
-    caixa.className = 'field-help visat-ajuda-cnae';
-    var resumo = document.createElement('summary');
-    resumo.textContent = 'Saiba mais sobre o CNAE';
-    caixa.dataset.visatApoioCnae = '1';
-    var texto = document.createElement('p');
-    texto.style.margin = '4px 0';
-    texto.textContent = 'Tabela usada no registro: CNAE do Sinan, classe com 5 dígitos (CNAE 1.0 e classes da CNAE 2.0 com denominação distinta). ' +
-      'Pelo CNPJ, a subclasse da Receita (CNAE 2.3, 7 dígitos) é convertida automaticamente. Conferência: código de origem CNAE 1.0 na busca do IBGE em CNAE 1.0; código de origem CNAE 2.0 na busca em CNAE 2.0.';
-    var link = atalho(el, 'cnae', IBGE_CNAE + '&versao_classe=3.0.1&versao_subclasse=') || document.createElement('a');
-    caixa.append(resumo, texto);
-    (el.parentNode.querySelector('datalist') || el).insertAdjacentElement('afterend', caixa);
-    function atualizar() {
-      var m = String(el.value || '').match(/^\s*(\d{2})\.?(\d{2})-?(\d)/);
-      var codigo = m ? m[1] + m[2] + m[3] : '';
-      var termo = codigo || String(el.value || '').trim();
-      carregar('cnae').then(function (lista) {
-        var item = codigo && lista.find(function (x) { return x.c === codigo; });
-        var v2 = item && item.origem === '2.0';
-        link.href = IBGE_CNAE + encodeURIComponent(codigo ? codigo.slice(0, 4) + '-' + codigo[4] : termo) +
-          '&versao_classe=' + (v2 ? '5.0.1' : '3.0.1') + '&versao_subclasse=';
-        link.textContent = 'Consultar CNAE no IBGE' + (v2 ? ' (CNAE 2.0)' : ' (CNAE 1.0)') + ' ↗';
-      });
-    }
-    link.href = IBGE_CNAE + '&versao_classe=3.0.1&versao_subclasse=';
-    link.textContent = 'Consultar CNAE no IBGE (CNAE 1.0) ↗';
-    el.addEventListener('input', atualizar);
-    el.addEventListener('change', atualizar);
-    atualizar();
-  }
-
   /* ---------- configuração por formulário ---------- */
 
   function configurar(raiz) {
-    configurarBuscaEmpresa(raiz, ['empresa', 'empresaNome', 'razao'], ['cnpj']);
-    configurarBuscaEmpresa(raiz, ['razaoPrincipal', 'razaoPrinc'], ['cnpjPrincipal', 'cnpjPrinc']);
     atualizarDicaCnpj(raiz);
 
     var nomeUnidade = campo(raiz, ['unidNotif', 'unidade', 'unidadeNotificadora']);
@@ -616,16 +447,19 @@
     // Ocupação -> CBO
     anexarLista(campo(raiz, ['ocupacao']), 'cbo', null);
 
-    ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (k) {
-      var el = campo(raiz, [k]);
-      anexarLista(el, 'cnae', null);
-      apoioCnae(el);
+    anexarLista(campo(raiz, ['cnae']), 'cnae', null);
+    // A emissão da CAT é um serviço externo distinto da notificação.
+    raiz.querySelectorAll('[data-chips="cat"]').forEach(function (grupo) {
+      if (grupo.nextElementSibling?.matches('[data-visat-link-cat]')) return;
+      var link = document.createElement('a');
+      link.dataset.visatLinkCat = '';
+      link.className = 'field-help';
+      link.href = 'https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Registrar CAT no INSS';
+      grupo.after(link);
     });
-    // P13: atalhos junto aos rótulos
-    atalho(campo(raiz, ['ocupacao']), 'cbo');
-    ['cnpj', 'cnpjPrincipal', 'cnpjPrinc'].forEach(function (k) { atalho(campo(raiz, [k]), 'cnpj'); });
-    atalho(cnes, 'cnes');
-    raiz.querySelectorAll('[data-chips="cat"]').forEach(function (g) { atalho(g, 'cat'); });
     // Diagnóstico -> CID-10: busca restrita ao escopo de cada ficha em js/cid-qualificado.js.
   }
 

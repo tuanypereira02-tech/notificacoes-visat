@@ -51,22 +51,15 @@ function organizarCamposEmpresa(area) {
     codigo.parentElement.classList.add('visat-codigo-derivado');
   }
 
-  const nome = localizar(['empresa', 'empresaNome', 'razao']) ||
-    adicionar('empresa', 'Nome da empresa ou empregador');
+  localizar(['empresa', 'empresaNome', 'razao'])?.parentElement.remove();
   const cnae = localizar(['cnae']) || adicionar('cnae', 'CNAE da empresa');
-  if (empregador.id !== 'voz-cnpj') nome.labels[0].textContent = 'Nome da empresa ou empregador';
   cnae.labels[0].textContent = 'CNAE da empresa';
-  empregador.parentElement.after(nome.parentElement, cnae.parentElement);
+  empregador.parentElement.after(cnae.parentElement);
 
   const empresaPrincipal = grupo.querySelector('[data-show-when="terceirizada=Sim"]');
   if (!empresaPrincipal) return;
-  const documentoPrincipal = localizar(['cnpjPrincipal', 'cnpjPrinc'], empresaPrincipal);
-  const nomePrincipal = localizar(['razaoPrincipal', 'razaoPrinc'], empresaPrincipal);
-  const cnaePrincipal = localizar(['cnaePrincipal', 'cnaePrinc'], empresaPrincipal);
-  if (documentoPrincipal && nomePrincipal && cnaePrincipal) {
-    nomePrincipal.labels[0].textContent = 'Nome da empresa principal';
-    empresaPrincipal.prepend(documentoPrincipal.parentElement, nomePrincipal.parentElement, cnaePrincipal.parentElement);
-  }
+  localizar(['razaoPrincipal', 'razaoPrinc'], empresaPrincipal)?.parentElement.remove();
+  localizar(['cnaePrincipal', 'cnaePrinc'], empresaPrincipal)?.parentElement.remove();
 }
 
 const blocosSinan = {
@@ -170,11 +163,10 @@ const blocosSinan = {
 };
 
 function criarComplementares(titulo) {
-  // Ficha corrida: os campos opcionais ficam em sequência, sem grupo recolhível.
-  const secao = document.createElement('section');
+  const secao = document.createElement('details');
   secao.className = 'visat-sequencia';
   secao.dataset.visatComplementares = '';
-  const cabecalho = document.createElement('h3');
+  const cabecalho = document.createElement('summary');
   cabecalho.className = 'visat-sequencia-titulo';
   cabecalho.textContent = titulo;
   secao.append(cabecalho);
@@ -188,7 +180,7 @@ function recolherCamposDaEntrada(secao, obrigatorios) {
     return campo && !obrigatorios.includes(campo.id) && !obrigatorios.includes(campo.dataset.chips);
   });
   if (!opcionais.length) return;
-  const detalhes = criarComplementares('Dados complementares · opcionais');
+  const detalhes = criarComplementares('Dados complementares (opcional)');
   const campos = document.createElement('div');
   campos.className = 'field-group';
   campos.append(...opcionais);
@@ -222,7 +214,9 @@ function montarBlocoSinan(root, options) {
   }
 
   const etapasDoAgravo = [...area.querySelectorAll('.screen')].slice(0, -1);
-  const detalhesAgravo = criarComplementares('Dados específicos do agravo · opcionais');
+  const detalhesAgravo = criarComplementares('Dados do agravo (opcional)');
+  const camposCid = document.createElement('div');
+  camposCid.className = 'field-group';
   const cat = area.querySelector('[data-chips="cat"]');
   if (cat) etapasDoAgravo[0].querySelector('.field-group').append(cat.parentElement);
   for (const etapa of etapasDoAgravo) {
@@ -231,6 +225,9 @@ function montarBlocoSinan(root, options) {
       etapa.remove();
       continue;
     }
+    etapa.querySelectorAll('[data-key="cid"], [data-key="cid10"], [data-key="cidCod"], [data-key="cidDiag"], [data-key="cidCausa"]').forEach(campo => {
+      camposCid.append(campo.parentElement);
+    });
     etapa.classList.remove('screen', 'active');
     etapa.removeAttribute('data-screen');
     etapa.dataset.visatSecaoComplementar = '';
@@ -247,6 +244,16 @@ function montarBlocoSinan(root, options) {
   ]);
   recolherCamposDaEntrada(individual, ['sinan-nome', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
   recolherCamposDaEntrada(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-uf-res', 'sinan-mun-res']);
+  if (camposCid.children.length) {
+    const diagnostico = document.createElement('section');
+    diagnostico.className = 'visat-sequencia';
+    diagnostico.dataset.visatComplementares = '';
+    const titulo = document.createElement('h3');
+    titulo.className = 'visat-sequencia-titulo';
+    titulo.textContent = 'CID-10 da lesão ou diagnóstico';
+    diagnostico.append(titulo, camposCid);
+    residencia.querySelector('.field-group').after(diagnostico);
+  }
   residencia.append(detalhesAgravo);
   const orientacao = document.createElement('p');
   orientacao.className = 'field-help';
@@ -725,6 +732,17 @@ async function verificarCoerencia() {
 }
 
 function focarCampo(campo) {
+  const municipioPorCodigo = {
+    ibgeNotif: '#sinan-mun-notif',
+    ibgeRes: '#sinan-mun-res',
+    ibgeEmp: '[data-key="munEmp"]',
+    ibgePrincipal: '[data-key="munPrincipal"]'
+  };
+  const seletor = municipioPorCodigo[campo.dataset.key];
+  if (seletor) campo = root.querySelector(seletor) || campo;
+  for (let grupo = campo.closest('details'); grupo; grupo = grupo.parentElement.closest('details')) {
+    grupo.open = true;
+  }
   (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
 }
 
@@ -784,7 +802,7 @@ async function finalizarFicha() {
     return;
   }
   emCorrecao = true;
-  mostrarPendencias(pendentes, 'Revise as pendências para gerar o PDF final');
+  mostrarPendencias(pendentes, pendentes.length === 1 ? '1 pendência para gerar o PDF final' : pendentes.length + ' pendências para gerar o PDF final');
 }
 
 function mostrarPendencias(pendentes, mensagem) {
@@ -795,6 +813,8 @@ function mostrarPendencias(pendentes, mensagem) {
   const titulo = document.createElement('h2');
   titulo.textContent = mensagem;
   titulo.tabIndex = -1;
+  const instrucao = document.createElement('p');
+  instrucao.textContent = 'Selecione um item para ir direto ao campo.';
   const lista = document.createElement('ul');
   pendentes.forEach(({ tela, rotulo, campo }) => {
     const item = document.createElement('li');
@@ -810,7 +830,7 @@ function mostrarPendencias(pendentes, mensagem) {
     item.append(botao);
     lista.append(item);
   });
-  caixa.append(titulo, lista);
+  caixa.append(titulo, instrucao, lista);
   getScreens()[state.screen - 1].prepend(caixa);
   titulo.focus();
 }
@@ -955,7 +975,7 @@ root.querySelector('#btnImprimir').addEventListener('click', () => {
   const pendentes = camposBasicosPendentes().concat(documentosPendentes());
   if (pendentes.length) {
     emCorrecao = true;
-    mostrarPendencias(pendentes, 'Revise as pendências para gerar o PDF final');
+    mostrarPendencias(pendentes, pendentes.length === 1 ? '1 pendência para gerar o PDF final' : pendentes.length + ' pendências para gerar o PDF final');
     return;
   }
   buildPrint();

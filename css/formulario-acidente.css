@@ -484,3 +484,12 @@ body.modo-formulario-acidente .rodape { display: none; }
 .visat-lista-apoio { margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: #fff; }
 .visat-lista-apoio ul { display: grid; gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; }
 .visat-lista-apoio .btn { text-align: left; }
+
+/* Seções complementares fechadas mantêm os dados essenciais à vista. */
+details.visat-sequencia { display: block; margin-top: 16px; padding-top: 12px; }
+details.visat-sequencia > summary { cursor: pointer; font-size: 16px; }
+details.visat-sequencia[open] > summary { margin-bottom: 16px; }
+[data-visat-pendencias] { padding: 16px; }
+[data-visat-pendencias] h2 { margin: 0 0 8px; font-size: 18px; }
+[data-visat-pendencias] ul { display: grid; gap: 8px; padding: 0; list-style: none; }
+[data-visat-pendencias] button { text-align: left; }

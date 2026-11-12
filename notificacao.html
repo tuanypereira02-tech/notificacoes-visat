@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261112-ficha-otimizada">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261112-ficha-simplificada">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -124,7 +124,7 @@
 <label class="field-label" for="sinan-idade">Idade</label>
 <div class="unit-row" >
 <input class="input input-lg" id="sinan-idade" type="number" min="0" data-key="idade">
-<select class="input input-lg" id="sinan-idade-un" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+<select class="input input-lg" id="sinan-idade-un" aria-label="Unidade da idade" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
 </div>
 </div>
 <div>
@@ -660,10 +660,10 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261112-ficha-otimizada" defer></script>
+  <script src="js/formulario-acidente.js?v=20261112-ficha-simplificada" defer></script>
   <script src="js/app.js?v=20261111-numeracao" defer></script>
-  <script src="js/autopreenchimento.js?v=20261112-ficha-otimizada" defer></script>
-  <script src="js/autopreenchimento-listas.js?v=20261112-ficha-otimizada" defer></script>
+  <script src="js/autopreenchimento.js?v=20261112-ficha-simplificada" defer></script>
+  <script src="js/autopreenchimento-listas.js?v=20261112-ficha-simplificada" defer></script>
   <script src="js/cid-qualificado.js?v=20261112-corrida" defer></script>
 </body>
 </html>

@@ -232,7 +232,7 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (d) {
         return {
-          razao_social: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
+          cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
           uf: d.uf, municipio: d.municipio, ibge: d.codigo_municipio_ibge, bairro: d.bairro,
           tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero,
           telefone: d.ddd_telefone_1 && String(d.ddd_telefone_1).length >= 10
@@ -246,7 +246,7 @@
             var e = d.estabelecimento || {};
             var ap = e.atividade_principal || {};
             return {
-              razao_social: d.razao_social, cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
+              cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
               secundarios: (e.atividades_secundarias || []).map(function (x) { return { codigo: x.id, descricao: x.descricao }; }),
               uf: e.estado && e.estado.sigla, municipio: e.cidade && e.cidade.nome,
               ibge: e.cidade && e.cidade.ibge_id, bairro: e.bairro,
@@ -266,8 +266,7 @@
       if (!registro || digitos(el.value) !== registro.cnpj) return;
       var dados = registro.dados;
       var destino = registro.destino;
-      var razao = campo(raiz, destino.razao);
-      var cnae = campo(raiz, destino.cnae);
+      var cnae = destino.cnae && campo(raiz, destino.cnae);
       var uf = destino.uf && campo(raiz, destino.uf);
       var municipio = destino.municipio && campo(raiz, destino.municipio);
       function normalizar(v) {
@@ -275,9 +274,6 @@
       }
       var codigo = cnae && cnae.value.match(/^\s*(\d{4})[-.]?(\d)\b/);
       var cadastrados = [dados.cnae].concat((dados.secundarios || []).map(function (x) { return x.codigo; }));
-      if (razao && razao.value && dados.razao_social && normalizar(razao.value) !== normalizar(dados.razao_social)) {
-        avisos.push({ campo: razao, mensagem: 'Confira a razão social com o CNPJ selecionado.' });
-      }
       if (codigo && cadastrados.some(Boolean) && !cadastrados.some(function (x) {
         return cnaeSinan(x) === codigo[1] + codigo[2] || digitos(x).padStart(7, '0').slice(0, 5) === codigo[1] + codigo[2];
       })) avisos.push({ campo: cnae, mensagem: 'O CNAE informado difere das atividades retornadas para este CNPJ. Confira a atividade pertinente ao caso.' });
@@ -328,8 +324,7 @@
           var cnae = codSinan ? codSinan + (d.cnaeDescricao ? ' – ' + d.cnaeDescricao : '') : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
           var mun = ibgeSinan(d.ibge) === PADRAO.ibge ? PADRAO.municipio : titulo(d.municipio);
-          preencher(destino.razao, d.razao_social);
-          preencher(destino.cnae, cnae);
+          if (destino.cnae) preencher(destino.cnae, cnae);
           if (destino.uf) preencher(destino.uf, d.uf);
           if (destino.municipio) preencher(destino.municipio, mun);
           if (destino.ibge) preencher(destino.ibge, ibgeSinan(d.ibge));
@@ -338,7 +333,7 @@
           if (destino.numero) preencher(destino.numero, d.numero);
           if (destino.telefone) preencher(destino.telefone, d.telefone);
           if (destino.cep) preencher(destino.cep, d.cep);
-          aviso(el, 'Confira os dados preenchidos. Ajuste o CNAE se necessário.');
+          aviso(el, destino.cnae ? 'Confira o CNAE preenchido e ajuste se necessário.' : 'Confira os dados da empresa preenchidos.');
         })
         .catch(function () {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
@@ -352,7 +347,6 @@
 
   function configurarEmpresas(raiz) {
     configurarCnpj(raiz, ['cnpj'], {
-      razao: ['empresa', 'empresaNome', 'razao'],
       cnae: ['cnae'],
       uf: ['ufEmp'],
       municipio: ['munEmp'],
@@ -364,8 +358,6 @@
       cep: ['cepEmp']
     });
     configurarCnpj(raiz, ['cnpjPrincipal', 'cnpjPrinc'], {
-      razao: ['razaoPrincipal', 'razaoPrinc'],
-      cnae: ['cnaePrincipal', 'cnaePrinc'],
       uf: ['ufPrincipal'], municipio: ['munPrincipal'], ibge: ['ibgePrincipal'],
       bairro: ['bairroPrincipal'], endereco: ['endPrincipal'], numero: ['numPrincipal'], cep: ['cepPrincipal']
     });
