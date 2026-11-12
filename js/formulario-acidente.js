@@ -17,56 +17,55 @@ const VISAT_HOMOLOGACAO = (() => {
   try { return new URLSearchParams(window.location.search).has('homologacao'); } catch { return false; }
 })();
 
-function completarCamposEmpresa(area) {
-  const grupos = [
-    {
-      chave: 'cnpj',
-      campos: [
-        [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
-        [['cnae'], 'Atividade econômica (CNAE)'],
-        [['ufEmp', 'uf'], 'UF da empresa'],
-        [['munEmp', 'municipio'], 'Município da empresa'],
-        [['ibgeEmp'], 'Código IBGE do município da empresa'],
-        [['bairroEmp', 'bairro'], 'Bairro da empresa'],
-        [['endEmp', 'endereco'], 'Logradouro da empresa'],
-        [['numEmp', 'numero'], 'Número do endereço da empresa'],
-        [['cepEmp'], 'CEP da empresa']
-      ]
-    },
-    {
-      chave: 'cnpjPrincipal',
-      campos: [
-        [['ufPrincipal'], 'UF da empresa principal'],
-        [['munPrincipal'], 'Município da empresa principal'],
-        [['ibgePrincipal'], 'Código IBGE da empresa principal'],
-        [['bairroPrincipal'], 'Bairro da empresa principal'],
-        [['endPrincipal'], 'Logradouro da empresa principal'],
-        [['numPrincipal'], 'Número do endereço da empresa principal'],
-        [['cepPrincipal'], 'CEP da empresa principal']
-      ]
-    }
-  ];
-  for (const grupo of grupos) {
-    const documento = area.querySelector('[data-key="' + grupo.chave + '"]' +
-      (grupo.chave === 'cnpjPrincipal' ? ', [data-key="cnpjPrinc"]' : ''));
-    if (!documento) continue;
-    const secao = documento.closest('.screen');
-    const destino = documento.closest('[data-show-when]') || documento.closest('.field-group');
-    for (const [chaves, texto] of grupo.campos) {
-      if (chaves.some(chave => secao.querySelector('[data-key="' + chave + '"]'))) continue;
-      const chave = chaves[0];
-      const caixa = document.createElement('div');
-      const label = document.createElement('label');
-      label.className = 'field-label';
-      label.htmlFor = 'empresa-' + chave;
-      label.textContent = texto;
-      const input = document.createElement('input');
-      input.className = 'input input-lg';
-      input.id = label.htmlFor;
-      input.dataset.key = chave;
-      caixa.append(label, input);
-      destino.append(caixa);
-    }
+function organizarCamposEmpresa(area) {
+  const empregador = area.querySelector('[data-key="cnpj"]');
+  if (!empregador) return;
+  const grupo = empregador.closest('.field-group');
+
+  function localizar(chaves, escopo = grupo) {
+    return escopo.querySelector(chaves.map(chave => '[data-key="' + chave + '"]').join(', '));
+  }
+
+  function adicionar(chave, texto) {
+    const caixa = document.createElement('div');
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    label.className = 'field-label';
+    label.htmlFor = 'empresa-' + chave;
+    label.textContent = texto;
+    input.className = 'input input-lg';
+    input.id = label.htmlFor;
+    input.dataset.key = chave;
+    caixa.append(label, input);
+    grupo.append(caixa);
+    return input;
+  }
+
+  // As chaves genéricas do bloco de câncer pertencem à empresa.
+  const uf = localizar(['ufEmp', 'uf']);
+  if (uf) uf.dataset.key = 'ufEmp';
+  const municipio = localizar(['munEmp', 'municipio']);
+  if (municipio) {
+    municipio.dataset.key = 'munEmp';
+    const codigo = localizar(['ibgeEmp']) || adicionar('ibgeEmp', 'Código IBGE da empresa');
+    codigo.parentElement.classList.add('visat-codigo-derivado');
+  }
+
+  const nome = localizar(['empresa', 'empresaNome', 'razao']) ||
+    adicionar('empresa', 'Nome da empresa ou empregador');
+  const cnae = localizar(['cnae']) || adicionar('cnae', 'CNAE da empresa');
+  if (empregador.id !== 'voz-cnpj') nome.labels[0].textContent = 'Nome da empresa ou empregador';
+  cnae.labels[0].textContent = 'CNAE da empresa';
+  empregador.parentElement.after(nome.parentElement, cnae.parentElement);
+
+  const empresaPrincipal = grupo.querySelector('[data-show-when="terceirizada=Sim"]');
+  if (!empresaPrincipal) return;
+  const documentoPrincipal = localizar(['cnpjPrincipal', 'cnpjPrinc'], empresaPrincipal);
+  const nomePrincipal = localizar(['razaoPrincipal', 'razaoPrinc'], empresaPrincipal);
+  const cnaePrincipal = localizar(['cnaePrincipal', 'cnaePrinc'], empresaPrincipal);
+  if (documentoPrincipal && nomePrincipal && cnaePrincipal) {
+    nomePrincipal.labels[0].textContent = 'Nome da empresa principal';
+    empresaPrincipal.prepend(documentoPrincipal.parentElement, nomePrincipal.parentElement, cnaePrincipal.parentElement);
   }
 }
 
@@ -238,6 +237,10 @@ function montarBlocoSinan(root, options) {
     detalhesAgravo.append(etapa);
   }
 
+  // O código segue no PDF como dado derivado do município.
+  bloco.querySelectorAll('[data-key="ibgeNotif"], [data-key="ibgeRes"]').forEach(codigo => {
+    codigo.parentElement.classList.add('visat-codigo-derivado');
+  });
   recolherCamposDaEntrada(gerais, [
     'sinan-tipo', 'sinan-agravo', 'sinan-cidAgravo', 'sinan-data-notif', 'sinan-uf-notif',
     'sinan-mun-notif', 'sinan-unid', data?.id, 'dataObito', 'evolucao'
@@ -250,7 +253,7 @@ function montarBlocoSinan(root, options) {
   orientacao.textContent = 'Use esta ficha para a notificação inicial. Registre a investigação, o seguimento e o encerramento no instrumento oficial do agravo.';
   residencia.append(orientacao);
   area.prepend(bloco);
-  completarCamposEmpresa(area);
+  organizarCamposEmpresa(area);
   const screens = area.querySelectorAll('.screen');
   screens.forEach((screen, index) => {
     screen.dataset.screen = index + 1;

@@ -118,7 +118,7 @@
   }
 
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
-  function anexarLista(input, tipo, aoEscolher) {
+  function anexarLista(input, tipo, aoEscolher, codigoDerivado) {
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
     input.dataset.visatLista = tipo;
     var dl = document.createElement('datalist');
@@ -148,7 +148,7 @@
           return palavras.every(function (p) { return alvo.includes(p); });
         }).slice(0, 12);
         listaRapida = document.createElement('div');
-        listaRapida.className = 'highlight-box';
+        listaRapida.className = 'visat-lista-apoio';
         var aviso = document.createElement('p');
         aviso.setAttribute('role', 'status');
         aviso.textContent = itens.length ? 'Lista de apoio. Digite no campo para filtrar.' :
@@ -245,7 +245,7 @@
         if (!exatos.length) exatos = lista.filter(function (x) { return norm(x.v) === valor; });
         if (exatos.length > 1 && uf) exatos = exatos.filter(function (x) { return norm(x.uf) === norm(uf); });
         if (exatos.length === 1) {
-          if (semPreencher !== true) aoEscolher(exatos[0]);
+          if (semPreencher !== true || (codigoDerivado && !codigoDerivado.value)) aoEscolher(exatos[0]);
           input.dataset.visatConfirmado = norm(input.value);
           estadoCodigo(input, 'validado', tipo, exatos[0].c);
         } else {
@@ -294,8 +294,8 @@
       digitando: 'Escolha uma sugestão da lista para preencher o código automaticamente.',
       validado: '✓ Código validado na tabela de referência: ' + extra + '.',
       varios: 'Há ' + extra + ' opções com este nome. Escolha uma sugestão da lista para preencher o código.',
-      manual: 'Preenchimento manual: o código não foi validado. Escolha uma sugestão da lista ou consulte a ' + FONTE_OFICIAL[tipo] + ' pelo atalho ao lado do rótulo.',
-      indisponivel: 'Tabela de referência indisponível: informe o código consultando a ' + FONTE_OFICIAL[tipo] + '.'
+      manual: 'Preenchimento manual: o código não foi validado. Escolha uma sugestão da lista da ' + FONTE_OFICIAL[tipo] + '.',
+      indisponivel: 'Tabela de referência indisponível. Confira o município ou a unidade e tente novamente.'
     }[estado];
   }
 
@@ -303,7 +303,6 @@
   var ATALHOS = {
     cbo: ['Consultar CBO (MTE)', 'https://cbo.mte.gov.br/cbosite/pages/pesquisas/BuscaPorTitulo.jsf'],
     cnpj: ['Comprovante CNPJ (Receita)', 'https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/'],
-    ibge: ['Códigos IBGE', 'https://www.ibge.gov.br/explica/codigos-dos-municipios.php'],
     cnes: ['Consultar CNES', 'https://cnes.datasus.gov.br/pages/estabelecimentos/consulta.jsp'],
     cat: ['Registrar CAT (INSS)', 'https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat']
   };
@@ -397,6 +396,7 @@
             var botao = document.createElement('button');
             botao.type = 'button';
             botao.className = 'btn';
+            botao.dataset.variant = 'outline';
             botao.textContent = [item.razao_social, item.nome_fantasia !== item.razao_social ? item.nome_fantasia : '',
               item.cnpj, [item.municipio, item.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ');
             botao.addEventListener('click', function () {
@@ -466,7 +466,7 @@
       var item = /^\d{6,7}$/.test(codigo) && municipios.find(function (x) { return x.c === codigo.slice(0, 6); });
       if (!item || (municipio && municipio.value && norm(municipio.value) !== norm(item.v)) ||
           (uf && uf.value && norm(uf.value) !== norm(item.uf))) {
-        avisos.push({ campo: ibge, mensagem: 'Confira a correspondência entre código IBGE, município e UF nesta etapa.' });
+        avisos.push({ campo: municipio || ibge, mensagem: 'Confira a correspondência entre código IBGE, município e UF nesta etapa.' });
       }
     });
     if (cbo && ocupacoes.length && !ocupacoes.some(function (x) { return x.c === cbo[1] + cbo[2]; })) {
@@ -508,15 +508,17 @@
   function apoioCnae(el) {
     if (!el || el.dataset.visatApoioCnae) return;
     el.dataset.visatApoioCnae = '1';
-    var caixa = document.createElement('div');
-    caixa.className = 'field-help';
+    var caixa = document.createElement('details');
+    caixa.className = 'field-help visat-ajuda-cnae';
+    var resumo = document.createElement('summary');
+    resumo.textContent = 'Saiba mais sobre o CNAE';
     caixa.dataset.visatApoioCnae = '1';
     var texto = document.createElement('p');
     texto.style.margin = '4px 0';
     texto.textContent = 'Tabela usada no registro: CNAE do Sinan, classe com 5 dígitos (CNAE 1.0 e classes da CNAE 2.0 com denominação distinta). ' +
       'Pelo CNPJ, a subclasse da Receita (CNAE 2.3, 7 dígitos) é convertida automaticamente. Conferência: código de origem CNAE 1.0 na busca do IBGE em CNAE 1.0; código de origem CNAE 2.0 na busca em CNAE 2.0.';
     var link = atalho(el, 'cnae', IBGE_CNAE + '&versao_classe=3.0.1&versao_subclasse=') || document.createElement('a');
-    caixa.append(texto);
+    caixa.append(resumo, texto);
     (el.parentNode.querySelector('datalist') || el).insertAdjacentElement('afterend', caixa);
     function atualizar() {
       var m = String(el.value || '').match(/^\s*(\d{2})\.?(\d{2})-?(\d)/);
@@ -590,15 +592,25 @@
       [campo(raiz, ['munEmp']), campo(raiz, ['ibgeEmp']), campo(raiz, ['ufEmp'])],
       [campo(raiz, ['munPrincipal']), campo(raiz, ['ibgePrincipal']), campo(raiz, ['ufPrincipal'])]
     ].forEach(function (t) {
-      var confirmarMunicipio = vincularCampos(t.slice(0, 2), t);
+      var municipio = t[0], ibge = t[1], uf = t[2];
+      if (!municipio || !ibge) return;
+      // Ao editar a localização, descarta o código anterior e resolve a nova combinação.
+      [municipio, uf].filter(Boolean).forEach(function (el) {
+        el.addEventListener('input', function (evento) {
+          if (!evento.isTrusted) return;
+          ibge.value = '';
+          delete municipio.dataset.visatConfirmado;
+        });
+      });
+      if (uf) uf.addEventListener('change', function (evento) {
+        if (evento.isTrusted) municipio.dispatchEvent(new Event('blur'));
+      });
       function preencherMunicipio(item) {
-        definir(t[0], item.v, true);
-        definir(t[1], item.c, true);
-        definir(t[2], item.uf, true);
-        confirmarMunicipio();
+        definir(ibge, item.c, true);
+        definir(municipio, item.v, true);
+        definir(uf, item.uf, true);
       }
-      anexarLista(t[0], 'mun', preencherMunicipio);
-      anexarLista(t[1], 'mun', preencherMunicipio);
+      anexarLista(municipio, 'mun', preencherMunicipio, ibge);
     });
 
     // Ocupação -> CBO
@@ -612,7 +624,6 @@
     // P13: atalhos junto aos rótulos
     atalho(campo(raiz, ['ocupacao']), 'cbo');
     ['cnpj', 'cnpjPrincipal', 'cnpjPrinc'].forEach(function (k) { atalho(campo(raiz, [k]), 'cnpj'); });
-    ['ibgeNotif', 'ibgeRes', 'ibgeEmp', 'ibgePrincipal'].forEach(function (k) { atalho(campo(raiz, [k]), 'ibge'); });
     atalho(cnes, 'cnes');
     raiz.querySelectorAll('[data-chips="cat"]').forEach(function (g) { atalho(g, 'cat'); });
     // Diagnóstico -> CID-10: busca restrita ao escopo de cada ficha em js/cid-qualificado.js.

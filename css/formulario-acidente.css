@@ -141,8 +141,8 @@ text-align: center;
 border-radius: 999px;
 }
 .highlight-box {
-border: 2px solid var(--accent);
-background: #eef6f9;
+border: 1px solid var(--border);
+background: #fff;
 border-radius: 14px;
 padding: 24px;
 }
@@ -476,3 +476,11 @@ body.modo-formulario-acidente .rodape { display: none; }
 /* VISAT — sinalização abaixo do campo: vermelho na divergência, verde no correto */
 .field-error { color: #B3261E; font-weight: 500; }
 .input.invalid { border-color: #B3261E; }
+
+/* Os códigos derivados seguem no PDF sem ocupar uma linha de digitação. */
+.form-app .visat-codigo-derivado { display: none; }
+.form-app [data-show-when="terceirizada=Sim"] { display: grid; gap: 16px; }
+.visat-ajuda-cnae summary { cursor: pointer; width: fit-content; }
+.visat-lista-apoio { margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: #fff; }
+.visat-lista-apoio ul { display: grid; gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; }
+.visat-lista-apoio .btn { text-align: left; }

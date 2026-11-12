@@ -257,30 +257,6 @@
       });
   }
 
-  function oferecerCnaes(campoCnpj, campoCnae, dados) {
-    if (!campoCnae) return;
-    var opcoes = document.createElement('select');
-    opcoes.className = 'input';
-    opcoes.dataset.cnaesDoCnpj = '1';
-    opcoes.setAttribute('aria-label', 'Atividades econômicas cadastradas neste CNPJ');
-    opcoes.add(new Option('Selecionar atividade cadastrada neste CNPJ', ''));
-    var atividades = [{ codigo: dados.cnae, descricao: dados.cnaeDescricao }].concat(dados.secundarios || []);
-    atividades.forEach(function (atividade, i) {
-      var codigo = cnaeSinan(atividade.codigo);
-      if (!codigo) return;
-      var valor = codigo + (atividade.descricao ? ' – ' + atividade.descricao : '');
-      opcoes.add(new Option((i === 0 ? 'Principal: ' : 'Secundária: ') + valor, valor));
-    });
-    opcoes.addEventListener('change', function () { definir(campoCnae, opcoes.value, true); });
-    campoCnae.insertAdjacentElement('afterend', opcoes);
-    var cnpjConsultado = digitos(campoCnpj.value);
-    campoCnpj.addEventListener('input', function remover() {
-      if (digitos(campoCnpj.value) === cnpjConsultado) return;
-      opcoes.remove();
-      campoCnpj.removeEventListener('input', remover);
-    });
-  }
-
   var empresasConsultadas = new WeakMap();
 
   window.visatConferirEmpresas = function (raiz) {
@@ -362,8 +338,7 @@
           if (destino.numero) preencher(destino.numero, d.numero);
           if (destino.telefone) preencher(destino.telefone, d.telefone);
           if (destino.cep) preencher(destino.cep, d.cep);
-          oferecerCnaes(el, campo(raiz, destino.cnae), d);
-          aviso(el, 'Confira os dados e escolha a atividade econômica que corresponde ao caso.');
+          aviso(el, 'Confira os dados preenchidos. Ajuste o CNAE se necessário.');
         })
         .catch(function () {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
@@ -376,19 +351,16 @@
   }
 
   function configurarEmpresas(raiz) {
-    // Formulários com "ufNotif/ufNotificacao" usam "uf/municipio/bairro/endereco/numero" para a empresa.
-    var camposGenericosSaoDaEmpresa = !!campo(raiz, ['ufNotificacao']);
-    var telefoneGenericoDaEmpresa = !!campo(raiz, ['telefoneRes']);
     configurarCnpj(raiz, ['cnpj'], {
       razao: ['empresa', 'empresaNome', 'razao'],
       cnae: ['cnae'],
-      uf: camposGenericosSaoDaEmpresa ? ['ufEmp', 'uf'] : ['ufEmp'],
-      municipio: camposGenericosSaoDaEmpresa ? ['munEmp', 'municipio'] : ['munEmp'],
+      uf: ['ufEmp'],
+      municipio: ['munEmp'],
       ibge: ['ibgeEmp'],
       bairro: ['bairroEmp', 'bairro'],
       endereco: ['endEmp', 'endereco'],
       numero: ['numEmp', 'numero'],
-      telefone: telefoneGenericoDaEmpresa ? ['telEmp', 'telefone'] : ['telEmp'],
+      telefone: ['telEmp', 'telefone'],
       cep: ['cepEmp']
     });
     configurarCnpj(raiz, ['cnpjPrincipal', 'cnpjPrinc'], {
