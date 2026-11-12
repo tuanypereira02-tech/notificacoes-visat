@@ -171,13 +171,15 @@ const blocosSinan = {
 };
 
 function criarComplementares(titulo) {
-  const detalhes = document.createElement('details');
-  detalhes.className = 'highlight-box';
-  detalhes.dataset.visatComplementares = '';
-  const resumo = document.createElement('summary');
-  resumo.textContent = titulo;
-  detalhes.append(resumo);
-  return detalhes;
+  // Ficha corrida: os campos opcionais ficam em sequência, sem grupo recolhível.
+  const secao = document.createElement('section');
+  secao.className = 'visat-sequencia';
+  secao.dataset.visatComplementares = '';
+  const cabecalho = document.createElement('h3');
+  cabecalho.className = 'visat-sequencia-titulo';
+  cabecalho.textContent = titulo;
+  secao.append(cabecalho);
+  return secao;
 }
 
 function recolherCamposDaEntrada(secao, obrigatorios) {
@@ -720,8 +722,6 @@ async function verificarCoerencia() {
 }
 
 function focarCampo(campo) {
-  const detalhes = campo.closest('details[data-visat-complementares]');
-  if (detalhes) detalhes.open = true;
   (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
 }
 
@@ -893,7 +893,7 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
     const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
     if ((secaoComplementar && secaoComplementar !== screen) ||
         fieldLabel.closest('[hidden]') || (screen === endereco && fieldLabel.htmlFor === 'sinan-pais')) return;
-    const opcional = Boolean(fieldLabel.closest('details[data-visat-complementares]'));
+    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares]'));
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
@@ -1007,10 +1007,11 @@ function mostrarRevisaoDeCampos() {
   const secaoOcupacao = root.querySelector('[data-key="ocupacao"]')?.closest('.screen');
   if (secaoOcupacao) grupos.push({ tela: Number(secaoOcupacao.dataset.screen), campos: [[['ocupacao'], 'Ocupação / CBO']] });
 
-  const caixa = document.createElement('details');
+  const caixa = document.createElement('section');
   caixa.dataset.visatRevisao = '1';
   caixa.className = 'highlight-box';
-  const titulo = document.createElement('summary');
+  const titulo = document.createElement('h3');
+  titulo.className = 'visat-sequencia-titulo';
   titulo.textContent = 'Conferir campos complementares';
   const texto = document.createElement('p');
   const lista = document.createElement('ul');

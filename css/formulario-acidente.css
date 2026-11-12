@@ -443,7 +443,8 @@ body.modo-formulario-acidente .rodape { display: none; }
 .visat-cid-info:empty { display: none; }
 .visat-cid-info p { margin: 4px 0; }
 .visat-cid-info .visat-cid-titulo { font-weight: 700; }
-.visat-cid-info .visat-cid-aviso { color: #7d4000; background: #fff0df; border-left: 4px solid #CC6A00; padding: 6px 8px; border-radius: 4px; }
+.visat-cid-info .visat-cid-aviso { color: #B3261E; background: #fdecea; border-left: 4px solid #B3261E; padding: 6px 8px; border-radius: 4px; }
+.visat-cid-info .visat-cid-ok { color: #1e6b3a; font-weight: 500; }
 .visat-cid-info .visat-cid-erro { color: #B3261E; background: #fdecea; border-left: 4px solid #B3261E; padding: 6px 8px; border-radius: 4px; font-weight: 500; }
 .visat-cid-info details { margin-top: 4px; }
 .visat-cid-info summary { cursor: pointer; color: #195e8c; font-weight: 500; }
@@ -465,5 +466,13 @@ body.modo-formulario-acidente .rodape { display: none; }
 .visat-atalho:focus-visible { outline: 3px solid #CC6A00; outline-offset: 2px; }
 .visat-estado-codigo { display: block; margin-top: 6px; font-size: 13px; color: #505b65; }
 .visat-estado-codigo[data-estado="validado"] { color: #1e6b3a; font-weight: 500; }
-.visat-estado-codigo[data-estado="manual"], .visat-estado-codigo[data-estado="varios"], .visat-estado-codigo[data-estado="indisponivel"] { color: #7d4000; }
+.visat-estado-codigo[data-estado="manual"], .visat-estado-codigo[data-estado="varios"], .visat-estado-codigo[data-estado="indisponivel"] { color: #B3261E; font-weight: 500; }
 @media (max-width: 600px) { .visat-atalho { float: none; display: inline-block; margin: 0 0 4px; } }
+
+/* VISAT — ficha corrida: campos opcionais em sequência, sem grupo recolhível */
+.visat-sequencia { display: grid; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #d8e3ed; }
+.visat-sequencia-titulo { margin: 0; font-size: 18px; font-weight: 700; color: #112C45; }
+.visat-sequencia .visat-sequencia { margin-top: 8px; }
+/* VISAT — sinalização abaixo do campo: vermelho na divergência, verde no correto */
+.field-error { color: #B3261E; font-weight: 500; }
+.input.invalid { border-color: #B3261E; }

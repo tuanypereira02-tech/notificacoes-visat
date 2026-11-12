@@ -131,9 +131,11 @@
     function linha(t, classe) { var p = document.createElement('p'); if (classe) p.className = classe; p.textContent = t; caixa.append(p); return p; }
     if (r.mensagem) { linha(r.mensagem, 'visat-cid-erro'); return; }
     var escopo = escopoDoCampo(el);
-    if (r.item) linha(formatar(r.codigo) + ' — ' + r.item.d, 'visat-cid-titulo');
+    var avisos = avisosDoCodigo(escopo, r);
+    var correto = (r.estado === 'ldrt' || r.estado === 'valido') && !avisos.length;
+    if (r.item) linha((correto ? '✓ ' : '') + formatar(r.codigo) + ' — ' + r.item.d, 'visat-cid-titulo' + (correto ? ' visat-cid-ok' : ''));
     if (r.estado === 'ldrt') {
-      linha('Consta da LDRT — Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.');
+      linha('Consta da LDRT — Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.', 'visat-cid-ok');
       var ags = (r.item.a || []).map(function (i) { return dados.dart.agentes[i]; });
       if (ags.length) {
         var det = document.createElement('details');
@@ -145,7 +147,7 @@
         caixa.append(det);
       }
     }
-    avisosDoCodigo(escopo, r).forEach(function (t) { linha(t, 'visat-cid-aviso'); });
+    avisos.forEach(function (t) { linha(t, 'visat-cid-aviso'); });
   }
 
   function anexar(el, escopo) {
