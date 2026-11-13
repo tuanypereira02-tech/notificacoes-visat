@@ -127,7 +127,7 @@
 <div class="field-group">
 <div>
 <span class="field-label">Tipo de exposição</span>
-<div class="chip-grid" data-chips="tipoExposicao" data-single="true" data-summary="Tipo de exposição">
+<div class="chip-grid" data-chips="tipoExposicao" data-multi="true" data-summary="Tipo de exposição">
 <button type="button" class="chip chip-lg" data-value="Percutânea">Percutânea</button>
 <button type="button" class="chip chip-lg" data-value="Mucosa (oral ou ocular)">Mucosa (oral ou ocular)</button>
 <button type="button" class="chip chip-lg" data-value="Pele íntegra">Pele íntegra</button>
@@ -135,6 +135,7 @@
 <button type="button" class="chip chip-lg" data-value="Outros">Outros</button>
 </div>
 </div>
+<div data-show-includes="tipoExposicao=Outros" hidden><label class="field-label" for="bio-tipoExposicao-outro">Especifique o tipo de exposição</label><input class="input" id="bio-tipoExposicao-outro" data-key="tipoExposicaoOutro"></div>
 <div>
 <label class="field-label" for="bio-data-ac">Data do acidente</label>
 <input class="input input-lg" id="bio-data-ac" type="date" data-key="dataAcidente" data-summary="Data do acidente">
@@ -155,7 +156,7 @@
 </div>
 <div>
 <span class="field-label">Material orgânico</span>
-<div class="chip-grid" data-chips="material" data-multi="true" data-summary="Material orgânico">
+<div class="chip-grid" data-chips="material" data-single="true" data-summary="Material orgânico">
 <button type="button" class="chip" data-value="Sangue">Sangue</button>
 <button type="button" class="chip" data-value="Líquor">Líquor</button>
 <button type="button" class="chip" data-value="Líquido pleural">Líquido pleural</button>
@@ -164,8 +165,10 @@
 <button type="button" class="chip" data-value="Fluido com sangue">Fluido com sangue</button>
 <button type="button" class="chip" data-value="Soro/plasma">Soro/plasma</button>
 <button type="button" class="chip" data-value="Outros">Outros</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
+<div data-show-when="material=Outros" hidden><label class="field-label" for="bio-material-outro">Especifique o material orgânico</label><input class="input" id="bio-material-outro" data-key="materialOutro"></div>
 <div>
 <span class="field-label">Agente</span>
 <div class="chip-grid" data-chips="agente" data-single="true" data-summary="Agente">
@@ -176,14 +179,17 @@
 <button type="button" class="chip" data-value="Lâmina/lanceta">Lâmina/lanceta</button>
 <button type="button" class="chip" data-value="Outros">Outros</button>
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+<button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
+<div data-show-when="agente=Outros" hidden><label class="field-label" for="bio-agente-outro">Especifique o agente</label><input class="input" id="bio-agente-outro" data-key="agenteOutro"></div>
 <div>
 <label class="field-label" for="bio-circ">Circunstância do acidente</label>
 <select class="input input-lg" id="bio-circ" data-key="circunstancia">
-<option value="">Selecione</option><option>Administração de medicação endovenosa, intramuscular, subcutânea, intradérmica</option><option>Punção venosa/arterial para coleta de sangue</option><option>Punção venosa/arterial não especificada</option><option>Descarte inadequado em saco de lixo</option><option>Descarte inadequado em bancada/cama/chão</option><option>Lavanderia</option><option>Lavagem de material</option><option>Manipulação de caixa com material perfurocortante</option><option>Procedimento cirúrgico</option><option>Procedimento odontológico</option><option>Procedimento laboratorial</option><option>Dextro</option><option>Reencape</option><option>Outros</option><option>Ignorado</option>
+<option value="">Selecione</option><option>Administração de medicação endovenosa</option><option>Administração de medicação subcutânea</option><option>Administração de medicação intramuscular</option><option>Administração de medicação intradérmica</option><option>Punção venosa/arterial para coleta de sangue</option><option>Punção venosa/arterial não especificada</option><option>Descarte inadequado em saco de lixo</option><option>Descarte inadequado em bancada/cama/chão</option><option>Lavanderia</option><option>Lavagem de material</option><option>Manipulação de caixa com material perfurocortante</option><option>Procedimento cirúrgico</option><option>Procedimento odontológico</option><option>Procedimento laboratorial</option><option>Dextro</option><option>Reencape</option><option>Outros</option><option>Ignorado</option>
 </select>
 </div>
+<div data-show-when="circunstancia=Outros" hidden><label class="field-label" for="bio-circ-outro">Especifique a circunstância</label><input class="input" id="bio-circ-outro" data-key="circunstanciaOutro"></div>
 </div>
 </section>
 <section class="screen" data-screen="6">
@@ -199,8 +205,10 @@
 <button type="button" class="chip" data-value="Máscara">Máscara</button>
 <button type="button" class="chip" data-value="Proteção facial">Proteção facial</button>
 <button type="button" class="chip" data-value="Bota">Bota</button>
+<button type="button" class="chip" data-value="Outros">Outros</button>
 </div>
 </div>
+<div data-show-includes="epi=Outros" hidden><label class="field-label" for="bio-epi-outro">Especifique o EPI</label><input class="input" id="bio-epi-outro" data-key="epiOutro"></div>
 <div>
 <span class="field-label">Situação vacinal do acidentado para hepatite B (3 doses)</span>
 <div class="chip-grid" data-chips="vacinaHB" data-single="true">
@@ -221,11 +229,11 @@
 </section>
 <section class="screen" data-screen="7">
 <h1 class="screen-title">Paciente fonte, exames e conduta</h1>
-<p class="screen-sub">Exames são feitos na hora e definem a conduta.</p>
+<p class="screen-sub">Registre os resultados e a conduta adotada no atendimento inicial.</p>
 <div class="field-group">
 <div>
-<span class="field-label">Paciente fonte conhecida?</span>
-<div class="chip-grid" data-chips="fonte" data-single="true" data-summary="Paciente fonte conhecida?">
+<span class="field-label">Pessoa-fonte conhecida?</span>
+<div class="chip-grid" data-chips="fonte" data-single="true" data-summary="Pessoa-fonte conhecida?">
 <button type="button" class="chip" data-value="Sim">Sim</button>
 <button type="button" class="chip" data-value="Não">Não</button>
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
@@ -271,7 +279,7 @@
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
-<div>
+<div data-show-when="fonte=Sim" hidden>
 <span class="field-label">Paciente fonte — HBsAg</span>
 <div class="chip-grid" data-chips="fonteHBsAg" data-single="true">
 <button type="button" class="chip" data-value="Positivo">Positivo</button>
@@ -281,9 +289,9 @@
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
-<div>
-<span class="field-label">Paciente fonte — Anti-HBc</span>
-<div class="chip-grid" data-chips="fonteAntiHBc" data-single="true">
+<div data-show-when="fonte=Sim" hidden>
+<span class="field-label">Paciente fonte — Anti-HBs</span>
+<div class="chip-grid" data-chips="fonteAntiHBs" data-single="true">
 <button type="button" class="chip" data-value="Positivo">Positivo</button>
 <button type="button" class="chip" data-value="Negativo">Negativo</button>
 <button type="button" class="chip" data-value="Inconclusivo">Inconclusivo</button>
@@ -291,7 +299,7 @@
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
-<div>
+<div data-show-when="fonte=Sim" hidden>
 <span class="field-label">Paciente fonte — Anti-HIV</span>
 <div class="chip-grid" data-chips="fonteAntiHIV" data-single="true">
 <button type="button" class="chip" data-value="Positivo">Positivo</button>
@@ -301,7 +309,7 @@
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
 </div>
 </div>
-<div>
+<div data-show-when="fonte=Sim" hidden>
 <span class="field-label">Paciente fonte — Anti-HCV</span>
 <div class="chip-grid" data-chips="fonteAntiHCV" data-single="true">
 <button type="button" class="chip" data-value="Positivo">Positivo</button>
@@ -316,15 +324,13 @@
 <div class="chip-grid" data-chips="conduta" data-multi="true" data-summary="Conduta no momento do acidente">
 <button type="button" class="chip" data-value="Sem indicação de quimioprofilaxia">Sem indicação de quimioprofilaxia</button>
 <button type="button" class="chip" data-value="Recusou quimioprofilaxia indicada">Recusou quimioprofilaxia indicada</button>
-<button type="button" class="chip" data-value="AZT+3TC">AZT+3TC</button>
-<button type="button" class="chip" data-value="AZT+3TC+Indinavir">AZT+3TC+Indinavir</button>
-<button type="button" class="chip" data-value="AZT+3TC+Nelfinavir">AZT+3TC+Nelfinavir</button>
 <button type="button" class="chip" data-value="Imunoglobulina humana contra hepatite B (HBIG)">Imunoglobulina humana contra hepatite B (HBIG)</button>
 <button type="button" class="chip" data-value="Vacina contra hepatite B">Vacina contra hepatite B</button>
+<button type="button" class="chip" data-value="TDF/3TC + DTG">TDF/3TC + DTG</button>
 <button type="button" class="chip" data-value="Outro esquema de ARV">Outro esquema de ARV</button>
 </div>
 </div>
-<div>
+<div data-show-includes="conduta=Outro esquema de ARV" hidden>
 <label class="field-label" for="bio-arv">Outro esquema de ARV (especificar)</label>
 <input class="input input-lg" id="bio-arv" type="text" data-key="outroArv">
 </div>

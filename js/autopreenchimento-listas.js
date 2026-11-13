@@ -126,7 +126,7 @@
     input.insertAdjacentElement('afterend', dl);
     input.setAttribute('list', dl.id);
     input.setAttribute('autocomplete', 'off');
-    input.title = 'Pressione espaço duas vezes para abrir a lista de apoio.';
+    input.title = 'Digite o nome ou código e escolha uma sugestão.';
     var listaRapida;
     var abertura = 0;
 
@@ -239,7 +239,7 @@
         if (!lista.length) { estadoCodigo(input, 'indisponivel', tipo); return; }
         var uf = tipo === 'mun' ? ufVinculada(input) : '';
         var exatos = lista.filter(function (x) {
-          return norm(x.d) === valor || x.c === valor || norm(x.v + ' – ' + x.c) === valor ||
+          return norm(x.d) === valor || (tipo === 'cnae' && norm(x.d.replace(/ \(CNAE [^)]*\)$/, '')) === valor) || x.c === valor || norm(x.v + ' – ' + x.c) === valor ||
             (tipo === 'mun' && /^\d{7}$/.test(valor) && x.c === valor.slice(0, 6));
         });
         if (!exatos.length) exatos = lista.filter(function (x) { return norm(x.v) === valor; });
@@ -271,14 +271,14 @@
   function ufVinculada(input) {
     var raiz = input.closest('.acidente-inline') || document;
     var pares = { munNotif: 'ufNotif', municipioNotif: 'ufNotif', municipioNotificacao: 'ufNotificacao', municipio: 'uf',
-      munRes: 'ufRes', munEmp: 'ufEmp', munPrincipal: 'ufPrincipal', ibgeNotif: 'ufNotif', ibgeRes: 'ufRes', ibgeEmp: 'ufEmp', ibgePrincipal: 'ufPrincipal' };
+      munRes: 'ufRes', munEmp: 'ufEmp', munOcorrencia: 'ufOcorrencia', munAtendimento: 'ufAtendimento', munPrincipal: 'ufPrincipal', ibgeNotif: 'ufNotif', ibgeRes: 'ufRes', ibgeEmp: 'ufEmp', ibgePrincipal: 'ufPrincipal' };
     var chave = pares[input.dataset.key];
     var uf = chave && (raiz.querySelector('[data-key="' + chave + '"]') ||
       (chave === 'ufNotif' && (raiz.querySelector('[data-key="ufNotificacao"]') || raiz.querySelector('[data-key="uf"]'))));
     return uf ? uf.value : '';
   }
 
-  var FONTE_OFICIAL = { mun: 'tabela de municípios do IBGE', cnes: 'CNES/DATASUS' };
+  var FONTE_OFICIAL = { mun: 'tabela de municípios do IBGE', cnes: 'CNES/DATASUS', cbo: 'CBO', cnae: 'CNAE do Sinan' };
   function estadoCodigo(input, estado, tipo, extra) {
     var el = input.parentNode.querySelector('[data-visat-estado-codigo="' + input.id + '"]');
     if (!el) {
@@ -313,7 +313,8 @@
       [['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio'], ['ibgeNotif'], ['ufNotif', 'ufNotificacao', 'uf']],
       [['munRes'], ['ibgeRes'], ['ufRes']],
       [['munEmp'], ['ibgeEmp'], ['ufEmp']],
-      [['munPrincipal'], ['ibgePrincipal'], ['ufPrincipal']]
+      [['munOcorrencia'], ['ibgeOcorrencia'], ['ufOcorrencia']],
+      [['munAtendimento'], ['ibgeAtendimento'], ['ufAtendimento']]
     ].map(function (grupo) {
       return grupo.map(function (chaves) { return campo(raiz, chaves); });
     }).filter(function (grupo) { return grupo[1] && grupo[1].value.trim(); });
@@ -399,17 +400,32 @@
         origens.filter(Boolean).forEach(function (origem) { confirmados.set(origem, norm(origem.value)); });
       };
     }
-    var confirmarUnidade = vincularCampos([nomeUnidade, cnes], [nomeUnidade, cnes, municipioNotif, ufNotif, ibgeNotif]);
+    var confirmarUnidade = !nomeUnidade?.dataset.visatLista && vincularCampos([nomeUnidade, cnes], [nomeUnidade, cnes]);
     function preencherUnidade(item) {
       definir(nomeUnidade, item.v, true);
       definir(cnes, item.c, true);
+      definir(ibgeNotif, item.ibge, true);
       definir(municipioNotif, item.municipio, true);
       definir(ufNotif, item.uf, true);
-      definir(ibgeNotif, item.ibge, true);
-      confirmarUnidade();
+      if (confirmarUnidade) confirmarUnidade();
     }
     anexarLista(nomeUnidade, 'cnes', preencherUnidade);
     anexarLista(cnes, 'cnes', preencherUnidade);
+    var unidadeAtendimento = campo(raiz, ['unidAtendimento']);
+    var cnesAtendimento = campo(raiz, ['cnesAtendimento']);
+    function preencherUnidadeAtendimento(item) {
+      definir(unidadeAtendimento, item.v, true);
+      definir(cnesAtendimento, item.c, true);
+      definir(campo(raiz, ['ibgeAtendimento']), item.ibge, true);
+      definir(campo(raiz, ['munAtendimento']), item.municipio, true);
+      definir(campo(raiz, ['ufAtendimento']), item.uf, true);
+      if (confirmarAtendimento) confirmarAtendimento();
+    }
+    var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
+      vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
+    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento);
+    anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento);
+
     var investigadora = campo(raiz, ['munInvestigadora']);
     anexarLista(investigadora, 'cnes', function (item) {
       definir(investigadora, item.v, true);
@@ -421,11 +437,13 @@
       [municipioNotif, ibgeNotif, ufNotif],
       [campo(raiz, ['munRes']), campo(raiz, ['ibgeRes']), campo(raiz, ['ufRes'])],
       [campo(raiz, ['munEmp']), campo(raiz, ['ibgeEmp']), campo(raiz, ['ufEmp'])],
-      [campo(raiz, ['munPrincipal']), campo(raiz, ['ibgePrincipal']), campo(raiz, ['ufPrincipal'])]
+      [campo(raiz, ['munOcorrencia']), campo(raiz, ['ibgeOcorrencia']), campo(raiz, ['ufOcorrencia'])],
+      [campo(raiz, ['munAtendimento']), campo(raiz, ['ibgeAtendimento']), campo(raiz, ['ufAtendimento'])]
     ].forEach(function (t) {
       var municipio = t[0], ibge = t[1], uf = t[2];
       if (!municipio || !ibge) return;
       // Ao editar a localização, descarta o código anterior e resolve a nova combinação.
+      if (municipio.dataset.visatLista) return;
       [municipio, uf].filter(Boolean).forEach(function (el) {
         el.addEventListener('input', function (evento) {
           if (!evento.isTrusted) return;
@@ -445,9 +463,10 @@
     });
 
     // Ocupação -> CBO
-    anexarLista(campo(raiz, ['ocupacao']), 'cbo', null);
-
-    anexarLista(campo(raiz, ['cnae']), 'cnae', null);
+    var ocupacao = campo(raiz, ['ocupacao']);
+    var cnae = campo(raiz, ['cnae']);
+    anexarLista(ocupacao, 'cbo', function (item) { definir(ocupacao, item.v, true); });
+    anexarLista(cnae, 'cnae', function (item) { definir(cnae, item.v, true); });
     // A emissão da CAT é um serviço externo distinto da notificação.
     raiz.querySelectorAll('[data-chips="cat"]').forEach(function (grupo) {
       if (grupo.nextElementSibling?.matches('[data-visat-link-cat]')) return;

@@ -11,55 +11,124 @@ window.addEventListener('pageshow', evento => {
   if (evento.persisted) window.location.reload();
 });
 
-const VISAT_MODELO = 'Modelo VISAT 2026.11-1';
+const VISAT_MODELO = 'Modelo VISAT 2026.11-2';
 const VISAT_EMAIL = 'saudetrab.sms.pmf@floripa.sc.gov.br';
 const VISAT_HOMOLOGACAO = (() => {
   try { return new URLSearchParams(window.location.search).has('homologacao'); } catch { return false; }
 })();
 
-function organizarCamposEmpresa(area) {
-  const empregador = area.querySelector('[data-key="cnpj"]');
-  if (!empregador) return;
-  const grupo = empregador.closest('.field-group');
+function criarCampo(chave, rotulo, tipo = 'text', opcoes = []) {
+  const caixa = document.createElement('div');
+  const label = document.createElement('label');
+  const campo = document.createElement(opcoes.length ? 'select' : 'input');
+  campo.className = 'input input-lg';
+  campo.id = 'visat-' + chave;
+  campo.dataset.key = chave;
+  if (opcoes.length) campo.add(new Option('Selecione', ''));
+  opcoes.forEach(opcao => campo.add(new Option(opcao)));
+  if (!opcoes.length) campo.type = tipo;
+  label.className = 'field-label';
+  label.htmlFor = campo.id;
+  label.textContent = rotulo;
+  caixa.append(label, campo);
+  return caixa;
+}
 
-  function localizar(chaves, escopo = grupo) {
-    return escopo.querySelector(chaves.map(chave => '[data-key="' + chave + '"]').join(', '));
-  }
+function criarEtapa(titulo) {
+  const etapa = document.createElement('section');
+  etapa.className = 'screen';
+  const cabecalho = document.createElement('h1');
+  cabecalho.className = 'screen-title';
+  cabecalho.textContent = titulo;
+  const campos = document.createElement('div');
+  campos.className = 'field-group';
+  campos.dataset.visatComplementares = '';
+  etapa.append(cabecalho, campos);
+  return etapa;
+}
 
-  function adicionar(chave, texto) {
-    const caixa = document.createElement('div');
-    const label = document.createElement('label');
-    const input = document.createElement('input');
-    label.className = 'field-label';
-    label.htmlFor = 'empresa-' + chave;
-    label.textContent = texto;
-    input.className = 'input input-lg';
-    input.id = label.htmlFor;
-    input.dataset.key = chave;
-    caixa.append(label, input);
+function montarEmpregador(area) {
+  const etapa = criarEtapa('Trabalho e empregador');
+  const grupo = etapa.querySelector('.field-group');
+  const opcoes = ['Sim', 'Não', 'Não se aplica', 'Ignorado'];
+  const campos = [
+    [['ocupacao'], 'Ocupação (CBO)'],
+    [['situacao'], 'Situação no mercado de trabalho'],
+    [['tempoNum', 'tempoValor', 'tempoOcupacao', 'tempoOcup'], 'Tempo de trabalho na ocupação'],
+    [['ocupacaoAnterior'], 'Ocupação anterior'],
+    [['cnpj'], 'CNPJ ou CPF do empregador'],
+    [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
+    [['cnae'], 'Atividade econômica (CNAE)'],
+    [['telEmp', 'telefone'], 'Telefone do empregador', 'tel'],
+    [['endEmp', 'endereco'], 'Logradouro do local de trabalho'],
+    [['numEmp', 'numero'], 'Número'],
+    [['compEmp'], 'Complemento'],
+    [['refEmp'], 'Ponto de referência'],
+    [['bairroEmp', 'bairro'], 'Bairro'],
+    [['munEmp', 'municipio'], 'Município do local de trabalho'],
+    [['ufEmp', 'uf'], 'UF do local de trabalho'],
+    [['terceirizada'], 'O empregador é empresa terceirizada?', 'text', opcoes],
+    [['plataformaDigital'], 'Trabalha com plataformas digitais (aplicativos)?', 'text', opcoes]
+  ];
+  campos.forEach(([chaves, rotulo, tipo, opcoes]) => {
+    const campo = area.querySelector(chaves.map(chave => '[data-key="' + chave + '"], [data-chips="' + chave + '"]').join(', '));
+    const caixa = campo?.closest('.unit-row')?.parentElement || campo?.parentElement ||
+      criarCampo(chaves[0], rotulo, tipo, opcoes);
+    if (campo && ['uf', 'municipio', 'telefone'].includes(campo.dataset.key)) campo.dataset.key = chaves[0];
+    caixa.querySelector('.field-label').textContent = rotulo;
     grupo.append(caixa);
-    return input;
-  }
+  });
+  const codigo = area.querySelector('[data-key="ibgeEmp"]')?.parentElement ||
+    criarCampo('ibgeEmp', 'Código IBGE do local de trabalho');
+  codigo.classList.add('visat-codigo-derivado');
+  grupo.querySelector('[data-key="munEmp"]').parentElement.after(codigo);
+  const cat = area.querySelector('[data-chips="cat"]');
+  if (cat) grupo.append(cat.parentElement);
+  return etapa;
+}
 
-  // As chaves genéricas do bloco de câncer pertencem à empresa.
-  const uf = localizar(['ufEmp', 'uf']);
-  if (uf) uf.dataset.key = 'ufEmp';
-  const municipio = localizar(['munEmp', 'municipio']);
-  if (municipio) {
-    municipio.dataset.key = 'munEmp';
-    const codigo = localizar(['ibgeEmp']) || adicionar('ibgeEmp', 'Código IBGE da empresa');
-    codigo.parentElement.classList.add('visat-codigo-derivado');
-  }
-
-  localizar(['empresa', 'empresaNome', 'razao'])?.parentElement.remove();
-  const cnae = localizar(['cnae']) || adicionar('cnae', 'CNAE da empresa');
-  cnae.labels[0].textContent = 'CNAE da empresa';
-  empregador.parentElement.after(cnae.parentElement);
-
-  const empresaPrincipal = grupo.querySelector('[data-show-when="terceirizada=Sim"]');
-  if (!empresaPrincipal) return;
-  localizar(['razaoPrincipal', 'razaoPrinc'], empresaPrincipal)?.parentElement.remove();
-  localizar(['cnaePrincipal', 'cnaePrinc'], empresaPrincipal)?.parentElement.remove();
+function montarAtendimentoAcidente(detalhes) {
+  const ocorrencia = detalhes.querySelector('[data-chips="tipoAcidente"]').closest('[data-visat-secao-complementar]');
+  const campos = ocorrencia.querySelector('.field-group');
+  const opcoes = ['Sim', 'Não', 'Ignorado'];
+  const codigoLocal = criarCampo('ibgeOcorrencia', 'Código IBGE da ocorrência');
+  codigoLocal.classList.add('visat-codigo-derivado');
+  const quantidade = criarCampo('outrosAtingidosQuantidade', 'Quantos trabalhadores?', 'number');
+  quantidade.dataset.showWhen = 'outrosAtingidos=Sim';
+  quantidade.querySelector('input').min = 1;
+  campos.append(
+    criarCampo('tempoJornada', 'Tempo desde o início da jornada (horas e minutos)'),
+    criarCampo('munOcorrencia', 'Município de ocorrência do acidente'), codigoLocal,
+    criarCampo('ufOcorrencia', 'UF da ocorrência'),
+    criarCampo('outrosAtingidos', 'Houve outros trabalhadores atingidos?', 'text', opcoes), quantidade
+  );
+  const atendimento = criarEtapa('Atendimento médico');
+  atendimento.classList.remove('screen');
+  atendimento.dataset.visatSecaoComplementar = '';
+  const grupo = atendimento.querySelector('.field-group');
+  const codigoAtendimento = criarCampo('ibgeAtendimento', 'Código IBGE do atendimento');
+  codigoAtendimento.classList.add('visat-codigo-derivado');
+  const dadosAtendimento = document.createElement('div');
+  dadosAtendimento.className = 'field-group';
+  dadosAtendimento.dataset.showWhen = 'atendimentoMedico=Sim';
+  dadosAtendimento.append(
+    criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
+    criarCampo('munAtendimento', 'Município do atendimento'), codigoAtendimento,
+    criarCampo('ufAtendimento', 'UF do atendimento'),
+    criarCampo('unidAtendimento', 'Estabelecimento de saúde do atendimento'),
+    criarCampo('cnesAtendimento', 'Código CNES do estabelecimento')
+  );
+  const lesao = detalhes.querySelector('[data-chips="parteCorpo"]').closest('[data-visat-secao-complementar]');
+  ['parteCorpo', 'regime'].forEach(chave => {
+    const campo = detalhes.querySelector('[data-chips="' + chave + '"]');
+    if (campo) dadosAtendimento.append(campo.parentElement);
+  });
+  const outraParte = criarCampo('parteCorpoOutra', 'Especifique a parte do corpo atingida');
+  outraParte.dataset.showWhen = 'parteCorpo=Outro';
+  dadosAtendimento.querySelector('[data-chips="parteCorpo"]').parentElement.after(outraParte);
+  grupo.append(criarCampo('atendimentoMedico', 'Houve atendimento médico?', 'text', opcoes), dadosAtendimento);
+  ocorrencia.after(atendimento);
+  lesao.remove();
 }
 
 const blocosSinan = {
@@ -70,9 +139,7 @@ const blocosSinan = {
     "event": "dataAcidente"
   },
   "form-biologico-template": {
-    "aliases": {
-      "telefoneRes": "telefone"
-    },
+    "aliases": {},
     "agravo": "Acidente de trabalho com exposição a material biológico",
     "cid": "Z20.9",
     "event": "dataAcidente"
@@ -162,18 +229,18 @@ const blocosSinan = {
   }
 };
 
-function criarComplementares(titulo) {
-  const secao = document.createElement('details');
+function criarComplementares(titulo, recolhivel = true) {
+  const secao = document.createElement(recolhivel ? 'details' : 'section');
   secao.className = 'visat-sequencia';
   secao.dataset.visatComplementares = '';
-  const cabecalho = document.createElement('summary');
+  const cabecalho = document.createElement(recolhivel ? 'summary' : 'h3');
   cabecalho.className = 'visat-sequencia-titulo';
   cabecalho.textContent = titulo;
   secao.append(cabecalho);
   return secao;
 }
 
-function recolherCamposDaEntrada(secao, obrigatorios) {
+function organizarCamposComplementares(secao, obrigatorios) {
   const grupo = secao.querySelector('.field-group');
   const opcionais = [...grupo.children].filter((bloco) => {
     const campo = bloco.querySelector('[data-key], [data-chips]');
@@ -188,6 +255,27 @@ function recolherCamposDaEntrada(secao, obrigatorios) {
   grupo.after(detalhes);
 }
 
+const camposEspecificosDoModelo = {
+  'form-acidente-template': ['horaAcidente', 'tipoAcidente', 'parteCorpo', 'regime'],
+  'form-biologico-template': [
+    'tipoExposicao', 'tipoExposicaoOutro', 'material', 'materialOutro', 'agente', 'agenteOutro',
+    'circunstancia', 'circunstanciaOutro', 'epi', 'epiOutro', 'vacinaHB',
+    'sorAntiHIV', 'sorHBsAg', 'sorAntiHBs', 'sorAntiHCV',
+    'fonte', 'fonteAntiHIV', 'fonteHBsAg', 'fonteAntiHBs', 'fonteAntiHCV', 'conduta', 'outroArv'
+  ],
+  'form-cancer-template': ['regime', 'tempoExposicao', 'exposicao', 'agentes', 'outrosAgente', 'fumo', 'tempoTabaco'],
+  'form-dermatose-template': ['agente', 'agenteOutros', 'localizacao', 'localOutro', 'epicutaneo'],
+  'form-lerdort-template': ['sinais', 'sinaisOutro', 'limitacao', 'fatores'],
+  'form-pair-template': ['tipoRuido', 'concomitante', 'outrosConcTxt', 'sintomas', 'outrosSintTxt'],
+  'form-pneumo-template': [
+    'exposicaoVinculos', 'especificarVinculos', 'agentes', 'tempoExp', 'regime',
+    'confirmacao', 'outroExame', 'funcional', 'resultadoFunc', 'fumo', 'tempoTabaco',
+    'agravosAssoc', 'outrosAgravos', 'outrosTrab'
+  ],
+  'form-mental-template': ['habitos', 'fumar', 'tabacoValor', 'regime', 'agenteValor'],
+  'form-voz-template': []
+};
+
 function montarBlocoSinan(root, options) {
   const config = blocosSinan[options.templateId];
   const area = root.querySelector('#mainArea');
@@ -200,6 +288,7 @@ function montarBlocoSinan(root, options) {
     bloco.querySelector('[data-key="' + key + '"]').dataset.key = alias;
   }
   const [gerais, individual, residencia] = bloco.querySelectorAll('.screen');
+  ['geo1', 'geo2'].forEach(chave => residencia.querySelector('[data-key="' + chave + '"]').parentElement.remove());
   if (options.obito) {
     root.querySelector('.pill').textContent = 'Óbito por acidente de trabalho';
     const evolucao = root.querySelector('[data-chips="evolucao"]');
@@ -214,20 +303,29 @@ function montarBlocoSinan(root, options) {
   }
 
   const etapasDoAgravo = [...area.querySelectorAll('.screen')].slice(0, -1);
-  const detalhesAgravo = criarComplementares('Dados do agravo (opcional)');
-  const camposCid = document.createElement('div');
-  camposCid.className = 'field-group';
-  const cat = area.querySelector('[data-chips="cat"]');
-  if (cat) etapasDoAgravo[0].querySelector('.field-group').append(cat.parentElement);
+  const empregador = montarEmpregador(area);
+  const cidDoCaso = [...area.querySelectorAll('[data-key="cid"], [data-key="cid10"], [data-key="cidCod"], [data-key="cidDiag"], [data-key="cidCausa"]')];
+  if (cidDoCaso.length) {
+    const blocoCid = criarComplementares('CID-10 do caso', false);
+    cidDoCaso.forEach(campo => blocoCid.append(campo.parentElement));
+
+    gerais.append(blocoCid);
+  }
+  if (data && !['dataAcidente', 'inicioSintomas'].includes(config.event)) {
+    data.parentElement.before(criarCampo('inicioSintomas', 'Data dos primeiros sintomas', 'date'));
+  }
+  const detalhesAgravo = document.createDocumentFragment();
+  const chaves = camposEspecificosDoModelo[options.templateId];
   for (const etapa of etapasDoAgravo) {
-    const titulo = etapa.querySelector('.screen-title').textContent;
-    if (/fechamento|paciente fonte|conduta e encaminhamento/i.test(titulo)) {
+    const grupo = etapa.querySelector('.field-group');
+    for (const caixa of Array.from(grupo.children)) {
+      const campos = caixa.querySelectorAll('[data-key], [data-chips]');
+      if (![...campos].some(campo => chaves.includes(campo.dataset.key || campo.dataset.chips))) caixa.remove();
+    }
+    if (!grupo.childElementCount) {
       etapa.remove();
       continue;
     }
-    etapa.querySelectorAll('[data-key="cid"], [data-key="cid10"], [data-key="cidCod"], [data-key="cidDiag"], [data-key="cidCausa"]').forEach(campo => {
-      camposCid.append(campo.parentElement);
-    });
     etapa.classList.remove('screen', 'active');
     etapa.removeAttribute('data-screen');
     etapa.dataset.visatSecaoComplementar = '';
@@ -238,29 +336,26 @@ function montarBlocoSinan(root, options) {
   bloco.querySelectorAll('[data-key="ibgeNotif"], [data-key="ibgeRes"]').forEach(codigo => {
     codigo.parentElement.classList.add('visat-codigo-derivado');
   });
-  recolherCamposDaEntrada(gerais, [
+  organizarCamposComplementares(gerais, [
     'sinan-tipo', 'sinan-agravo', 'sinan-cidAgravo', 'sinan-data-notif', 'sinan-uf-notif',
-    'sinan-mun-notif', 'sinan-unid', data?.id, 'dataObito', 'evolucao'
+    'sinan-mun-notif', 'sinan-unid', 'sinan-cod-unid', 'visat-inicioSintomas', data?.id, 'dataObito', 'evolucao'
   ]);
-  recolherCamposDaEntrada(individual, ['sinan-nome', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
-  recolherCamposDaEntrada(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-uf-res', 'sinan-mun-res']);
-  if (camposCid.children.length) {
-    const diagnostico = document.createElement('section');
-    diagnostico.className = 'visat-sequencia';
-    diagnostico.dataset.visatComplementares = '';
-    const titulo = document.createElement('h3');
-    titulo.className = 'visat-sequencia-titulo';
-    titulo.textContent = 'CID-10 da lesão ou diagnóstico';
-    diagnostico.append(titulo, camposCid);
-    residencia.querySelector('.field-group').after(diagnostico);
+  organizarCamposComplementares(individual, ['sinan-nome', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
+  organizarCamposComplementares(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-cep', 'sinan-uf-res', 'sinan-mun-res']);
+  if (options.templateId === 'form-acidente-template') montarAtendimentoAcidente(detalhesAgravo);
+  bloco.append(empregador);
+  if (detalhesAgravo.childElementCount) {
+    const dadosDoAgravo = criarEtapa('Dados do agravo');
+    const complemento = criarComplementares('Detalhes do agravo (opcional)');
+    complemento.append(detalhesAgravo);
+    dadosDoAgravo.querySelector('.field-group').append(complemento);
+    bloco.append(dadosDoAgravo);
   }
-  residencia.append(detalhesAgravo);
   const orientacao = document.createElement('p');
   orientacao.className = 'field-help';
   orientacao.textContent = 'Use esta ficha para a notificação inicial. Registre a investigação, o seguimento e o encerramento no instrumento oficial do agravo.';
-  residencia.append(orientacao);
+  bloco.lastElementChild.append(orientacao);
   area.prepend(bloco);
-  organizarCamposEmpresa(area);
   const screens = area.querySelectorAll('.screen');
   screens.forEach((screen, index) => {
     screen.dataset.screen = index + 1;
@@ -683,6 +778,15 @@ function datasIncoerentes() {
   const nascimento = campoPorChave('nascimento');
   const notificacao = campoPorChave('dataNotificacao') || campoPorChave('dataNotif');
   const evento = config.event && campoPorChave(config.event);
+  const sintomas = campoPorChave('inicioSintomas');
+  if (sintomas?.value && (nascimento?.value && sintomas.value < nascimento.value ||
+      evento?.value && sintomas.value > evento.value)) {
+    erros.push({ campo: sintomas, mensagem: 'Confira a data dos primeiros sintomas em relação ao nascimento e à data de referência do agravo' });
+  }
+  const atendimento = campoPorChave('dataAtendimento');
+  if (atendimento?.value && !atendimento.closest('[hidden]') && evento?.value && atendimento.value < evento.value) {
+    erros.push({ campo: atendimento, mensagem: 'A data do atendimento está antes da data do acidente' });
+  }
   const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(campoPorChave).find(campo => campo?.type === 'date');
   const obito = campoPorChave('dataObito');
   if (fechamento?.value && notificacao?.value && fechamento.value < notificacao.value) {
@@ -736,7 +840,8 @@ function focarCampo(campo) {
     ibgeNotif: '#sinan-mun-notif',
     ibgeRes: '#sinan-mun-res',
     ibgeEmp: '[data-key="munEmp"]',
-    ibgePrincipal: '[data-key="munPrincipal"]'
+    ibgeOcorrencia: '[data-key="munOcorrencia"]',
+    ibgeAtendimento: '[data-key="munAtendimento"]'
   };
   const seletor = municipioPorCodigo[campo.dataset.key];
   if (seletor) campo = root.querySelector(seletor) || campo;
@@ -915,8 +1020,9 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
   screen.querySelectorAll('.field-label').forEach((fieldLabel) => {
     const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
     if ((secaoComplementar && secaoComplementar !== screen) ||
-        fieldLabel.closest('[hidden]') || (screen === endereco && fieldLabel.htmlFor === 'sinan-pais')) return;
-    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares]'));
+        fieldLabel.closest('[hidden]')) return;
+    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares]')) ||
+      ['visat-inicioSintomas', 'sinan-cep', 'sinan-cod-unid'].includes(fieldLabel.htmlFor);
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
@@ -948,10 +1054,6 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
       const control = root.querySelector(`#${fieldLabel.htmlFor}`);
       if (!control || (control.matches(seletorDocumentos) && control.closest('[hidden]'))) return;
       const field = addField(block, labelText, opcional);
-      if (control === residencia && residencia.value === 'exterior') {
-        addAnswer(field, state.values.paisExterior);
-        return;
-      }
       if (control instanceof HTMLSelectElement) {
         const selected = control.value
           ? Array.from(control.selectedOptions).map((option) => option.textContent.trim())
@@ -1018,7 +1120,9 @@ function mostrarRevisaoDeCampos() {
   root.querySelector('[data-visat-revisao]')?.remove();
   const grupos = [
     { tela: 1, campos: [
-      [['codUnidNotif'], 'Código CNES']
+      [['codUnidNotif'], 'Código CNES'],
+      [['cid', 'cid10', 'cidCod', 'cidDiag'], 'CID-10 do caso'],
+      [['cidCausa'], 'CID-10 da causa externa']
     ] },
     { tela: 2, campos: [
       [['raca'], 'Raça/cor'],
@@ -1028,7 +1132,10 @@ function mostrarRevisaoDeCampos() {
   const secaoEvolucao = root.querySelector('[data-chips="evolucao"]')?.closest('.screen');
   if (secaoEvolucao) grupos.push({ tela: Number(secaoEvolucao.dataset.screen), campos: [[['evolucao'], 'Evolução do caso']] });
   const secaoOcupacao = root.querySelector('[data-key="ocupacao"]')?.closest('.screen');
-  if (secaoOcupacao) grupos.push({ tela: Number(secaoOcupacao.dataset.screen), campos: [[['ocupacao'], 'Ocupação / CBO']] });
+  if (secaoOcupacao) grupos.push({
+    tela: Number(secaoOcupacao.dataset.screen),
+    campos: [[['ocupacao'], 'Ocupação (CBO)'], [['cnae'], 'Atividade econômica (CNAE)']]
+  });
 
   const caixa = document.createElement('section');
   caixa.dataset.visatRevisao = '1';
@@ -1061,7 +1168,13 @@ function mostrarRevisaoDeCampos() {
       botao.className = 'btn';
       botao.dataset.variant = 'outline';
       botao.textContent = rotulo + (valores.some(v => semInformacao.test(v)) ? ' · ignorado' : ' · em branco');
-      botao.addEventListener('click', () => showScreen(grupo.tela));
+      botao.addEventListener('click', () => {
+        showScreen(grupo.tela);
+        const campo = chaves.map(chave => secao.querySelector(
+          '[data-key="' + chave + '"], [data-chips="' + chave + '"]'
+        )).find(Boolean);
+        if (campo) focarCampo(campo);
+      });
       item.append(botao);
       lista.append(item);
     }

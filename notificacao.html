@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261112-ficha-simplificada">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261113-modelo-auto">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -49,7 +49,7 @@
       <div id="resultado" class="resultado" aria-live="polite"></div>
     </section>
     <aside id="nota-fluxo-ve" aria-labelledby="h-fluxo-ve" hidden>
-      <h2 id="h-fluxo-ve">Intoxicação exógena e violências</h2>
+      <h2 id="h-fluxo-ve">Intoxicação exógena (CID-10 T65.9) e violências</h2>
       <p>Notifique o caso no fluxo da Vigilância Epidemiológica (VE), usando a ficha específica do agravo. Se houver suspeita ou informação de relação com o trabalho, sinalize essa relação na notificação e descreva as circunstâncias nas observações.</p>
       <p>A VE encaminha o caso à VISAT quando identifica possível relação com o trabalho na análise ou recebe essa sinalização na notificação.</p>
       <p><a href="https://sites.google.com/view/gerve/notifica%C3%A7%C3%A3o-compuls%C3%B3ria" target="_blank" rel="noopener noreferrer">Consultar o fluxo da Vigilância Epidemiológica</a></p>
@@ -76,7 +76,7 @@
 <label class="field-label" for="sinan-agravo">Agravo / doença</label>
 <input class="input input-lg" id="sinan-agravo" type="text" data-key="agravo" readonly>
 </div>
-<div><label class="field-label" for="sinan-cidAgravo">Código do agravo (CID-10)</label><input class="input input-lg" id="sinan-cidAgravo" type="text" data-key="cidAgravo" readonly></div>
+<div><label class="field-label" for="sinan-cidAgravo">CID-10 do agravo</label><input class="input input-lg" id="sinan-cidAgravo" type="text" data-key="cidAgravo" readonly></div>
 <div>
 <label class="field-label" for="sinan-data-notif">Data da notificação</label>
 <input class="input input-lg" id="sinan-data-notif" type="date" data-key="dataNotificacao">
@@ -84,16 +84,16 @@
 <div>
 <label class="field-label" for="sinan-uf-notif">UF de notificação</label>
 <select class="input input-lg" id="sinan-uf-notif" data-key="ufNotif">
-<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+<option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option selected>SC</option><option>SP</option><option>SE</option><option>TO</option>
 </select>
 </div>
 <div>
 <label class="field-label" for="sinan-mun-notif">Município de notificação</label>
-<input class="input input-lg" id="sinan-mun-notif" type="text" data-key="munNotif">
+<input class="input input-lg" id="sinan-mun-notif" type="text" data-key="munNotif" value="Florianópolis">
 </div>
 <div>
 <label class="field-label" for="sinan-ibge-notif">Código IBGE</label>
-<input class="input input-lg" id="sinan-ibge-notif" type="text" data-key="ibgeNotif">
+<input class="input input-lg" id="sinan-ibge-notif" type="text" data-key="ibgeNotif" value="420540">
 </div>
 <div>
 <label class="field-label" for="sinan-unid">Unidade de saúde ou fonte notificadora</label>
@@ -660,10 +660,10 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261112-ficha-simplificada" defer></script>
+  <script src="js/formulario-acidente.js?v=20261113-modelo-auto" defer></script>
   <script src="js/app.js?v=20261111-numeracao" defer></script>
-  <script src="js/autopreenchimento.js?v=20261112-ficha-simplificada" defer></script>
-  <script src="js/autopreenchimento-listas.js?v=20261112-ficha-simplificada" defer></script>
-  <script src="js/cid-qualificado.js?v=20261112-corrida" defer></script>
+  <script src="js/autopreenchimento.js?v=20261113-modelo-auto" defer></script>
+  <script src="js/autopreenchimento-listas.js?v=20261113-modelo-auto" defer></script>
+  <script src="js/cid-qualificado.js?v=20261113-modelo-auto" defer></script>
 </body>
 </html>

@@ -232,7 +232,7 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (d) {
         return {
-          cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
+          nome: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
           uf: d.uf, municipio: d.municipio, ibge: d.codigo_municipio_ibge, bairro: d.bairro,
           tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero,
           telefone: d.ddd_telefone_1 && String(d.ddd_telefone_1).length >= 10
@@ -246,7 +246,7 @@
             var e = d.estabelecimento || {};
             var ap = e.atividade_principal || {};
             return {
-              cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
+              nome: d.razao_social, cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
               secundarios: (e.atividades_secundarias || []).map(function (x) { return { codigo: x.id, descricao: x.descricao }; }),
               uf: e.estado && e.estado.sigla, municipio: e.cidade && e.cidade.nome,
               ibge: e.cidade && e.cidade.ibge_id, bairro: e.bairro,
@@ -291,21 +291,21 @@
     var el = campo(raiz, chavesCnpj);
     if (!el || el.dataset.autopreenchimentoCnpj) return;
     el.dataset.autopreenchimentoCnpj = '1';
-    var documentoVinculado = '';
+    var preenchidos = new Map();
     var consulta = 0;
     function preencher(chaves, valor) {
-      definir(campo(raiz, chaves), valor);
+      var destino = campo(raiz, chaves);
+      if (definir(destino, valor)) preenchidos.set(destino, destino.value);
     }
     el.addEventListener('input', function () {
       var n = digitos(el.value);
       if (n === el.dataset.ultimoCnpj) return;
       consulta++;
       delete el.dataset.ultimoCnpj;
-      if (!documentoVinculado || documentoVinculado === n) return;
-      documentoVinculado = '';
-      Object.values(destino).forEach(function (chaves) {
-        limparCampo(campo(raiz, chaves));
+      preenchidos.forEach(function (valor, campo) {
+        if (campo.value === valor) limparCampo(campo);
       });
+      preenchidos.clear();
       aviso(el, '');
     });
 
@@ -318,12 +318,12 @@
       consultarCnpj(n)
         .then(function (d) {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
-          documentoVinculado = n;
           empresasConsultadas.set(el, { cnpj: n, dados: d, destino: destino });
           var codSinan = cnaeSinan(d.cnae);
           var cnae = codSinan ? codSinan + (d.cnaeDescricao ? ' – ' + d.cnaeDescricao : '') : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
           var mun = ibgeSinan(d.ibge) === PADRAO.ibge ? PADRAO.municipio : titulo(d.municipio);
+          if (destino.nome) preencher(destino.nome, d.nome);
           if (destino.cnae) preencher(destino.cnae, cnae);
           if (destino.uf) preencher(destino.uf, d.uf);
           if (destino.municipio) preencher(destino.municipio, mun);
@@ -341,12 +341,14 @@
           aviso(el, 'CNPJ não encontrado ou consulta indisponível. Preencher manualmente.', true);
         });
     }
+    el.addEventListener('input', buscar);
     el.addEventListener('change', buscar);
     el.addEventListener('blur', buscar);
   }
 
   function configurarEmpresas(raiz) {
     configurarCnpj(raiz, ['cnpj'], {
+      nome: ['empresa', 'empresaNome', 'razao'],
       cnae: ['cnae'],
       uf: ['ufEmp'],
       municipio: ['munEmp'],

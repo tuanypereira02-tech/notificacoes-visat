@@ -232,7 +232,22 @@
     }
     el.addEventListener('focus', function () { carregar(qual).catch(function () {}); });
     el.addEventListener('input', function () { sugerir(); conferir(); });
-    el.addEventListener('change', conferir);
+    el.addEventListener('change', function () {
+      var digitado = el.value.trim();
+      var codigo = codigoDe(digitado);
+      if (codigo && !digitado.includes(' – ')) {
+        carregar(qual).then(function (tabela) {
+          if (!el.isConnected || el.value.trim() !== digitado) return;
+          var item = itensDoEscopo(tabela).find(function (registro) {
+            return codigoDe(registro.c) === codigo;
+          });
+          if (!item) return;
+          el.value = item.c + ' – ' + item.d;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }).catch(function () {});
+      }
+      conferir();
+    });
     el.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') lista.hidden = true; });
     lista.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { lista.hidden = true; el.focus(); } });
     if (el.value) conferir();
