@@ -957,6 +957,9 @@ btnVoltar.style.visibility = n === 1 ? 'hidden' : 'visible';
 btnContinuar.textContent = n === TOTAL || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 renderProgress();
 area.scrollTop = 0;
+// Na página incorporada (Google Sites), volta ao início da ficha a cada troca de tela.
+const topoFicha = root.getBoundingClientRect().top + window.scrollY - 8;
+if (window.scrollY > topoFicha) window.scrollTo({ top: Math.max(0, topoFicha) });
 if (isDone) buildSummary();
 }
 
