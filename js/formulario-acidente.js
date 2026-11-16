@@ -1025,40 +1025,84 @@ function unidadesDaTela(tela) {
   return unidades;
 }
 function secoesDaTela(tela) { return [...tela.querySelectorAll(SELETOR_SECAO)]; }
+// Altura máxima da área dos campos, calculada pelo tamanho do quadro (e não pelo conteúdo
+// mostrado no momento), para a divisão em partes ser sempre a mesma.
+function alturaDisponivelArea() {
+  const rodapes = [root.querySelector('#bottomBar'), root.querySelector('#form-status')]
+    .filter(el => el && el.offsetParent !== null)
+    .reduce((soma, el) => {
+      const estilo = getComputedStyle(el);
+      return soma + el.getBoundingClientRect().height + parseFloat(estilo.marginTop) + parseFloat(estilo.marginBottom);
+    }, 0);
+  const topo = area.getBoundingClientRect().top + (window.scrollY || 0);
+  return Math.floor(window.innerHeight - topo - rodapes - 12);
+}
 function paginarTela(tela) {
   const unidades = unidadesDaTela(tela);
   unidades.forEach(u => { u.classList.remove('visat-fora-da-parte'); delete u.dataset.visatParte; });
   secoesDaTela(tela).forEach(sec => sec.classList.remove('visat-fora-da-parte'));
-  const disponivel = area.clientHeight;
+  // Mede sem animação de entrada e sem listas de sugestões abertas, para a divisão não mudar
+  // quando uma lista abre ou fecha durante o preenchimento.
+  tela.getAnimations?.({ subtree: true }).forEach(animacao => { try { animacao.finish(); } catch {} });
+  root.classList.add('visat-medindo');
+  try {
+    dividirTelaEmPartes(tela, unidades);
+  } finally {
+    root.classList.remove('visat-medindo');
+  }
+}
+function dividirTelaEmPartes(tela, unidades) {
+  const disponivel = alturaDisponivelArea();
   if (!disponivel || area.scrollHeight <= disponivel + 4) { totalPartes = 1; return; }
   const visiveis = unidades.filter(u => u.getBoundingClientRect().height);
   const primeiro = visiveis[0] || tela;
   const cabecalho = primeiro.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
   const limite = Math.max(240, disponivel - cabecalho - 24);
   const base = primeiro.getBoundingClientRect().top;
-  let parte = 0;
-  let inicio = null;
-  unidades.forEach((u, indice) => {
+  // Medidas de cada campo/título com a tela inteira visível (sem partes ocultas).
+  const medidas = unidades.map(u => {
     const r = u.getBoundingClientRect();
-    if (!r.height) { u.dataset.visatParte = parte; return; }
-    const topo = r.top - base;
-    const fim = r.bottom - base;
-    if (inicio === null) inicio = topo;
-    if (fim - inicio > limite && topo > inicio) {
-      parte++;
-      inicio = topo;
-      // Títulos imediatamente anteriores acompanham o primeiro campo da nova parte.
-      for (let k = indice - 1; k >= 0; k--) {
-        const anterior = unidades[k];
-        if (!anterior.getBoundingClientRect().height) continue;
-        if (!anterior.matches(SELETOR_TITULO) && !anterior.matches('p.field-help')) break;
-        anterior.dataset.visatParte = parte;
-        inicio = Math.min(inicio, anterior.getBoundingClientRect().top - base);
-      }
-    }
-    u.dataset.visatParte = parte;
+    return { alto: r.height > 0, topo: r.top - base, fim: r.bottom - base,
+      titulo: u.matches(SELETOR_TITULO) || u.matches('p.field-help') };
   });
-  totalPartes = parte + 1;
+  // Divide em partes que não passam do limite; títulos acompanham o primeiro campo da parte seguinte.
+  function dividir(lim) {
+    const partes = new Array(medidas.length).fill(0);
+    let parte = 0;
+    let inicio = null;
+    medidas.forEach((m, indice) => {
+      if (!m.alto) { partes[indice] = parte; return; }
+      if (inicio === null) inicio = m.topo;
+      if (m.fim - inicio > lim && m.topo > inicio) {
+        parte++;
+        inicio = m.topo;
+        for (let k = indice - 1; k >= 0; k--) {
+          if (!medidas[k].alto) continue;
+          if (!medidas[k].titulo) break;
+          partes[k] = parte;
+          inicio = Math.min(inicio, medidas[k].topo);
+        }
+      }
+      partes[indice] = parte;
+    });
+    return partes;
+  }
+  let partes = dividir(limite);
+  const quantidade = partes[partes.length - 1] + 1;
+  if (quantidade > 1) {
+    // Equilibra as partes: menor limite que mantém a mesma quantidade de partes,
+    // para não sobrar uma última parte curta com muito espaço livre.
+    let menor = 160;
+    let maior = limite;
+    while (maior - menor > 8) {
+      const meio = Math.floor((menor + maior) / 2);
+      const tentativa = dividir(meio);
+      if (tentativa[tentativa.length - 1] + 1 <= quantidade) maior = meio; else menor = meio;
+    }
+    partes = dividir(maior);
+  }
+  unidades.forEach((u, indice) => { u.dataset.visatParte = partes[indice]; });
+  totalPartes = partes[partes.length - 1] + 1;
 }
 function aplicarParte(tela) {
   const unidades = unidadesDaTela(tela);
@@ -1105,7 +1149,7 @@ const observadorAltura = new ResizeObserver(() => {
   const tela = getScreens()[state.screen - 1];
   // Refaz a divisão quando a tela passa da altura ou quando já está dividida e o conteúdo mudou
   // (ex.: lista de sugestões fechada), evitando partes com um único campo e sobra branca.
-  if (!tela || state.screen > TOTAL || (area.scrollHeight <= area.clientHeight + 4 && totalPartes === 1)) return;
+  if (!tela || state.screen > TOTAL || (area.scrollHeight <= alturaDisponivelArea() + 4 && totalPartes === 1)) return;
   reavaliando = true;
   requestAnimationFrame(() => {
     const emUso = document.activeElement && tela.contains(document.activeElement) ? document.activeElement : null;
@@ -1134,6 +1178,7 @@ function levarAoTopoDaFicha() {
   topo.scrollIntoView({ block: 'nearest' });
 }
 let telaJaExibida = false;
+let conferenciaDivisao = 0;
 function showScreen(n, parte = 0) {
 root.querySelector('[data-visat-pendencias]')?.remove();
 state.screen = n;
@@ -1152,6 +1197,19 @@ if (telaAtiva && !isDone) {
   parteAtual = 0;
 }
 atualizarRotulos(n);
+// Campos complementados logo após a abertura (ex.: ajuda do CID) mudam a altura da tela:
+// a divisão é conferida de novo assim que a tela se completa, mantendo a parte em exibição.
+if (telaAtiva && !isDone) {
+  clearTimeout(conferenciaDivisao);
+  conferenciaDivisao = setTimeout(() => {
+    if (!root.isConnected || state.screen !== n) return;
+    const antes = totalPartes;
+    paginarTela(telaAtiva);
+    parteAtual = Math.min(parteAtual, totalPartes - 1);
+    aplicarParte(telaAtiva);
+    if (antes !== totalPartes) atualizarRotulos(n);
+  }, 250);
+}
 // A cada troca de tela, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
 // scrollIntoView também rola a página do Sites até o topo do quadro.
 if (telaJaExibida) levarAoTopoDaFicha();

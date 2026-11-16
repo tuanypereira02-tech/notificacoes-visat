@@ -561,3 +561,12 @@ body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
   .visat-sequencia { gap: 12px; margin-top: 14px; padding-top: 14px; }
   .field-label { margin-bottom: 6px; }
 }
+
+/* Durante a divisão da tela em partes, listas de sugestões abertas não contam na altura. */
+.visat-medindo .visat-lista-apoio,
+.visat-medindo .empresa-resultados,
+.visat-medindo .visat-cid-lista { display: none !important; }
+@media (min-width: 820px) {
+  .visat-medindo .field-group > div:has(.visat-lista-apoio),
+  .visat-medindo .field-group > div:has(.empresa-resultados) { grid-column: auto; }
+}
