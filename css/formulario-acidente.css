@@ -515,3 +515,27 @@ details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 /* Busca da empresa pelo nome (js/autopreenchimento.js) */
 .empresa-resultados { list-style: none; padding: 0; margin: .45rem 0 0; display: grid; gap: .4rem; }
 .empresa-resultados .btn { display: block; width: 100%; height: auto; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+
+/* Largura total do quadro (Google Sites): ficha com margens pequenas e campos em duas colunas em telas largas. */
+body.modo-formulario-acidente #principal { max-width: 1180px; }
+.step-area, .bottom-inner, .form-app .top-bar > .shell-container, .success-card { max-width: 1120px; }
+.hospital-alert-container { max-width: 1120px; margin-left: auto; margin-right: auto; }
+@media (min-width: 820px) {
+  .step-area { padding: 32px 28px 24px; }
+  .field-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
+  /* Ocupam a linha inteira: títulos, ajudas, blocos, textos longos e grupos de opções. */
+  .field-group > :not(div),
+  .field-group > .visat-sequencia,
+  .field-group > .highlight-box,
+  .field-group > div:has(textarea),
+  .field-group > div:has(> [data-chips]),
+  .field-group > div:has(.chip-group),
+  .field-group > div:has(.visat-lista-apoio:not([hidden])),
+  .field-group > div:has(.empresa-resultados:not([hidden])),
+  .field-group > div:has(.visat-cid-info),
+  .field-group > [data-visat-complementares] { grid-column: 1 / -1; }
+  .screen-sub { margin-bottom: 28px; }
+}
+/* Partes da tela (paginação pela altura disponível) */
+.visat-fora-da-parte { display: none !important; }
+@media print { .visat-fora-da-parte { display: revert !important; } }

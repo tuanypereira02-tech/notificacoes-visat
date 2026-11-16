@@ -907,6 +907,7 @@ function focarCampo(campo) {
   for (let grupo = campo.closest('details'); grupo; grupo = grupo.parentElement.closest('details')) {
     grupo.open = true;
   }
+  mostrarParteDoCampo(campo);
   (campo.matches('input, select, textarea') ? campo : campo.querySelector('button'))?.focus();
 }
 
@@ -1005,18 +1006,94 @@ seg.classList.toggle('done', i < state.screen);
 });
 }
 
+// Partes da tela: o que não cabe na altura disponível vai para a parte seguinte (botão Seguinte).
+let parteAtual = 0;
+let totalPartes = 1;
+function unidadesDaTela(tela) {
+  // Blocos da tela (exceto título e subtítulo); o grupo principal de campos entra campo a campo.
+  return [...tela.children].filter(el => !el.matches('.screen-title, .screen-sub'))
+    .flatMap(el => el.matches('.field-group') ? [...el.children] : [el]);
+}
+function paginarTela(tela) {
+  const unidades = unidadesDaTela(tela);
+  unidades.forEach(u => { u.classList.remove('visat-fora-da-parte'); delete u.dataset.visatParte; });
+  const disponivel = area.clientHeight;
+  if (!disponivel || area.scrollHeight <= disponivel + 4) { totalPartes = 1; return; }
+  const primeiro = unidades.find(u => u.getBoundingClientRect().height) || tela;
+  const cabecalho = primeiro.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
+  const limite = Math.max(240, disponivel - cabecalho - 24);
+  const topoGrupo = primeiro.getBoundingClientRect().top;
+  let parte = 0;
+  let inicio = null;
+  unidades.forEach(u => {
+    const r = u.getBoundingClientRect();
+    if (!r.height) { u.dataset.visatParte = parte; return; }
+    const topo = r.top - topoGrupo;
+    const fim = r.bottom - topoGrupo;
+    if (inicio === null) inicio = topo;
+    if (fim - inicio > limite && topo > inicio) { parte++; inicio = topo; }
+    u.dataset.visatParte = parte;
+  });
+  totalPartes = parte + 1;
+}
+function aplicarParte(tela) {
+  unidadesDaTela(tela).forEach(u => {
+    u.classList.toggle('visat-fora-da-parte', totalPartes > 1 && Number(u.dataset.visatParte || 0) !== parteAtual);
+  });
+}
+function atualizarRotulos(n) {
+  const isDone = n === TOTAL + 1;
+  counter.textContent = isDone ? 'Concluído'
+    : 'Tela ' + n + ' de ' + TOTAL + (totalPartes > 1 ? ' · parte ' + (parteAtual + 1) + ' de ' + totalPartes : '');
+  btnVoltar.style.visibility = n === 1 && parteAtual === 0 ? 'hidden' : 'visible';
+  const ultimaParte = parteAtual >= totalPartes - 1;
+  btnContinuar.textContent = (n === TOTAL && ultimaParte) || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
+}
+function irParaParte(parte) {
+  const tela = getScreens()[state.screen - 1];
+  if (!tela) return;
+  parteAtual = Math.max(0, Math.min(parte, totalPartes - 1));
+  aplicarParte(tela);
+  atualizarRotulos(state.screen);
+  area.scrollTop = 0;
+  root.scrollIntoView({ block: 'start' });
+}
+function mostrarParteDoCampo(campo) {
+  const tela = campo.closest('.screen');
+  if (!tela || Number(tela.dataset.screen) !== state.screen) return;
+  const unidade = unidadesDaTela(tela).find(u => u.contains(campo));
+  if (unidade && unidade.dataset.visatParte != null && Number(unidade.dataset.visatParte) !== parteAtual) {
+    irParaParte(Number(unidade.dataset.visatParte));
+  }
+}
+window.addEventListener('resize', () => {
+  const tela = getScreens()[state.screen - 1];
+  if (!tela || !root.isConnected) return;
+  paginarTela(tela);
+  parteAtual = Math.min(parteAtual, totalPartes - 1);
+  aplicarParte(tela);
+  atualizarRotulos(state.screen);
+});
+
 let telaJaExibida = false;
-function showScreen(n) {
+function showScreen(n, parte = 0) {
 root.querySelector('[data-visat-pendencias]')?.remove();
 state.screen = n;
 getScreens().forEach(s => s.classList.toggle('active', Number(s.dataset.screen) === n));
 const isDone = n === TOTAL + 1;
 bottomBar.style.display = isDone ? 'none' : 'block';
-counter.textContent = isDone ? 'Concluído' : 'Tela ' + n + ' de ' + TOTAL;
-btnVoltar.style.visibility = n === 1 ? 'hidden' : 'visible';
-btnContinuar.textContent = n === TOTAL || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 renderProgress();
 area.scrollTop = 0;
+const telaAtiva = getScreens()[n - 1];
+totalPartes = 1;
+if (telaAtiva && !isDone) {
+  paginarTela(telaAtiva);
+  parteAtual = parte < 0 ? totalPartes - 1 : Math.min(parte, totalPartes - 1);
+  aplicarParte(telaAtiva);
+} else {
+  parteAtual = 0;
+}
+atualizarRotulos(n);
 // A cada troca de tela, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
 // scrollIntoView também rola a página do Sites até o topo do quadro.
 if (telaJaExibida) root.scrollIntoView({ block: 'start' });
@@ -1352,10 +1429,16 @@ return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&g
 }
 
 btnVoltar.addEventListener('click', () => {
-if (state.screen > 1) showScreen(state.screen - 1);
+if (parteAtual > 0) { irParaParte(parteAtual - 1); return; }
+if (state.screen > 1) showScreen(state.screen - 1, -1);
 });
 
 btnContinuar.addEventListener('click', () => {
+if (!emCorrecao && parteAtual < totalPartes - 1) {
+  persistInputs();
+  irParaParte(parteAtual + 1);
+  return;
+}
 if (emCorrecao || state.screen === TOTAL) {
   finalizarFicha();
 } else {
