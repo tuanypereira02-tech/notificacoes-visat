@@ -213,7 +213,9 @@
         const valor = origem === 'ibge' ? ibgeSinan(endereco.ibge) : endereco[origem];
         if (valor == null || valor === '') continue;
         const exemplo = el.dataset.visatValorTeste === el.value;
-        if ((!editados.has(el) || !el.value) && definir(el, valor, exemplo)) {
+        // Texto parcial digitado (ex.: "madre") é completado pelo nome retornado.
+        const parcial = el.value && normalizar(valor).includes(normalizar(el.value));
+        if ((!editados.has(el) || !el.value || parcial) && definir(el, valor, exemplo || parcial)) {
           delete el.dataset.visatValorTeste;
           preenchidosPeloCep.set(el, el.value);
         } else if (normalizar(el.value) !== normalizar(valor)) {
