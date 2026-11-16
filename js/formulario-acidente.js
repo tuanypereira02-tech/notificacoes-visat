@@ -1103,7 +1103,9 @@ let reavaliando = false;
 const observadorAltura = new ResizeObserver(() => {
   if (reavaliando || !root.isConnected) return;
   const tela = getScreens()[state.screen - 1];
-  if (!tela || state.screen > TOTAL || area.scrollHeight <= area.clientHeight + 4) return;
+  // Refaz a divisão quando a tela passa da altura ou quando já está dividida e o conteúdo mudou
+  // (ex.: lista de sugestões fechada), evitando partes com um único campo e sobra branca.
+  if (!tela || state.screen > TOTAL || (area.scrollHeight <= area.clientHeight + 4 && totalPartes === 1)) return;
   reavaliando = true;
   requestAnimationFrame(() => {
     const emUso = document.activeElement && tela.contains(document.activeElement) ? document.activeElement : null;

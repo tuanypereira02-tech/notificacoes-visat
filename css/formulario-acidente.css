@@ -539,8 +539,14 @@ body.modo-formulario-acidente #principal { max-width: 1180px; }
 /* Partes da tela (paginação pela altura disponível) */
 .visat-fora-da-parte { display: none !important; }
 @media print { .visat-fora-da-parte { display: revert !important; } }
-/* A área dos campos ocupa a altura do quadro; botões no rodapé, sem sobra branca abaixo deles. */
-body.modo-formulario-acidente .step-area { flex: 1 1 auto; }
+/* Botões logo abaixo dos campos: a área dos campos acompanha o conteúdo e só se limita à altura
+   do quadro quando a tela é maior que ele (nesse caso a tela é dividida em partes).
+   Evita a faixa branca entre os campos e os botões quando o quadro é alto (ex.: Google Sites). */
+body.modo-formulario-acidente .step-area { flex: 0 1 auto; }
+body.modo-formulario-acidente #principal > section[aria-labelledby="h-resultado"],
+body.modo-formulario-acidente #resultado,
+body.modo-formulario-acidente .acidente-inline,
+body.modo-formulario-acidente .form-app { flex: 0 1 auto; }
 body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
 @media (min-width: 820px) {
   /* Campo com subcampos (grupo interno) ocupa a linha inteira; os subcampos seguem em duas colunas. */
