@@ -1056,7 +1056,7 @@ function irParaParte(parte) {
   aplicarParte(tela);
   atualizarRotulos(state.screen);
   area.scrollTop = 0;
-  root.scrollIntoView({ block: 'start' });
+  levarAoTopoDaFicha();
 }
 function mostrarParteDoCampo(campo) {
   const tela = campo.closest('.screen');
@@ -1075,6 +1075,12 @@ window.addEventListener('resize', () => {
   atualizarRotulos(state.screen);
 });
 
+// Rolagem mínima: só traz o topo da ficha para a tela quando ele está escondido.
+// 'nearest' evita empurrar molduras externas (ex.: visualização do Google Sites) além do necessário.
+function levarAoTopoDaFicha() {
+  const topo = root.querySelector('.top-bar') || root;
+  topo.scrollIntoView({ block: 'nearest' });
+}
 let telaJaExibida = false;
 function showScreen(n, parte = 0) {
 root.querySelector('[data-visat-pendencias]')?.remove();
@@ -1096,7 +1102,7 @@ if (telaAtiva && !isDone) {
 atualizarRotulos(n);
 // A cada troca de tela, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
 // scrollIntoView também rola a página do Sites até o topo do quadro.
-if (telaJaExibida) root.scrollIntoView({ block: 'start' });
+if (telaJaExibida) levarAoTopoDaFicha();
 telaJaExibida = true;
 if (isDone) buildSummary();
 }
