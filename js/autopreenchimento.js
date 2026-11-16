@@ -291,6 +291,60 @@
     }
 
     buscarEndereco.addEventListener('click', pesquisarEndereco);
+
+    // Sugestões de rua ao digitar o logradouro (ViaCEP): escolher preenche rua, bairro e CEP.
+    const campoRua = dadosEndereco.logradouro;
+    if (campoRua) {
+      const sugestoes = document.createElement('ul');
+      sugestoes.className = 'empresa-resultados';
+      sugestoes.setAttribute('aria-label', 'Ruas encontradas');
+      sugestoes.hidden = true;
+      campoRua.after(sugestoes);
+      let esperaRua;
+      let consultaRua = 0;
+      const fecharRuas = () => { consultaRua++; clearTimeout(esperaRua); sugestoes.replaceChildren(); sugestoes.hidden = true; };
+      campoRua.addEventListener('input', evento => {
+        if (!evento.isTrusted) return;
+        fecharRuas();
+        const [uf, municipio, rua] = enderecoInformado();
+        if (!/^[A-Z]{2}$/.test(uf) || municipio.length < 3 || rua.length < 3) return;
+        const atual = consultaRua;
+        esperaRua = setTimeout(async () => {
+          try {
+            const caminho = [uf, municipio, rua].map(encodeURIComponent).join('/');
+            const resposta = await fetch('https://viacep.com.br/ws/' + caminho + '/json/', { credentials: 'omit', referrerPolicy: 'no-referrer' });
+            if (!resposta.ok) return;
+            const lista = await resposta.json();
+            if (atual !== consultaRua || !Array.isArray(lista)) return;
+            const vistos = new Set();
+            for (const endereco of lista) {
+              if (!/^\d{8}$/.test(digitos(endereco.cep)) || vistos.has(endereco.cep)) continue;
+              vistos.add(endereco.cep);
+              const item = document.createElement('li');
+              const botao = document.createElement('button');
+              botao.type = 'button';
+              botao.className = 'btn';
+              botao.dataset.variant = 'outline';
+              botao.textContent = [endereco.logradouro, endereco.bairro, endereco.complemento, endereco.cep].filter(Boolean).join(' · ');
+              botao.addEventListener('pointerdown', ev => ev.preventDefault());
+              botao.addEventListener('click', () => {
+                fecharRuas();
+                definir(campoRua, endereco.logradouro, true);
+                ultimoCep = digitos(endereco.cep);
+                definir(cep, endereco.cep, true);
+                aplicarEndereco(endereco);
+                campoRua.focus();
+              });
+              item.append(botao);
+              sugestoes.append(item);
+              if (vistos.size >= 15) break;
+            }
+            sugestoes.hidden = !sugestoes.childElementCount;
+          } catch { /* sem sugestões; o campo segue manual */ }
+        }, 500);
+      });
+      campoRua.addEventListener('blur', () => setTimeout(fecharRuas, 200));
+    }
     numeroEndereco?.addEventListener('change', evento => {
       const [uf, municipio, logradouro] = enderecoInformado();
       if (evento.isTrusted && numeroEndereco.value.trim() && !cep.value.trim() && uf && municipio.length >= 3 && logradouro.length >= 3) {
