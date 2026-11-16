@@ -1005,6 +1005,7 @@ seg.classList.toggle('done', i < state.screen);
 });
 }
 
+let telaJaExibida = false;
 function showScreen(n) {
 root.querySelector('[data-visat-pendencias]')?.remove();
 state.screen = n;
@@ -1016,9 +1017,10 @@ btnVoltar.style.visibility = n === 1 ? 'hidden' : 'visible';
 btnContinuar.textContent = n === TOTAL || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 renderProgress();
 area.scrollTop = 0;
-// Na página incorporada (Google Sites), volta ao início da ficha a cada troca de tela.
-const topoFicha = root.getBoundingClientRect().top + window.scrollY - 8;
-if (window.scrollY > topoFicha) window.scrollTo({ top: Math.max(0, topoFicha) });
+// A cada troca de tela, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
+// scrollIntoView também rola a página do Sites até o topo do quadro.
+if (telaJaExibida) root.scrollIntoView({ block: 'start' });
+telaJaExibida = true;
 if (isDone) buildSummary();
 }
 
