@@ -213,6 +213,111 @@
     cep.addEventListener('input', buscar);
     cep.addEventListener('change', buscar);
     cep.addEventListener('blur', buscar);
+
+    /* Busca do CEP pelo endereço: UF + município + logradouro (ViaCEP); o bairro filtra. */
+    var campoLog = campo(raiz, ['logRes']);
+    var campoBairro = campo(raiz, ['bairroRes']);
+    var campoUf = campo(raiz, ['ufRes']);
+    var campoMun = campo(raiz, ['munRes']);
+    var campoNum = campo(raiz, ['numRes']);
+    if (!campoLog || !campoUf || !campoMun) return;
+    var normalizar = function (t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase(); };
+    var botaoBusca = document.createElement('button');
+    botaoBusca.type = 'button';
+    botaoBusca.className = 'btn';
+    botaoBusca.dataset.variant = 'outline';
+    botaoBusca.dataset.visatBuscarCep = 'cep';
+    botaoBusca.textContent = 'Buscar CEP pelo endereço';
+    var resultados = document.createElement('div');
+    resultados.className = 'visat-lista-apoio';
+    resultados.hidden = true;
+    var ajudaCep = document.createElement('p');
+    ajudaCep.className = 'field-help';
+    ajudaCep.textContent = 'Sem o CEP? Informe UF, município e logradouro e clique em Buscar CEP pelo endereço. O bairro ajuda a filtrar.';
+    cep.parentNode.append(ajudaCep, botaoBusca, resultados);
+    var consultaEndereco = 0;
+
+    function fecharResultados() {
+      consultaEndereco++;
+      resultados.replaceChildren();
+      resultados.hidden = true;
+    }
+    function lerEndereco() {
+      return {
+        uf: String(campoUf.value || '').trim().toUpperCase(),
+        municipio: String(campoMun.value || '').trim(),
+        logradouro: String(campoLog.value || '').trim(),
+        bairro: campoBairro ? String(campoBairro.value || '').trim() : ''
+      };
+    }
+    function selecionar(endereco) {
+      fecharResultados();
+      definir(cep, endereco.cep, true);
+      cep.focus();
+    }
+    function pesquisarEndereco() {
+      fecharResultados();
+      var dados = lerEndereco();
+      if (!/^[A-Z]{2}$/.test(dados.uf) || dados.municipio.length < 3 || dados.logradouro.length < 3) {
+        aviso(cep, 'Informe UF, município e logradouro de residência para buscar o CEP.', true);
+        return;
+      }
+      var atual = consultaEndereco;
+      aviso(cep, 'Buscando CEP pelo endereço…');
+      var caminho = [dados.uf, dados.municipio, dados.logradouro].map(encodeURIComponent).join('/');
+      fetch('https://viacep.com.br/ws/' + caminho + '/json/', { credentials: 'omit', referrerPolicy: 'no-referrer' })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (lista) {
+          if (atual !== consultaEndereco || !cep.isConnected) return;
+          var opcoes = [];
+          var vistos = {};
+          (Array.isArray(lista) ? lista : []).forEach(function (e) {
+            if (!/^\d{8}$/.test(digitos(e.cep)) || vistos[e.cep]) return;
+            if (dados.bairro && normalizar(e.bairro).indexOf(normalizar(dados.bairro)) < 0) return;
+            vistos[e.cep] = true;
+            opcoes.push(e);
+          });
+          if (!opcoes.length) {
+            aviso(cep, 'Nenhum CEP encontrado para esse endereço. Confira o logradouro e o bairro.', true);
+            return;
+          }
+          if (opcoes.length === 1) {
+            selecionar(opcoes[0]);
+            return;
+          }
+          aviso(cep, 'Escolha o CEP do endereço. Confira a faixa de numeração quando houver.');
+          var ul = document.createElement('ul');
+          opcoes.slice(0, 30).forEach(function (e) {
+            var li = document.createElement('li');
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn';
+            b.dataset.variant = 'outline';
+            b.textContent = [e.cep, e.logradouro, e.bairro, e.complemento].filter(Boolean).join(' · ');
+            b.addEventListener('click', function () { selecionar(e); });
+            li.append(b);
+            ul.append(li);
+          });
+          resultados.append(ul);
+          resultados.hidden = false;
+        })
+        .catch(function () {
+          if (atual === consultaEndereco && cep.isConnected) {
+            aviso(cep, 'Consulta de CEP indisponível. Tente novamente ou informe o CEP conhecido.', true);
+          }
+        });
+    }
+    botaoBusca.addEventListener('click', pesquisarEndereco);
+    [campoLog, campoBairro, campoUf, campoMun, cep].forEach(function (el) {
+      if (el) el.addEventListener('input', function (ev) { if (ev.isTrusted) fecharResultados(); });
+    });
+    // Ao informar o número sem CEP, a busca pelo endereço roda sozinha.
+    if (campoNum) campoNum.addEventListener('change', function (ev) {
+      var d = lerEndereco();
+      if (ev.isTrusted && campoNum.value.trim() && !cep.value.trim() && d.uf && d.municipio.length >= 3 && d.logradouro.length >= 3) {
+        pesquisarEndereco();
+      }
+    });
   }
 
   /* ---------- 5. CNPJ (BrasilAPI) ---------- */
