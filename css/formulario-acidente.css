@@ -485,10 +485,9 @@ body.modo-formulario-acidente .rodape { display: none; }
 .visat-lista-apoio ul { display: grid; gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; }
 .visat-lista-apoio .btn { text-align: left; }
 
-/* Seções complementares fechadas mantêm os dados essenciais à vista. */
-details.visat-sequencia { display: block; margin-top: 16px; padding-top: 12px; }
-details.visat-sequencia > summary { cursor: pointer; font-size: 16px; }
-details.visat-sequencia[open] > summary { margin-bottom: 16px; }
+/* Seções complementares em fluxo contínuo, sem controles de expansão. */
+section.visat-sequencia { display: grid; gap: 16px; margin-top: 24px; padding-top: 20px; }
+section.visat-sequencia > .visat-sequencia-titulo { cursor: default; }
 [data-visat-pendencias] { padding: 16px; }
 [data-visat-pendencias] h2 { margin: 0 0 8px; font-size: 18px; }
 [data-visat-pendencias] ul { display: grid; gap: 8px; padding: 0; list-style: none; }
