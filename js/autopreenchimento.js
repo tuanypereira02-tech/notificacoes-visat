@@ -146,178 +146,201 @@
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  function configurarCep(raiz) {
-    var cep = campo(raiz, ['cep']);
+  function configurarCep(raiz, chaveCep, destinos) {
+    const cep = campo(raiz, [chaveCep]);
     if (!cep || cep.dataset.autopreenchimentoCep) return;
     cep.dataset.autopreenchimentoCep = '1';
-    var cepDoEndereco = digitos(cep.value);
-    var ultimoCep = cepDoEndereco;
-    var consulta = 0;
+    cep.inputMode = 'numeric';
+    cep.maxLength = 9;
+    cep.placeholder = '00000-000';
 
-    function buscar() {
-      var n = digitos(cep.value);
-      if (n === ultimoCep) return;
-      if (cepDoEndereco.length === 8 && cepDoEndereco !== n) {
-        ['logRes', 'bairroRes', 'ufRes', 'munRes', 'ibgeRes', 'distRes', 'numRes', 'compRes',
-          'geo1', 'geo2', 'refRes', 'paisExterior'].forEach(function (chave) {
-          limparCampo(campo(raiz, [chave]));
-        });
-        var zona = raiz.querySelector('[data-chips="zona"]');
-        if (zona) {
-          zona.querySelectorAll('.chip.selected').forEach(function (chip) { chip.classList.remove('selected'); });
-          zona.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        cepDoEndereco = '';
-      }
-      ultimoCep = n;
-      var atual = ++consulta;
-      if (n.length !== 8) {
-        aviso(cep, '');
-        return;
-      }
-      aviso(cep, 'Buscando endereço pelo CEP…');
-      fetch('https://viacep.com.br/ws/' + n + '/json/')
-        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-        .then(function (d) {
-          if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
-          if (d.erro) {
-            aviso(cep, 'CEP não encontrado. Confira o número ou informe o endereço manualmente.', true);
-            return;
-          }
-          var dados = {
-            logRes: d.logradouro,
-            bairroRes: d.bairro,
-            ufRes: d.uf,
-            munRes: d.localidade,
-            ibgeRes: ibgeSinan(d.ibge)
-          };
-          cepDoEndereco = n;
-          Object.entries(dados).forEach(function (item) {
-            var el = campo(raiz, [item[0]]);
-            if (!el) return;
-            if (item[1]) {
-              definir(el, item[1], true);
-            } else if (el.value) {
-              el.value = '';
-              el.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-          });
-          aviso(cep, 'Endereço preenchido com os dados disponíveis. Confira antes de enviar.');
-        })
-        .catch(function () {
-          if (!cep.isConnected || atual !== consulta || digitos(cep.value) !== n) return;
-          ultimoCep = '';
-          aviso(cep, 'Consulta indisponível. Tente novamente ou informe o endereço manualmente.', true);
-        });
+    const ajuda = document.createElement('p');
+    ajuda.id = cep.id + '-ajuda';
+    ajuda.className = 'field-help';
+    ajuda.textContent = 'Digite o CEP ou busque por logradouro, município e UF. O bairro ajuda a filtrar.';
+    cep.setAttribute('aria-describedby', ajuda.id);
+    cep.after(ajuda);
+
+    const preenchidosPeloCep = new Map();
+    const normalizar = texto => String(texto || '').normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+    const dadosEndereco = Object.fromEntries(Object.entries(destinos).map(([chave, chaves]) => [chave, campo(raiz, chaves)]));
+    const editados = new Set();
+    for (const el of Object.values(dadosEndereco).filter(Boolean)) {
+      const preservar = () => {
+        editados.add(el);
+        preenchidosPeloCep.delete(el);
+      };
+      el.addEventListener('input', evento => { if (evento.isTrusted) preservar(); });
+      el.addEventListener('change', evento => { if (evento.isTrusted) preservar(); });
+      el.addEventListener('visat:escolha-manual', preservar);
     }
-    cep.addEventListener('input', buscar);
-    cep.addEventListener('change', buscar);
-    cep.addEventListener('blur', buscar);
-
-    /* Busca do CEP pelo endereço: UF + município + logradouro (ViaCEP); o bairro filtra. */
-    var campoLog = campo(raiz, ['logRes']);
-    var campoBairro = campo(raiz, ['bairroRes']);
-    var campoUf = campo(raiz, ['ufRes']);
-    var campoMun = campo(raiz, ['munRes']);
-    var campoNum = campo(raiz, ['numRes']);
-    if (!campoLog || !campoUf || !campoMun) return;
-    var normalizar = function (t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase(); };
-    var botaoBusca = document.createElement('button');
-    botaoBusca.type = 'button';
-    botaoBusca.className = 'btn';
-    botaoBusca.dataset.variant = 'outline';
-    botaoBusca.dataset.visatBuscarCep = 'cep';
-    botaoBusca.textContent = 'Buscar CEP pelo endereço';
-    var resultados = document.createElement('div');
+    const buscarEndereco = document.createElement('button');
+    buscarEndereco.type = 'button';
+    buscarEndereco.className = 'btn';
+    buscarEndereco.dataset.variant = 'outline';
+    buscarEndereco.dataset.visatBuscarCep = chaveCep;
+    buscarEndereco.textContent = 'Buscar CEP pelo endereço';
+    const resultados = document.createElement('div');
     resultados.className = 'visat-lista-apoio';
     resultados.hidden = true;
-    var ajudaCep = document.createElement('p');
-    ajudaCep.className = 'field-help';
-    ajudaCep.textContent = 'Sem o CEP? Informe UF, município e logradouro e clique em Buscar CEP pelo endereço. O bairro ajuda a filtrar.';
-    cep.parentNode.append(ajudaCep, botaoBusca, resultados);
-    var consultaEndereco = 0;
+    ajuda.after(buscarEndereco, resultados);
 
+    let consultaEndereco = 0;
     function fecharResultados() {
       consultaEndereco++;
       resultados.replaceChildren();
       resultados.hidden = true;
     }
-    function lerEndereco() {
-      return {
-        uf: String(campoUf.value || '').trim().toUpperCase(),
-        municipio: String(campoMun.value || '').trim(),
-        logradouro: String(campoLog.value || '').trim(),
-        bairro: campoBairro ? String(campoBairro.value || '').trim() : ''
-      };
+    function enderecoInformado() {
+      return ['uf', 'localidade', 'logradouro', 'bairro'].map(chave => dadosEndereco[chave]?.value.trim() || '');
     }
-    function selecionar(endereco) {
-      fecharResultados();
-      definir(cep, endereco.cep, true);
-      cep.focus();
+    const numeroEndereco = campo(raiz, chaveCep === 'cep' ? ['numRes'] : ['numEmp', 'numero']);
+    for (const el of [...Object.values(dadosEndereco), numeroEndereco, cep].filter(Boolean)) {
+      el.addEventListener('input', evento => { if (evento.isTrusted) fecharResultados(); });
+      el.addEventListener('change', evento => { if (evento.isTrusted) fecharResultados(); });
+      el.addEventListener('visat:escolha-manual', fecharResultados);
     }
-    function pesquisarEndereco() {
+    let ultimoCep = '';
+    let consulta = 0;
+
+    function aplicarEndereco(endereco) {
+      const conflitantes = [];
+      for (const [origem, el] of Object.entries(dadosEndereco)) {
+        if (!el) continue;
+        if (origem === 'ibge' &&
+            (normalizar(dadosEndereco.localidade?.value) !== normalizar(endereco.localidade) ||
+             normalizar(dadosEndereco.uf?.value) !== normalizar(endereco.uf))) continue;
+        const valor = origem === 'ibge' ? ibgeSinan(endereco.ibge) : endereco[origem];
+        if (valor == null || valor === '') continue;
+        const exemplo = el.dataset.visatValorTeste === el.value;
+        if ((!editados.has(el) || !el.value) && definir(el, valor, exemplo)) {
+          delete el.dataset.visatValorTeste;
+          preenchidosPeloCep.set(el, el.value);
+        } else if (normalizar(el.value) !== normalizar(valor)) {
+          conflitantes.push(valor);
+        }
+      }
+      aviso(cep, conflitantes.length
+        ? 'CEP localizado. Dados informados foram preservados. Confira o endereço retornado: ' +
+          [endereco.logradouro, endereco.bairro, [endereco.localidade, endereco.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ') + '.'
+        : 'CEP localizado. Confira o endereço e informe número e complemento, se houver.');
+    }
+
+    async function pesquisarEndereco() {
       fecharResultados();
-      var dados = lerEndereco();
-      if (!/^[A-Z]{2}$/.test(dados.uf) || dados.municipio.length < 3 || dados.logradouro.length < 3) {
-        aviso(cep, 'Informe UF, município e logradouro de residência para buscar o CEP.', true);
+      const dados = enderecoInformado();
+      const [uf, municipio, logradouro, bairro] = dados;
+      if (!/^[A-Z]{2}$/.test(uf) || municipio.length < 3 || logradouro.length < 3) {
+        aviso(cep, 'Informe UF, município e logradouro para buscar o CEP.', true);
         return;
       }
-      var atual = consultaEndereco;
+      const atual = consultaEndereco;
+      consulta++;
+      ultimoCep = '';
       aviso(cep, 'Buscando CEP pelo endereço…');
-      var caminho = [dados.uf, dados.municipio, dados.logradouro].map(encodeURIComponent).join('/');
-      fetch('https://viacep.com.br/ws/' + caminho + '/json/', { credentials: 'omit', referrerPolicy: 'no-referrer' })
-        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-        .then(function (lista) {
-          if (atual !== consultaEndereco || !cep.isConnected) return;
-          var opcoes = [];
-          var vistos = {};
-          (Array.isArray(lista) ? lista : []).forEach(function (e) {
-            if (!/^\d{8}$/.test(digitos(e.cep)) || vistos[e.cep]) return;
-            if (dados.bairro && normalizar(e.bairro).indexOf(normalizar(dados.bairro)) < 0) return;
-            vistos[e.cep] = true;
-            opcoes.push(e);
-          });
-          if (!opcoes.length) {
-            aviso(cep, 'Nenhum CEP encontrado para esse endereço. Confira o logradouro e o bairro.', true);
-            return;
-          }
-          if (opcoes.length === 1) {
-            selecionar(opcoes[0]);
-            return;
-          }
-          aviso(cep, 'Escolha o CEP do endereço. Confira a faixa de numeração quando houver.');
-          var ul = document.createElement('ul');
-          opcoes.slice(0, 30).forEach(function (e) {
-            var li = document.createElement('li');
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'btn';
-            b.dataset.variant = 'outline';
-            b.textContent = [e.cep, e.logradouro, e.bairro, e.complemento].filter(Boolean).join(' · ');
-            b.addEventListener('click', function () { selecionar(e); });
-            li.append(b);
-            ul.append(li);
-          });
-          resultados.append(ul);
-          resultados.hidden = false;
-        })
-        .catch(function () {
-          if (atual === consultaEndereco && cep.isConnected) {
-            aviso(cep, 'Consulta de CEP indisponível. Tente novamente ou informe o CEP conhecido.', true);
-          }
+      try {
+        const caminho = [uf, municipio, logradouro].map(encodeURIComponent).join('/');
+        const resposta = await fetch('https://viacep.com.br/ws/' + caminho + '/json/', {
+          credentials: 'omit', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(8000)
         });
+        if (!resposta.ok) throw new Error('Consulta indisponível');
+        const enderecos = await resposta.json();
+        if (atual !== consultaEndereco || !cep.isConnected || enderecoInformado().some((valor, i) => valor !== dados[i])) return;
+        const opcoes = new Map();
+        for (const endereco of enderecos) {
+          if (/^\d{8}$/.test(digitos(endereco.cep)) &&
+              (!bairro || normalizar(endereco.bairro).includes(normalizar(bairro)))) {
+            opcoes.set(endereco.cep, endereco);
+          }
+        }
+        if (!opcoes.size) {
+          aviso(cep, 'Nenhum CEP encontrado para esse endereço. Confira o logradouro e o bairro.', true);
+          return;
+        }
+        function selecionar(endereco) {
+          fecharResultados();
+          ultimoCep = digitos(endereco.cep);
+          definir(cep, endereco.cep, true);
+          aplicarEndereco(endereco);
+          cep.focus();
+        }
+        if (opcoes.size === 1) {
+          selecionar(opcoes.values().next().value);
+          return;
+        }
+        aviso(cep, 'Escolha o CEP correspondente ao seu endereço. Confira a faixa de numeração quando disponível.');
+        const lista = document.createElement('ul');
+        for (const endereco of opcoes.values()) {
+          const item = document.createElement('li');
+          const botao = document.createElement('button');
+          botao.type = 'button';
+          botao.className = 'btn';
+          botao.dataset.variant = 'outline';
+          botao.textContent = [endereco.cep, endereco.logradouro, endereco.bairro, endereco.complemento].filter(Boolean).join(' · ');
+          botao.addEventListener('click', () => selecionar(endereco));
+          item.append(botao);
+          lista.append(item);
+        }
+        resultados.append(lista);
+        resultados.hidden = false;
+      } catch {
+        if (atual === consultaEndereco && cep.isConnected) {
+          aviso(cep, 'Consulta de CEP indisponível. Tente novamente ou informe o CEP conhecido.', true);
+        }
+      }
     }
-    botaoBusca.addEventListener('click', pesquisarEndereco);
-    [campoLog, campoBairro, campoUf, campoMun, cep].forEach(function (el) {
-      if (el) el.addEventListener('input', function (ev) { if (ev.isTrusted) fecharResultados(); });
-    });
-    // Ao informar o número sem CEP, a busca pelo endereço roda sozinha.
-    if (campoNum) campoNum.addEventListener('change', function (ev) {
-      var d = lerEndereco();
-      if (ev.isTrusted && campoNum.value.trim() && !cep.value.trim() && d.uf && d.municipio.length >= 3 && d.logradouro.length >= 3) {
+
+    buscarEndereco.addEventListener('click', pesquisarEndereco);
+    numeroEndereco?.addEventListener('change', evento => {
+      const [uf, municipio, logradouro] = enderecoInformado();
+      if (evento.isTrusted && numeroEndereco.value.trim() && !cep.value.trim() && uf && municipio.length >= 3 && logradouro.length >= 3) {
         pesquisarEndereco();
       }
     });
+
+    async function buscar() {
+      const numero = digitos(cep.value);
+      if (numero === ultimoCep) return;
+      const cepMudou = numero !== ultimoCep;
+      ultimoCep = numero;
+      const atual = ++consulta;
+      if (cepMudou) {
+        for (const [el, valor] of preenchidosPeloCep) {
+          if (el.value === valor) limparCampo(el);
+        }
+        preenchidosPeloCep.clear();
+      }
+      if (numero.length !== 8) {
+        aviso(cep, '');
+        return;
+      }
+
+      aviso(cep, 'Buscando endereço pelo CEP…');
+      try {
+        const resposta = await fetch('https://viacep.com.br/ws/' + numero + '/json/', {
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!resposta.ok) throw new Error('Consulta indisponível');
+        const endereco = await resposta.json();
+        if (atual !== consulta || !cep.isConnected || digitos(cep.value) !== numero) return;
+        if (endereco.erro) {
+          aviso(cep, 'CEP não encontrado. Confira o número ou preencha o endereço manualmente.', true);
+          return;
+        }
+        aplicarEndereco(endereco);
+      } catch {
+        if (atual !== consulta || !cep.isConnected || digitos(cep.value) !== numero) return;
+        ultimoCep = '';
+        aviso(cep, 'Consulta indisponível. Confira o CEP ou preencha o endereço manualmente.', true);
+      }
+    }
+
+    cep.addEventListener('input', evento => {
+      if (evento.isTrusted || !cep.value) buscar();
+    });
+    cep.addEventListener('change', evento => { if (evento.isTrusted) buscar(); });
   }
 
   /* ---------- 5. CNPJ (BrasilAPI) ---------- */
@@ -470,6 +493,198 @@
     });
   }
 
+  /* ---------- 5b. Empresa pelo nome (base VISAT + cadastro online) ---------- */
+
+  var baseEmpresas = null;
+  function carregarBaseEmpresas() {
+    if (!baseEmpresas) {
+      baseEmpresas = fetch('data/empresas-visat.json?v=20261116')
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (lista) {
+          return lista.map(function (registro) {
+            return { registro: registro, nomes: [registro[1], registro[2], registro[3]].map(normalizarNome) };
+          });
+        })
+        .catch(function () { baseEmpresas = null; return []; });
+    }
+    return baseEmpresas;
+  }
+  function normalizarNome(texto) {
+    return String(texto == null ? '' : texto).normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function iniciaisDe(nome) {
+    return nome.split(' ').filter(function (p) { return p && ['de', 'da', 'do', 'das', 'dos', 'e'].indexOf(p) < 0; })
+      .map(function (p) { return p[0]; }).join('');
+  }
+
+  function configurarBuscaEmpresa(raiz) {
+    var nome = campo(raiz, ['empresa', 'empresaNome', 'razao']);
+    var cnpj = campo(raiz, ['cnpj']);
+    if (!nome || !cnpj || nome.dataset.visatBuscaEmpresa) return;
+    nome.dataset.visatBuscaEmpresa = '1';
+    // Como no rascunho: o nome vem antes do CNPJ.
+    if (nome.parentElement !== cnpj.parentElement && cnpj.parentElement.parentElement === nome.parentElement.parentElement) {
+      cnpj.parentElement.before(nome.parentElement);
+    }
+    var ajuda = document.createElement('p');
+    ajuda.className = 'field-help';
+    ajuda.textContent = 'Digite o nome da empresa para filtrar e consultar o cadastro. Ao escolher, o CNPJ e os dados disponíveis são preenchidos.';
+    var retorno = document.createElement('p');
+    retorno.className = 'field-help';
+    retorno.setAttribute('role', 'status');
+    var resultados = document.createElement('ul');
+    resultados.className = 'empresa-resultados';
+    resultados.setAttribute('aria-label', 'Empresas encontradas');
+    resultados.hidden = true;
+    nome.after(ajuda, retorno, resultados);
+    var enderecoEmpresa = {
+      ufEmp: campo(raiz, ['ufEmp']), munEmp: campo(raiz, ['munEmp']), endEmp: campo(raiz, ['endEmp', 'endereco']),
+      numEmp: campo(raiz, ['numEmp', 'numero']), bairroEmp: campo(raiz, ['bairroEmp', 'bairro']),
+      compEmp: campo(raiz, ['compEmp']), cepEmp: campo(raiz, ['cepEmp'])
+    };
+    var consultaAtual = 0;
+    var espera;
+    var aplicando = false;
+
+    function ocultar() { resultados.replaceChildren(); resultados.hidden = true; }
+    function cancelar() { consultaAtual++; clearTimeout(espera); }
+    function filtroDe(el) { return el && el.value.trim() ? normalizarNome(el.value) : ''; }
+
+    function selecionar(empresa) {
+      var atualDoc = digitos(cnpj.value);
+      var novoDoc = digitos(empresa.cnpj);
+      if (atualDoc && atualDoc !== novoDoc) {
+        retorno.textContent = 'Já existe um CNPJ informado. Apague ou confira esse CNPJ para usar a empresa escolhida.';
+        cnpj.focus();
+        return;
+      }
+      aplicando = true;
+      try {
+        nome.value = empresa.nome;
+        nome.dispatchEvent(new Event('input', { bubbles: true }));
+        // Endereço da base só entra em campo vazio; a consulta do CNPJ completa o restante.
+        Object.keys(enderecoEmpresa).forEach(function (chave) { definir(enderecoEmpresa[chave], empresa[chave]); });
+        cnpj.value = empresa.cnpj;
+        cnpj.dispatchEvent(new Event('input', { bubbles: true }));
+        cnpj.dispatchEvent(new Event('change', { bubbles: true }));
+      } finally {
+        aplicando = false;
+      }
+      ocultar();
+      retorno.textContent = 'Empresa selecionada. Confira o CNPJ, a unidade e os dados do local de trabalho.' +
+        (empresa.divergente ? ' O município diverge entre as fontes; confira o endereço.' : '');
+      nome.focus();
+    }
+
+    function mostrar(lista) {
+      ocultar();
+      lista.slice(0, 30).forEach(function (empresa) {
+        var li = document.createElement('li');
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn';
+        b.dataset.variant = 'outline';
+        var local = [empresa.munEmp, empresa.ufEmp].filter(Boolean).join('/');
+        b.textContent = [empresa.nome, local, empresa.tipo, empresa.cnpjFormatado, empresa.divergente ? 'Conferir município' : ''].filter(Boolean).join(' · ');
+        b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); });
+        b.addEventListener('click', function () { cancelar(); selecionar(empresa); });
+        li.append(b);
+        resultados.append(li);
+      });
+      resultados.hidden = !resultados.childElementCount;
+      return resultados.childElementCount;
+    }
+
+    function formatarCnpj(n) {
+      n = digitos(n);
+      return n.length === 14 ? n.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : n;
+    }
+
+    function atualizar() {
+      if (aplicando) return;
+      cancelar();
+      ocultar();
+      retorno.textContent = '';
+      var termo = nome.value.trim();
+      var busca = normalizarNome(termo);
+      if (!busca) return;
+      var atual = consultaAtual;
+      var uf = filtroDe(enderecoEmpresa.ufEmp);
+      var cidade = filtroDe(enderecoEmpresa.munEmp);
+      var palavras = busca.split(/\s+/);
+      var sigla = busca.replace(/ /g, '');
+      function relevancia(n) {
+        if (n === busca) return 4;
+        if (n.indexOf(busca) === 0) return 3;
+        if (sigla.length >= 2 && iniciaisDe(n) === sigla) return 2;
+        return palavras.every(function (p) { return n.indexOf(p) >= 0; }) ? 1 : 0;
+      }
+      carregarBaseEmpresas().then(function (indice) {
+        if (atual !== consultaAtual) return;
+        var locais = indice.filter(function (item) {
+          var r = item.registro;
+          return (!uf || normalizarNome(r[5]) === uf) && (!cidade || normalizarNome(r[4]) === cidade) &&
+            item.nomes.some(relevancia);
+        }).sort(function (a, b) {
+          return Math.max.apply(null, b.nomes.map(relevancia)) - Math.max.apply(null, a.nomes.map(relevancia));
+        }).slice(0, 20).map(function (item) {
+          var r = item.registro;
+          return { cnpj: r[0], cnpjFormatado: formatarCnpj(r[0]), nome: r[1] || r[2], munEmp: titulo(r[4]), ufEmp: r[5], tipo: r[6],
+            endEmp: titulo(r[8]), numEmp: r[9], compEmp: r[10], bairroEmp: titulo(r[11]), cepEmp: r[12], divergente: r[13] };
+        });
+        function exibir(online) {
+          var unicos = {};
+          var lista = [];
+          locais.concat(online || []).forEach(function (e) {
+            var chave = digitos(e.cnpj);
+            if (!unicos[chave]) { unicos[chave] = true; lista.push(e); }
+          });
+          return mostrar(lista);
+        }
+        var temLocais = exibir();
+        if (busca.length < 3) {
+          if (!temLocais) retorno.textContent = 'Digite mais letras para ampliar a busca.';
+          return;
+        }
+        retorno.textContent = 'Buscando também no cadastro online…';
+        espera = setTimeout(function () {
+          var url = 'https://fichario.app/api/v1/busca?q=' + encodeURIComponent(termo) +
+            (uf ? '&uf=' + encodeURIComponent(uf.toUpperCase()) : '') + (cidade ? '&cidade=' + encodeURIComponent(cidade) : '');
+          fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' })
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (dados) {
+              if (atual !== consultaAtual || !nome.isConnected) return;
+              var online = (Array.isArray(dados.resultados) ? dados.resultados : []).map(function (item) {
+                var n = digitos(item.cnpj);
+                return { nome: item.nome_fantasia || item.razao_social, cnpj: n, cnpjFormatado: formatarCnpj(n),
+                  munEmp: titulo(item.municipio), ufEmp: item.uf };
+              }).filter(function (e) { return e.nome && e.cnpj.length === 14; });
+              retorno.textContent = exibir(online)
+                ? 'Confira o município e o CNPJ da unidade antes de selecionar.'
+                : 'Nenhuma empresa encontrada. Confira o nome ou preencha o CNPJ.';
+            })
+            .catch(function () {
+              if (atual !== consultaAtual || !nome.isConnected) return;
+              retorno.textContent = temLocais ? 'Consulta online indisponível. As sugestões da base VISAT continuam disponíveis.'
+                : 'Consulta online indisponível. Preencha o CNPJ manualmente.';
+            });
+        }, 450);
+      });
+    }
+
+    nome.addEventListener('input', function (ev) { if (ev.isTrusted) atualizar(); });
+    nome.parentElement.addEventListener('focusout', function (ev) {
+      if (nome.parentElement.contains(ev.relatedTarget)) return;
+      cancelar();
+      ocultar();
+      if (retorno.textContent.indexOf('Buscando') === 0) retorno.textContent = '';
+    });
+    nome.parentElement.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { cancelar(); ocultar(); retorno.textContent = ''; nome.focus(); }
+    });
+  }
+
   /* ---------- aplicação nos formulários montados ---------- */
 
   function raizDoFormulario(el) {
@@ -480,8 +695,16 @@
   function aplicar(raiz) {
     if (!raiz.querySelector('[data-key]')) return;
     configurarIdade(raiz);
-    configurarCep(raiz);
+    configurarCep(raiz, 'cep', {
+      logradouro: ['logRes'], bairro: ['bairroRes'], uf: ['ufRes'],
+      localidade: ['munRes'], ibge: ['ibgeRes']
+    });
+    configurarCep(raiz, 'cepEmp', {
+      logradouro: ['endEmp', 'endereco'], bairro: ['bairroEmp', 'bairro'],
+      uf: ['ufEmp'], localidade: ['munEmp'], ibge: ['ibgeEmp']
+    });
     configurarEmpresas(raiz);
+    configurarBuscaEmpresa(raiz);
   }
 
   var agendado = null;

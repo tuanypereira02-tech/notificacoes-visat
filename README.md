@@ -39,3 +39,7 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
   destinatário fixo, assunto com agravo, unidade notificadora e CNES (sem dados do paciente), cópia e resposta para o e-mail
   informado pelo profissional. Em teste, o destino é saudetrab.sms.pmf@gmail.com com o prefixo [TESTE VISAT];
   após a homologação, trocar para saudetrab.sms.pmf@floripa.sc.gov.br e [VISAT] (instruções no topo de js/envio-ficha.js).
+- Busca de CEP (16/11/2026, como no rascunho VISAT): "Buscar CEP pelo endereço" abaixo do CEP de residência e do local de trabalho
+  (UF, município e logradouro no ViaCEP, com filtro pelo bairro); o CEP escolhido completa o endereço.
+- Busca da empresa pelo nome (16/11/2026, como no rascunho VISAT): o nome da empresa fica antes do CNPJ; as sugestões vêm da base
+  data/empresas-visat.json e do cadastro online (fichario.app); a escolha preenche o CNPJ, que consulta e completa CNAE e endereço.

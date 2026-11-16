@@ -511,3 +511,7 @@ details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 .visat-janela-email [data-email-cancelar] { background: #fff; color: #112C45; }
 .visat-janela-email [data-email-enviar] { background: #112C45; color: #fff; }
 .visat-janela-email [data-email-enviar]:disabled { opacity: .6; cursor: progress; }
+
+/* Busca da empresa pelo nome (js/autopreenchimento.js) */
+.empresa-resultados { list-style: none; padding: 0; margin: .45rem 0 0; display: grid; gap: .4rem; }
+.empresa-resultados .btn { display: block; width: 100%; height: auto; text-align: left; white-space: normal; overflow-wrap: anywhere; }
