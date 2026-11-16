@@ -542,3 +542,16 @@ body.modo-formulario-acidente #principal { max-width: 1180px; }
 /* A área dos campos ocupa a altura do quadro; botões no rodapé, sem sobra branca abaixo deles. */
 body.modo-formulario-acidente .step-area { flex: 1 1 auto; }
 body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
+@media (min-width: 820px) {
+  /* Campo com subcampos (grupo interno) ocupa a linha inteira; os subcampos seguem em duas colunas. */
+  .field-group > div:has(> .field-group) { grid-column: 1 / -1; }
+}
+@media (min-width: 820px) {
+  /* Espaçamento mais compacto no computador: mais campos por parte, menos branco. */
+  .field-group { gap: 18px 28px; }
+  .step-area { padding: 20px 28px 16px; }
+  .screen-title { margin-bottom: 6px; }
+  .screen-sub { margin-bottom: 18px; }
+  .visat-sequencia { gap: 12px; margin-top: 14px; padding-top: 14px; }
+  .field-label { margin-bottom: 6px; }
+}

@@ -1009,36 +1009,67 @@ seg.classList.toggle('done', i < state.screen);
 // Partes da tela: o que não cabe na altura disponível vai para a parte seguinte (botão Seguinte).
 let parteAtual = 0;
 let totalPartes = 1;
+const SELETOR_SECAO = '.visat-sequencia, [data-visat-secao-complementar]';
+const SELETOR_TITULO = 'h1, h2, h3, h4, .screen-title, .visat-sequencia-titulo, summary';
 function unidadesDaTela(tela) {
-  // Blocos da tela (exceto título e subtítulo); o grupo principal de campos entra campo a campo.
-  return [...tela.children].filter(el => !el.matches('.screen-title, .screen-sub'))
-    .flatMap(el => el.matches('.field-group') ? [...el.children] : [el]);
+  // Campos e títulos da tela, entrando nas subseções; título e subtítulo da tela ficam sempre visíveis.
+  const unidades = [];
+  function percorrer(el) {
+    for (const filho of el.children) {
+      if (el === tela && filho.matches('.screen-title, .screen-sub')) continue;
+      if (filho.matches('.field-group') || filho.matches(SELETOR_SECAO)) percorrer(filho);
+      else unidades.push(filho);
+    }
+  }
+  percorrer(tela);
+  return unidades;
 }
+function secoesDaTela(tela) { return [...tela.querySelectorAll(SELETOR_SECAO)]; }
 function paginarTela(tela) {
   const unidades = unidadesDaTela(tela);
   unidades.forEach(u => { u.classList.remove('visat-fora-da-parte'); delete u.dataset.visatParte; });
+  secoesDaTela(tela).forEach(sec => sec.classList.remove('visat-fora-da-parte'));
   const disponivel = area.clientHeight;
   if (!disponivel || area.scrollHeight <= disponivel + 4) { totalPartes = 1; return; }
-  const primeiro = unidades.find(u => u.getBoundingClientRect().height) || tela;
+  const visiveis = unidades.filter(u => u.getBoundingClientRect().height);
+  const primeiro = visiveis[0] || tela;
   const cabecalho = primeiro.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
   const limite = Math.max(240, disponivel - cabecalho - 24);
-  const topoGrupo = primeiro.getBoundingClientRect().top;
+  const base = primeiro.getBoundingClientRect().top;
   let parte = 0;
   let inicio = null;
-  unidades.forEach(u => {
+  unidades.forEach((u, indice) => {
     const r = u.getBoundingClientRect();
     if (!r.height) { u.dataset.visatParte = parte; return; }
-    const topo = r.top - topoGrupo;
-    const fim = r.bottom - topoGrupo;
+    const topo = r.top - base;
+    const fim = r.bottom - base;
     if (inicio === null) inicio = topo;
-    if (fim - inicio > limite && topo > inicio) { parte++; inicio = topo; }
+    if (fim - inicio > limite && topo > inicio) {
+      parte++;
+      inicio = topo;
+      // Títulos imediatamente anteriores acompanham o primeiro campo da nova parte.
+      for (let k = indice - 1; k >= 0; k--) {
+        const anterior = unidades[k];
+        if (!anterior.getBoundingClientRect().height) continue;
+        if (!anterior.matches(SELETOR_TITULO) && !anterior.matches('p.field-help')) break;
+        anterior.dataset.visatParte = parte;
+        inicio = Math.min(inicio, anterior.getBoundingClientRect().top - base);
+      }
+    }
     u.dataset.visatParte = parte;
   });
   totalPartes = parte + 1;
 }
 function aplicarParte(tela) {
-  unidadesDaTela(tela).forEach(u => {
+  const unidades = unidadesDaTela(tela);
+  unidades.forEach(u => {
     u.classList.toggle('visat-fora-da-parte', totalPartes > 1 && Number(u.dataset.visatParte || 0) !== parteAtual);
+  });
+  // Subseção sem nenhum campo nesta parte fica oculta (inclusive a linha divisória).
+  secoesDaTela(tela).forEach(sec => {
+    const campos = unidades.filter(u => sec.contains(u) && !u.matches(SELETOR_TITULO) && !u.matches('p.field-help'));
+    const temVisivel = campos.some(u => !u.classList.contains('visat-fora-da-parte'));
+    sec.classList.toggle('visat-fora-da-parte', totalPartes > 1 && campos.length > 0 && !temVisivel);
   });
 }
 function atualizarRotulos(n) {
@@ -1066,6 +1097,25 @@ function mostrarParteDoCampo(campo) {
     irParaParte(Number(unidade.dataset.visatParte));
   }
 }
+// Quando campos condicionais aparecem e a tela passa da altura, a divisão é refeita,
+// mantendo na parte atual o campo em uso.
+let reavaliando = false;
+const observadorAltura = new ResizeObserver(() => {
+  if (reavaliando || !root.isConnected) return;
+  const tela = getScreens()[state.screen - 1];
+  if (!tela || state.screen > TOTAL || area.scrollHeight <= area.clientHeight + 4) return;
+  reavaliando = true;
+  requestAnimationFrame(() => {
+    const emUso = document.activeElement && tela.contains(document.activeElement) ? document.activeElement : null;
+    paginarTela(tela);
+    const unidade = emUso && unidadesDaTela(tela).find(u => u.contains(emUso));
+    parteAtual = unidade ? Number(unidade.dataset.visatParte || 0) : Math.min(parteAtual, totalPartes - 1);
+    aplicarParte(tela);
+    atualizarRotulos(state.screen);
+    requestAnimationFrame(() => { reavaliando = false; });
+  });
+});
+getScreens().forEach(tela => observadorAltura.observe(tela));
 window.addEventListener('resize', () => {
   const tela = getScreens()[state.screen - 1];
   if (!tela || !root.isConnected) return;
