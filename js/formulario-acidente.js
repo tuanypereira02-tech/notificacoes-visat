@@ -229,11 +229,12 @@ const blocosSinan = {
   }
 };
 
-function criarComplementares(titulo, recolhivel = true) {
-  const secao = document.createElement(recolhivel ? 'details' : 'section');
+function criarComplementares(titulo, recolhivel = false) {
+  // Fichas em fluxo contínuo: os campos opcionais ficam visíveis, sem acordeão/setas.
+  const secao = document.createElement('section');
   secao.className = 'visat-sequencia';
   secao.dataset.visatComplementares = '';
-  const cabecalho = document.createElement(recolhivel ? 'summary' : 'h3');
+  const cabecalho = document.createElement('h3');
   cabecalho.className = 'visat-sequencia-titulo';
   cabecalho.textContent = titulo;
   secao.append(cabecalho);
