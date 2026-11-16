@@ -43,3 +43,9 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
   (UF, município e logradouro no ViaCEP, com filtro pelo bairro); o CEP escolhido completa o endereço.
 - Busca da empresa pelo nome (16/11/2026, como no rascunho VISAT): o nome da empresa fica antes do CNPJ; as sugestões vêm da base
   data/empresas-visat.json e do cadastro online (fichario.app); a escolha preenche o CNPJ, que consulta e completa CNAE e endereço.
+- Trabalho e empregador (16/11/2026): três blocos — Trabalho da pessoa notificada (ocupação, situação, tempo, ocupação anterior,
+  plataformas digitais), Empregador (UF e município do local de trabalho, com Florianópolis/SC editável como ponto de partida,
+  nome da empresa com busca, CNPJ/CPF, CNAE, terceirizada e, se Sim, empresa principal) e Endereço do local de trabalho
+  (CEP com busca pelo endereço, logradouro, número, complemento, bairro, referência e telefone). Para Aposentado ou Desempregado,
+  aviso para informar o empregador da época da exposição ou do acidente. O campo Distrito saiu da residência.
+

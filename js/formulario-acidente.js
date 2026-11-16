@@ -51,38 +51,94 @@ function montarEmpregador(area) {
   const etapa = criarEtapa('Trabalho e empregador');
   const grupo = etapa.querySelector('.field-group');
   const opcoes = ['Sim', 'Não', 'Não se aplica', 'Ignorado'];
-  const campos = [
+
+  // Três blocos: trabalho da pessoa, empregador e endereço do local de trabalho.
+  function bloco(titulo, ajuda) {
+    const secao = document.createElement('section');
+    secao.className = 'visat-sequencia';
+    const cabecalho = document.createElement('h3');
+    cabecalho.className = 'visat-sequencia-titulo';
+    cabecalho.textContent = titulo;
+    secao.append(cabecalho);
+    if (ajuda) {
+      const texto = document.createElement('p');
+      texto.className = 'field-help';
+      texto.textContent = ajuda;
+      secao.append(texto);
+    }
+    const campos = document.createElement('div');
+    campos.className = 'field-group';
+    secao.append(campos);
+    grupo.append(secao);
+    return campos;
+  }
+  function incluir(destino, [chaves, rotulo, tipo, lista]) {
+    const campo = area.querySelector(chaves.map(chave => '[data-key="' + chave + '"], [data-chips="' + chave + '"]').join(', '));
+    const caixa = campo?.closest('.unit-row')?.parentElement || campo?.parentElement ||
+      criarCampo(chaves[0], rotulo, tipo, lista);
+    if (campo && ['uf', 'municipio', 'telefone'].includes(campo.dataset.key)) campo.dataset.key = chaves[0];
+    caixa.querySelector('.field-label').textContent = rotulo;
+    destino.append(caixa);
+    return caixa;
+  }
+
+  const trabalho = bloco('Trabalho da pessoa notificada');
+  [
     [['ocupacao'], 'Ocupação (CBO)'],
     [['situacao'], 'Situação no mercado de trabalho'],
     [['tempoNum', 'tempoValor', 'tempoOcupacao', 'tempoOcup'], 'Tempo de trabalho na ocupação'],
     [['ocupacaoAnterior'], 'Ocupação anterior'],
-    // UF e município do local de trabalho antes da empresa: filtram a busca pelo nome e pelo CNPJ.
-    [['ufEmp', 'uf'], 'UF do local de trabalho'],
-    [['munEmp', 'municipio'], 'Município do local de trabalho'],
-    [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
-    [['cnpj'], 'CNPJ ou CPF do empregador'],
-    [['cnae'], 'Atividade econômica (CNAE)'],
-    [['telEmp', 'telefone'], 'Telefone do empregador', 'tel'],
-    [['endEmp', 'endereco'], 'Logradouro do local de trabalho'],
-    [['numEmp', 'numero'], 'Número'],
-    [['compEmp'], 'Complemento'],
-    [['refEmp'], 'Ponto de referência'],
-    [['bairroEmp', 'bairro'], 'Bairro'],
-    [['terceirizada'], 'O empregador é empresa terceirizada?', 'text', opcoes],
     [['plataformaDigital'], 'Trabalha com plataformas digitais (aplicativos)?', 'text', opcoes]
-  ];
-  campos.forEach(([chaves, rotulo, tipo, opcoes]) => {
-    const campo = area.querySelector(chaves.map(chave => '[data-key="' + chave + '"], [data-chips="' + chave + '"]').join(', '));
-    const caixa = campo?.closest('.unit-row')?.parentElement || campo?.parentElement ||
-      criarCampo(chaves[0], rotulo, tipo, opcoes);
-    if (campo && ['uf', 'municipio', 'telefone'].includes(campo.dataset.key)) campo.dataset.key = chaves[0];
-    caixa.querySelector('.field-label').textContent = rotulo;
-    grupo.append(caixa);
-  });
+  ].forEach(item => incluir(trabalho, item));
+  const avisoSemVinculo = document.createElement('p');
+  avisoSemVinculo.className = 'field-help';
+  avisoSemVinculo.dataset.visatSemVinculo = '';
+  avisoSemVinculo.hidden = true;
+  avisoSemVinculo.textContent = 'Pessoa sem vínculo atual: informe o empregador e o local de trabalho da época da exposição ou do acidente, se conhecidos.';
+  trabalho.append(avisoSemVinculo);
+
+  const empregador = bloco('Empregador',
+    'UF e município filtram a busca da empresa. Busque pelo nome ou digite o CNPJ (ou o CPF, para empregador pessoa física).');
+  // UF e município do local de trabalho antes da empresa: filtram a busca pelo nome e pelo CNPJ.
+  const uf = incluir(empregador, [['ufEmp', 'uf'], 'UF do local de trabalho']);
+  const municipio = incluir(empregador, [['munEmp', 'municipio'], 'Município do local de trabalho']);
   const codigo = area.querySelector('[data-key="ibgeEmp"]')?.parentElement ||
     criarCampo('ibgeEmp', 'Código IBGE do local de trabalho');
   codigo.classList.add('visat-codigo-derivado');
-  grupo.querySelector('[data-key="munEmp"]').parentElement.after(codigo);
+  municipio.after(codigo);
+  // Florianópolis/SC como ponto de partida, editável.
+  const padroes = { ufEmp: 'SC', munEmp: 'Florianópolis', ibgeEmp: '420540' };
+  Object.entries(padroes).forEach(([chave, valor]) => {
+    const el = empregador.querySelector('[data-key="' + chave + '"]');
+    if (el && !el.value) el.value = valor;
+  });
+  [
+    [['empresa', 'empresaNome', 'razao'], 'Empresa ou empregador (nome)'],
+    [['cnpj'], 'CNPJ ou CPF do empregador'],
+    [['cnae'], 'Atividade econômica (CNAE)'],
+    [['terceirizada'], 'O empregador é empresa terceirizada?', 'text', opcoes]
+  ].forEach(item => incluir(empregador, item));
+  const principalCnpj = criarCampo('cnpjPrincipal', 'CNPJ da empresa principal (contratante)');
+  const principalNome = criarCampo('empresaPrincipal', 'Nome da empresa principal (contratante)');
+  [principalNome, principalCnpj].forEach(caixa => {
+    caixa.dataset.showWhen = 'terceirizada=Sim';
+    caixa.hidden = true;
+    empregador.append(caixa);
+  });
+
+  const endereco = bloco('Endereço do local de trabalho',
+    'Endereço onde a pessoa trabalha, que pode ser diferente da sede da empresa (filial, obra ou contratante).');
+  const cep = area.querySelector('[data-key="cepEmp"]')?.parentElement || criarCampo('cepEmp', 'CEP do local de trabalho');
+  endereco.append(cep);
+  [
+    [['endEmp', 'endereco'], 'Logradouro do local de trabalho'],
+    [['numEmp', 'numero'], 'Número'],
+    [['compEmp'], 'Complemento'],
+    [['bairroEmp', 'bairro'], 'Bairro'],
+    [['refEmp'], 'Ponto de referência'],
+    [['telEmp', 'telefone'], 'Telefone do empregador', 'tel']
+  ].forEach(item => incluir(endereco, item));
+
   const cat = area.querySelector('[data-chips="cat"]');
   if (cat) grupo.append(cat.parentElement);
   return etapa;
@@ -464,6 +520,8 @@ aplicarCondicoes();
 
 function aplicarCondicoes() {
   atualizarGestante();
+  const semVinculo = root.querySelector('[data-visat-sem-vinculo]');
+  if (semVinculo) semVinculo.hidden = !['Aposentado', 'Desempregado'].includes(state.values.situacao);
   const noBrasil = residencia.value === 'BR';
   marcarObrigatorio(root.querySelector('#sinan-uf-res'), noBrasil);
   marcarObrigatorio(root.querySelector('#sinan-mun-res'), noBrasil);
