@@ -56,8 +56,11 @@ function montarEmpregador(area) {
     [['situacao'], 'Situação no mercado de trabalho'],
     [['tempoNum', 'tempoValor', 'tempoOcupacao', 'tempoOcup'], 'Tempo de trabalho na ocupação'],
     [['ocupacaoAnterior'], 'Ocupação anterior'],
-    [['cnpj'], 'CNPJ ou CPF do empregador'],
+    // UF e município do local de trabalho antes da empresa: filtram a busca pelo nome e pelo CNPJ.
+    [['ufEmp', 'uf'], 'UF do local de trabalho'],
+    [['munEmp', 'municipio'], 'Município do local de trabalho'],
     [['empresa', 'empresaNome', 'razao'], 'Nome da empresa ou empregador'],
+    [['cnpj'], 'CNPJ ou CPF do empregador'],
     [['cnae'], 'Atividade econômica (CNAE)'],
     [['telEmp', 'telefone'], 'Telefone do empregador', 'tel'],
     [['endEmp', 'endereco'], 'Logradouro do local de trabalho'],
@@ -65,8 +68,6 @@ function montarEmpregador(area) {
     [['compEmp'], 'Complemento'],
     [['refEmp'], 'Ponto de referência'],
     [['bairroEmp', 'bairro'], 'Bairro'],
-    [['munEmp', 'municipio'], 'Município do local de trabalho'],
-    [['ufEmp', 'uf'], 'UF do local de trabalho'],
     [['terceirizada'], 'O empregador é empresa terceirizada?', 'text', opcoes],
     [['plataformaDigital'], 'Trabalha com plataformas digitais (aplicativos)?', 'text', opcoes]
   ];
