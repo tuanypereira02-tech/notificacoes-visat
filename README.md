@@ -33,3 +33,9 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
 - P22: a busca de CID usa a tabela CID-10 (DATASUS) incorporada; se a tabela não carregar, o campo orienta digitar o código.
 - Homologação: acrescentar ?homologacao=1 ao endereço marca a tela, o PDF e o assunto do e-mail como HOMOLOGAÇÃO (usar só dados fictícios).
 - notificacao.html: liberação, na regra de segurança, das consultas de CEP (ViaCEP) e CNPJ (BrasilAPI e CNPJ.ws).
+- Envio por e-mail (16/11/2026): a tela "Ficha concluída" tem 1. Enviar por e-mail e 2. Baixar ficha em PDF.
+  O PDF é gerado no navegador (js/vendor/pdf-lib.min.js, licença MIT) e o envio usa o app da Web do Google Apps Script
+  "VISAT - Envio de fichas por e-mail" (conta saudetrab.sms.pmf@gmail.com), pela janela de e-mail da página (js/envio-ficha.js):
+  destinatário fixo, assunto com agravo, unidade notificadora e CNES (sem dados do paciente), cópia e resposta para o e-mail
+  informado pelo profissional. Em teste, o destino é saudetrab.sms.pmf@gmail.com com o prefixo [TESTE VISAT];
+  após a homologação, trocar para saudetrab.sms.pmf@floripa.sc.gov.br e [VISAT] (instruções no topo de js/envio-ficha.js).

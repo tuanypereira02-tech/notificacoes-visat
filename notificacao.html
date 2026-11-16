@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fichario.app https://viacep.com.br https://brasilapi.com.br https://publica.cnpj.ws https://servicodados.ibge.gov.br https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com/ https://fichario.app https://viacep.com.br https://brasilapi.com.br https://publica.cnpj.ws https://servicodados.ibge.gov.br https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="css/styles.css?v=20261103-forms-item1">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261113-modelo-auto">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261116-envio-email">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -279,7 +279,7 @@
   </div>
   <div class="shell-container hospital-alert-container">
   <div class="alert hospital-alert" role="note">
-  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
+  <p>Ao concluir, clique em <strong>1. Enviar por e-mail</strong>: a ficha segue em PDF anexado para a VISAT. Se preferir, baixe o PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
   </div>
   </div>
   </header>
@@ -293,7 +293,7 @@
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
   </div>
   <h1 class="screen-title center-text">Ficha concluída</h1>
-  <p class="screen-sub center-text">O envio não é automático. Salve o PDF final e encaminhe-o ao e-mail institucional da VISAT.</p>
+  <p class="screen-sub center-text">Confira os dados e envie a ficha à VISAT por e-mail, com o PDF anexado.</p>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="actions-row">
   <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
@@ -363,7 +363,7 @@
   </div>
   <div class="shell-container hospital-alert-container">
   <div class="alert hospital-alert" role="note">
-  <p>Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
+  <p>Ao concluir, clique em <strong>1. Enviar por e-mail</strong>: a ficha segue em PDF anexado para a VISAT. Se preferir, baixe o PDF e encaminhe-o para o e-mail <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a>.</p>
   </div>
   </div>
   </header>
@@ -607,7 +607,7 @@
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
   </div>
   <h1 class="screen-title center-text">Ficha concluída</h1>
-  <p class="screen-sub center-text">O envio não é automático. Salve o PDF final e encaminhe-o ao e-mail institucional da VISAT.</p>
+  <p class="screen-sub center-text">Confira os dados e envie a ficha à VISAT por e-mail, com o PDF anexado.</p>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="actions-row">
   <button type="button" class="btn" data-variant="outline" id="btnRevisar">Revisar dados</button>
@@ -660,7 +660,9 @@
   </div>
   </template>
 
-  <script src="js/formulario-acidente.js?v=20261113-modelo-auto" defer></script>
+  <script src="js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
+  <script src="js/envio-ficha.js?v=20261116-envio-email" defer></script>
+  <script src="js/formulario-acidente.js?v=20261116-envio-email" defer></script>
   <script src="js/app.js?v=20261111-numeracao" defer></script>
   <script src="js/autopreenchimento.js?v=20261113-modelo-auto" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261113-modelo-auto" defer></script>

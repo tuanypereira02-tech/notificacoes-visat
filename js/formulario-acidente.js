@@ -1072,16 +1072,48 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
 });
 }
 
-root.querySelector('#btnImprimir').addEventListener('click', () => {
+// PDF final da ficha (pdf-lib), usado para baixar e para anexar ao e-mail.
+function agravoDaFicha() {
+  return options.obito ? 'Óbito por acidente de trabalho' : config.agravo;
+}
+
+function nomePdfFinal() {
+  const slug = agravoDaFicha().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 60);
+  return 'VISAT_' + slug + '_' + today + (VISAT_HOMOLOGACAO ? '_HOMOLOGACAO' : '') + '.pdf';
+}
+
+let retornoEnvio;
+async function prepararPdfFinal(botao) {
   persistInputs();
   const pendentes = camposBasicosPendentes().concat(documentosPendentes());
   if (pendentes.length) {
     emCorrecao = true;
     mostrarPendencias(pendentes, pendentes.length === 1 ? '1 pendência para gerar o PDF final' : pendentes.length + ' pendências para gerar o PDF final');
-    return;
+    return null;
   }
   buildPrint();
-  window.print();
+  botao.disabled = true;
+  if (retornoEnvio) retornoEnvio.textContent = 'Gerando o PDF…';
+  try {
+    const rodape = 'VISAT Florianópolis | ' + VISAT_MODELO + (VISAT_HOMOLOGACAO ? ' | HOMOLOGAÇÃO — DADOS FICTÍCIOS' : '');
+    const pdf = await window.VisatEnvio.gerarPdf(root.querySelector('#printArea'), rodape);
+    if (retornoEnvio) retornoEnvio.textContent = '';
+    return pdf;
+  } catch (erro) {
+    if (retornoEnvio) retornoEnvio.textContent = 'Não foi possível gerar o PDF. Use Imprimir / salvar PDF do navegador (Ctrl+P).';
+    return null;
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+root.querySelector('#btnImprimir').addEventListener('click', async evento => {
+  const botao = evento.currentTarget;
+  const pdf = await prepararPdfFinal(botao);
+  if (!pdf) return;
+  window.VisatEnvio.baixar(pdf, nomePdfFinal());
+  if (retornoEnvio && !retornoEnvio.dataset.enviado) retornoEnvio.textContent = 'PDF baixado: ' + nomePdfFinal() + '.';
 });
 
 btnPdfConferencia.addEventListener('click', () => {
@@ -1190,31 +1222,45 @@ function buildSummary() {
 mostrarRevisaoDeCampos();
 const imprimir = root.querySelector('#btnImprimir');
 const acoes = imprimir.parentElement;
-imprimir.textContent = 'Imprimir / salvar PDF';
-const email = root.querySelector('.hospital-alert a[href^="mailto:"]');
-if (email && !acoes.querySelector('[data-visat-email]')) {
-  const link = document.createElement('a');
-  link.className = 'btn';
-  link.dataset.variant = 'outline';
-  link.dataset.visatEmail = '1';
-  const assunto = (VISAT_HOMOLOGACAO ? '[HOMOLOGAÇÃO] ' : '') + 'Notificação — ' +
-    (options.obito ? 'Óbito por acidente de trabalho' : config.agravo) + ' — ' + formatDate(state.values[config.aliases.dataNotificacao || 'dataNotificacao'] || today);
-  const corpo = 'Segue em anexo o PDF final da ficha de notificação (' + VISAT_MODELO + ').';
-  link.href = 'mailto:' + VISAT_EMAIL + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
-  link.textContent = 'Abrir e-mail';
-  acoes.append(link);
+imprimir.textContent = '2. Baixar ficha em PDF';
+imprimir.dataset.variant = 'outline';
+if (!acoes.querySelector('[data-visat-email]')) {
+  const enviarEmail = document.createElement('button');
+  enviarEmail.type = 'button';
+  enviarEmail.className = 'btn';
+  enviarEmail.dataset.visatEmail = '1';
+  enviarEmail.textContent = '1. Enviar por e-mail';
+  acoes.prepend(enviarEmail);
   const instrucao = document.createElement('p');
   instrucao.className = 'field-help';
   instrucao.dataset.visatPdfInstrucao = '1';
-  instrucao.textContent = 'Para enviar por e-mail, escolha Salvar como PDF na janela de impressão e anexe o arquivo à mensagem.';
-  acoes.after(instrucao);
+  instrucao.textContent = 'Clique em 1. Enviar por e-mail: a mensagem abre com a ficha em PDF já anexada e o destinatário da VISAT preenchido.';
+  acoes.before(instrucao);
+  retornoEnvio = document.createElement('p');
+  retornoEnvio.className = 'field-help';
+  retornoEnvio.setAttribute('role', 'status');
+  retornoEnvio.dataset.visatRetornoEnvio = '1';
+  acoes.after(retornoEnvio);
+  enviarEmail.addEventListener('click', async () => {
+    const pdf = await prepararPdfFinal(enviarEmail);
+    if (!pdf) return;
+    const agravo = agravoDaFicha();
+    const assunto = window.VisatEnvio.montarAssunto(agravo, state.values.unidNotif, state.values.codUnidNotif);
+    const corpo = 'Olá,\n\nSegue em anexo o PDF da ficha de notificação: ' + agravo + '.' +
+      (VISAT_HOMOLOGACAO ? '\nTeste de homologação com dados fictícios.' : '') + '\n\n' + VISAT_MODELO;
+    window.VisatEnvio.abrirJanela({
+      raiz: root, botao: enviarEmail, assunto, corpo, nomePdf: nomePdfFinal(), pdf,
+      retorno: retornoEnvio, aoEnviar: () => { retornoEnvio.dataset.enviado = '1'; }
+    });
+  });
 }
 const revisao = root.querySelector('[data-visat-revisao]');
 revisao.before(acoes);
 mostrarCoerencia(acoes);
 if (acoes.querySelector('[data-visat-email]')) {
   const instrucao = root.querySelector('[data-visat-pdf-instrucao]');
-  if (instrucao) acoes.after(instrucao);
+  if (instrucao) acoes.before(instrucao);
+  if (retornoEnvio) acoes.after(retornoEnvio);
 }
 const marcados = root.querySelectorAll('[data-summary]');
 const items = marcados.length

@@ -493,3 +493,21 @@ details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 [data-visat-pendencias] h2 { margin: 0 0 8px; font-size: 18px; }
 [data-visat-pendencias] ul { display: grid; gap: 8px; padding: 0; list-style: none; }
 [data-visat-pendencias] button { text-align: left; }
+
+/* Janela de envio da ficha por e-mail (js/envio-ficha.js) */
+.acidente-inline dialog.visat-janela-email { width: min(620px, calc(100vw - 28px)); }
+.visat-janela-email form { display: grid; gap: 14px; padding: 24px; }
+.visat-janela-email dl, .visat-janela-email dd { margin: 0; }
+.visat-janela-email dl > div { padding: .45rem 0; border-bottom: 1px solid #DEDCD7; overflow-wrap: anywhere; }
+.visat-janela-email dt, .visat-janela-email dt label, .visat-janela-email form > label { font-weight: 700; font-size: inherit; color: #112C45; }
+.visat-janela-email .input { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px 12px; font-size: 16px; border: 1px solid #c9d3dd; border-radius: 8px; background: #fff; color: #112C45; }
+.visat-janela-email textarea { resize: vertical; font: inherit; }
+.visat-janela-email .input:focus { outline: 2px solid #CC6A00; outline-offset: 1px; }
+.visat-janela-email [aria-invalid="true"] { border-color: #b42318; }
+.visat-janela-email [data-email-anexo] { display: inline-block; padding: 4px 10px; border: 1px solid #d8e3ed; border-radius: 8px; background: #f6f8fa; color: #112C45; text-decoration: none; }
+.visat-janela-email [role="status"]:empty, .acidente-inline [data-visat-retorno-envio]:empty { display: none; }
+.visat-janela-email .visat-email-acoes { display: flex; gap: .65rem; flex-wrap: wrap; justify-content: flex-end; }
+.visat-janela-email .visat-email-acoes .btn { min-height: 44px; padding: 10px 22px; font-size: 15px; font-weight: 600; border-radius: 8px; border: 1px solid #112C45; cursor: pointer; }
+.visat-janela-email [data-email-cancelar] { background: #fff; color: #112C45; }
+.visat-janela-email [data-email-enviar] { background: #112C45; color: #fff; }
+.visat-janela-email [data-email-enviar]:disabled { opacity: .6; cursor: progress; }
