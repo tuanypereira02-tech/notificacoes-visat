@@ -247,7 +247,7 @@ function organizarCamposComplementares(secao, obrigatorios) {
     return campo && !obrigatorios.includes(campo.id) && !obrigatorios.includes(campo.dataset.chips);
   });
   if (!opcionais.length) return;
-  const detalhes = criarComplementares('Dados complementares (opcional)');
+  const detalhes = criarComplementares('Dados complementares', false);
   const campos = document.createElement('div');
   campos.className = 'field-group';
   campos.append(...opcionais);
@@ -346,7 +346,7 @@ function montarBlocoSinan(root, options) {
   bloco.append(empregador);
   if (detalhesAgravo.childElementCount) {
     const dadosDoAgravo = criarEtapa('Dados do agravo');
-    const complemento = criarComplementares('Detalhes do agravo (opcional)');
+    const complemento = criarComplementares('Detalhes do agravo', false);
     complemento.append(detalhesAgravo);
     dadosDoAgravo.querySelector('.field-group').append(complemento);
     bloco.append(dadosDoAgravo);
