@@ -558,9 +558,15 @@ aplicarCondicoes();
 }
 
 function aplicarCondicoes() {
+  let mudouVisibilidade = false;
+  function atualizarVisibilidade(bloco, oculto) {
+    if (bloco.hidden === oculto) return;
+    bloco.hidden = oculto;
+    mudouVisibilidade = true;
+  }
   atualizarGestante();
   const semVinculo = root.querySelector('[data-visat-sem-vinculo]');
-  if (semVinculo) semVinculo.hidden = !['Aposentado', 'Desempregado'].includes(state.values.situacao);
+  if (semVinculo) atualizarVisibilidade(semVinculo, !['Aposentado', 'Desempregado'].includes(state.values.situacao));
   const noBrasil = residencia.value === 'BR';
   marcarObrigatorio(root.querySelector('#sinan-uf-res'), noBrasil);
   marcarObrigatorio(root.querySelector('#sinan-mun-res'), noBrasil);
@@ -570,14 +576,14 @@ function aplicarCondicoes() {
     const separador = el.dataset.showWhen.indexOf('=');
     const key = el.dataset.showWhen.slice(0, separador);
     const esperado = el.dataset.showWhen.slice(separador + 1);
-    el.hidden = state.values[key] !== esperado;
+    atualizarVisibilidade(el, state.values[key] !== esperado);
   });
   root.querySelectorAll('[data-show-includes]').forEach((el) => {
     const separador = el.dataset.showIncludes.indexOf('=');
     const key = el.dataset.showIncludes.slice(0, separador);
     const esperado = el.dataset.showIncludes.slice(separador + 1);
     const valor = state.values[key];
-    el.hidden = !(Array.isArray(valor) && valor.includes(esperado));
+    atualizarVisibilidade(el, !(Array.isArray(valor) && valor.includes(esperado)));
   });
   root.querySelectorAll('[data-show-contains]').forEach((el) => {
     const separador = el.dataset.showContains.indexOf('=');
@@ -585,8 +591,10 @@ function aplicarCondicoes() {
     const esperado = el.dataset.showContains.slice(separador + 1);
     const valor = state.values[key];
     const texto = Array.isArray(valor) ? valor.join(' ') : String(valor || '');
-    el.hidden = !texto.includes(esperado);
+    atualizarVisibilidade(el, !texto.includes(esperado));
   });
+  // Um bloco recém-ativado pode ainda estar oculto pela paginação e não disparar o observador.
+  if (mudouVisibilidade) agendarPaginacao();
 }
 
 function marcarObrigatorio(campo, ativo = true) {
@@ -1235,6 +1243,7 @@ function mostrarParteDoCampo(campo) {
 }
 // Campos condicionais mudam a altura: a divisão é refeita, mantendo na página o campo em uso.
 let reavaliando = false;
+let paginacaoAgendada = false;
 function refazerPaginas() {
   if (state.screen > TOTAL || !root.isConnected) return;
   const emUso = document.activeElement && root.contains(document.activeElement) ? document.activeElement : null;
@@ -1245,13 +1254,18 @@ function refazerPaginas() {
   aplicarParte();
   atualizarRotulos(state.screen);
 }
-const observadorAltura = new ResizeObserver(() => {
-  if (reavaliando || !root.isConnected || state.screen > TOTAL) return;
-  reavaliando = true;
+function agendarPaginacao() {
+  if (paginacaoAgendada || !root.isConnected || state.screen > TOTAL) return;
+  paginacaoAgendada = true;
   requestAnimationFrame(() => {
+    paginacaoAgendada = false;
+    reavaliando = true;
     refazerPaginas();
     requestAnimationFrame(() => { reavaliando = false; });
   });
+}
+const observadorAltura = new ResizeObserver(() => {
+  if (!reavaliando) agendarPaginacao();
 });
 getScreens().forEach(tela => observadorAltura.observe(tela));
 window.addEventListener('resize', () => refazerPaginas());
