@@ -1301,6 +1301,10 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
   max-height: 100vh;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+html.visat-em-quadro body.modo-formulario-acidente #principal::-webkit-scrollbar {
+  display: none;
 }
 /* A ficha começa na altura em que estava o botão "Abrir formulário" (a página do Sites não rola junto). */
 html.visat-em-quadro body.modo-formulario-acidente #principal {
