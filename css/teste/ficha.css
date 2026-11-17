@@ -1297,3 +1297,21 @@ body.modo-formulario-acidente .step-area {
 .acidente-inline .highlight-box > .hint-line,
 .acidente-inline [data-visat-oculto] { display: none !important; }
 
+
+/* ===== Ficha dentro do quadro do Google Sites (altura fixa, sem rolagem do quadro) =====
+   A página marca html.visat-em-quadro quando está incorporada; a ficha rola dentro do próprio quadro. */
+html.visat-em-quadro:has(body.modo-formulario-acidente),
+html.visat-em-quadro body.modo-formulario-acidente {
+  height: 100%;
+  overflow: hidden;
+}
+html.visat-em-quadro body.modo-formulario-acidente #principal {
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* A ficha começa na altura em que estava o botão "Abrir formulário" (a página do Sites não rola junto). */
+html.visat-em-quadro body.modo-formulario-acidente #principal {
+  padding-top: calc(16px + var(--visat-espaco-topo, 0px));
+}

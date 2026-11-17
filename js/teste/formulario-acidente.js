@@ -1402,6 +1402,12 @@ requestAnimationFrame(() => {
   const topo = root.getBoundingClientRect().top + window.scrollY - 8;
   window.scrollTo({ top: Math.max(0, topo), behavior: 'auto' });
   try { root.scrollIntoView({ block: 'start', behavior: 'auto' }); } catch (erro) { /* navegador sem suporte */ }
+  const rolagem = document.querySelector('html.visat-em-quadro #principal');
+  if (rolagem) {
+    const altura = window.visatAlturaAbertura || 0;
+    rolagem.style.setProperty('--visat-espaco-topo', Math.max(0, Math.min(altura - 160, rolagem.clientHeight - 500)) + 'px');
+    rolagem.scrollTop = 0;
+  }
 });
 return root;
 };
