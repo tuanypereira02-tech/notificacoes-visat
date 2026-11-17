@@ -1443,3 +1443,6 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
   max-height: none;
   overflow: visible;
 }
+
+/* As opções seguintes aparecem ao avançar com a seta, sem estender a lista. */
+.acidente-inline [data-visat-fora-da-janela] { display: none !important; }
