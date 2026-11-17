@@ -18,10 +18,10 @@
   var FAIXAS = {
     cancer: [['C00', 'C97'], ['D00', 'D48']],
     dermatose: [['L00', 'L99']],
-    lerdort: [['M00', 'M99'], ['G50', 'G59']],
+    lerdort: [['M00', 'M99'], ['G50', 'G59'], ['G90', 'G99']],
     pair: [['H833'], ['H90', 'H91'], ['H93', 'H93']],
     pneumo: [['J60', 'J65'], ['J92', 'J92']],
-    mental: [['F00', 'F99'], ['Z730']],
+    mental: [['F00', 'F99'], ['Z730'], ['Y90', 'Y91'], ['R40', 'R46'], ['Z55', 'Z65'], ['Y96', 'Y96'], ['X60', 'X84']],
     lesao: [['S00', 'T98']],
     causa: [['V01', 'Y98']]
   };
@@ -31,8 +31,8 @@
     lesao: 'lesão do acidente de trabalho, cap. XIX', causa: 'causa externa do acidente, cap. XX'
   };
   var DESCRICAO_FAIXA = {
-    cancer: 'C00 a C97 e D00 a D48', dermatose: 'L00 a L99', lerdort: 'M00 a M99 e G50 a G59',
-    pair: 'H83.3, H90, H91 e H93', pneumo: 'J60 a J65 e J92', mental: 'F00 a F99 e Z73.0',
+    cancer: 'C00 a C97 e D00 a D48', dermatose: 'L00 a L99', lerdort: 'M00 a M99, G50 a G59 e G90 a G99',
+    pair: 'H83.3, H90, H91 e H93', pneumo: 'J60 a J65 e J92', mental: 'F00 a F99, Z73.0, Y90 a Y91, R40 a R46, Z55 a Z65, Y96 e X60 a X84',
     lesao: 'S00 a T98', causa: 'V01 a Y98'
   };
 
@@ -41,7 +41,7 @@
   var promessas = {};
   function carregar(qual) {
     if (!promessas[qual]) {
-      promessas[qual] = fetch('data/cid-' + qual + '.json', { credentials: 'omit' })
+      promessas[qual] = fetch('data/cid-' + qual + '.json?v=20261117-faixas-sinan', { credentials: 'omit' })
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(function (j) {
           var mapa = {};

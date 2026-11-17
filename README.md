@@ -121,3 +121,4 @@ Decisões da comparação entre VISAT via Link, site de Notificações da VE, Go
 - Implementação em `aplicarAjustesVisat()` (js/teste/formulario-acidente.js), comum a todas as fichas.
 - **Distúrbio de voz:** "CAT emitida?" antes das informações complementares, com a mesma orientação quando a resposta é Não.
 - **CID no formato da ficha oficial:** código digitado sem descrição é ajustado para letra, dois números, ponto e 4º caractere (ex.: "m545" → "M54.5") antes da busca na tabela.
+- **Faixas de CID por ficha:** segue a ficha oficial do Sinan onde ela define a faixa — LER/DORT passa a aceitar também G90–G99; Transtornos mentais, também Y90–Y91, R40–R46, Z55–Z65, Y96 e X60–X84 (títulos da CID-10 DATASUS 2008, fora da LDRT entram com aviso). Onde a ficha não define faixa (câncer, dermatoses, PAIR, pneumoconioses), mantém a base LDRT.
