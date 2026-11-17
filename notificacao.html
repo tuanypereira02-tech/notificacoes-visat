@@ -65,7 +65,6 @@
 <h1 class="screen-title">Dados gerais</h1>
 <p class="screen-sub">Os campos marcados com * são obrigatórios para finalizar.</p>
 <div class="field-group">
-<div><label class="field-label" for="sinan-numeroNotificacao">Número notificação, se disponível</label><input class="input input-lg" id="sinan-numeroNotificacao" type="text" data-key="numeroNotificacao" ></div>
 <div>
 <label class="field-label" for="sinan-tipo">Tipo de notificação</label>
 <input class="input input-lg" id="sinan-tipo" data-key="tipoNotif" value="2 – Individual" readonly>
@@ -231,14 +230,6 @@
 <input class="input input-lg" id="sinan-bairro" type="text" data-key="bairroRes">
 </div>
 <div>
-<label class="field-label" for="sinan-geo1">Geo campo 1</label>
-<input class="input input-lg" id="sinan-geo1" type="text" data-key="geo1">
-</div>
-<div>
-<label class="field-label" for="sinan-geo2">Geo campo 2</label>
-<input class="input input-lg" id="sinan-geo2" type="text" data-key="geo2">
-</div>
-<div>
 <span class="field-label">Zona</span>
 <div class="chip-grid" data-chips="zona" data-single="true">
 <button type="button" class="chip" data-value="Urbana">Urbana</button>
@@ -376,13 +367,14 @@
   <label class="field-label" for="situacao">Situação no mercado de trabalho</label>
   <select class="input input-lg" id="situacao" data-key="situacao" data-required="Selecione a situação">
   <option value="">Selecione</option>
-  <option>Registrado</option>
-  <option>Não registrado</option>
-  <option>Autônomo</option>
-  <option>Servidor público</option>
+  <option>Empregado registrado com carteira assinada</option>
+  <option>Empregado não registrado</option>
+  <option>Autônomo/conta própria</option>
+  <option>Servidor público estatutário</option>
+  <option>Servidor público celetista</option>
   <option>Aposentado</option>
   <option>Desempregado</option>
-  <option>Temporário</option>
+  <option>Trabalho temporário</option>
   <option>Cooperativado</option>
   <option>Trabalhador avulso</option>
   <option>Empregador</option>
@@ -650,10 +642,10 @@
   </template>
 
   <script src="js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
-  <script src="js/envio-ficha.js?v=20261116-envio-email" defer></script>
-  <script src="js/teste/layout-ficha.js?v=20261117-rotulos2" defer></script>
-  <script src="js/teste/formulario-acidente.js?v=20261117-causa-acidente" defer></script>
-  <script src="js/teste/autopreenchimento.js?v=20261117-cep-unico1" defer></script>
+  <script src="js/envio-ficha.js?v=20261117-modelo-unico" defer></script>
+  <script src="js/teste/layout-ficha.js?v=20261117-modelo-unico" defer></script>
+  <script src="js/teste/formulario-acidente.js?v=20261117-modelo-unico" defer></script>
+  <script src="js/teste/autopreenchimento.js?v=20261117-modelo-unico" defer></script>
   <script src="js/teste/autopreenchimento-listas.js?v=20261117-ajustes-ficha1" defer></script>
   <script src="js/teste/cid-qualificado.js?v=20261117-cid-recolhido" defer></script>
   <script src="js/teste/app.js?v=20261117-teste5" defer></script>

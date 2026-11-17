@@ -104,3 +104,18 @@ casos de regressão. Falha de carregamento do mapa mantém o preenchimento manua
   "Descrição sumária de como ocorreu o acidente/ atividade/ causas/ condições/ objeto/ agentes..." reúne a atividade e a
   máquina/equipamento/substância (campo `maquina` retirado); o segundo espaço é "Outras informações". O antigo bloco
   "O que aconteceu" fica só com "Fatores que contribuíram".
+
+
+## Modelo único VISAT (17/11/2026)
+
+Decisões da comparação entre VISAT via Link, site de Notificações da VE, Google Sites e fichas oficiais do Sinan:
+
+- **PDF:** regra única: campo sem valor não sai na ficha (nem com traço); tempo e idade por extenso ("1 ano", "37 anos", "11 meses").
+- **Notificador:** função e e-mail do profissional ao lado do profissional responsável, em todas as fichas; o e-mail preenche "Seu e-mail" na janela de envio (editável). "Seu e-mail" continua obrigatório para enviar.
+- **Campos retirados:** Número da notificação e Geo campo 1 e 2.
+- **Situação no mercado de trabalho:** as 13 opções do Sinan também na ficha de acidente (estatutário e celetista separados).
+- **Servidor público:** "Local de atuação (unidade, setor ou órgão)" aparece para servidor estatutário ou celetista; o CNPJ continua o do órgão (condição `data-show-in`, com mais de um valor).
+- **Aplicativo:** só nas fichas de acidente (inclui óbito), LER/DORT e transtornos mentais; com "Sim", abrem "Tipo de aplicativo" (tipos do IBGE) e "Qual aplicativo?".
+- **CAT = Não:** orientação com o caminho oficial (gov.br/Meu INSS), sem prazo para o trabalhador e outros legitimados (Lei 8.213/1991, art. 22, § 2º).
+- **Troca de CNPJ:** ao mudar um CNPJ já consultado, o CNAE da empresa anterior sai, inclusive quando digitado ou escolhido à mão; falha na consulta: "Não foi possível consultar o CNPJ agora. Tente novamente ou preencha manualmente."
+- Implementação em `aplicarAjustesVisat()` (js/teste/formulario-acidente.js), comum a todas as fichas.

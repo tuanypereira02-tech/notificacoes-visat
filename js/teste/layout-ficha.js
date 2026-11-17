@@ -287,10 +287,10 @@ window.aplicarLayoutRascunho = function(root) {
       }
       return elemento;
     };
-    // Ordem da ficha do SINAN: Nº, 1 tipo, 2 agravo/CID, 3 data, 4 UF, 5 município, 6 unidade, 7 data do evento.
+    // Ordem da ficha do SINAN: 1 tipo, 2 agravo/CID, 3 data, 4 UF, 5 município, 6 unidade, 7 data do evento.
     const linhas = [
       // Caixas do mesmo tamanho: 4 por linha (3 colunas cada) ou 3 por linha (4 colunas cada).
-      linha([[caixa('sinan-numeroNotificacao'), 3], [caixa('sinan-tipo'), 3], [caixa('sinan-agravo'), 3], [caixa('sinan-cidAgravo'), 3]]),
+      linha([[caixa('sinan-tipo'), 4], [caixa('sinan-agravo'), 4], [caixa('sinan-cidAgravo'), 4]]),
       linha([[caixa('sinan-data-notif'), 3], [caixa('sinan-uf-notif'), 3], [caixa('sinan-mun-notif'), 3], [caixa('sinan-ibge-notif'), 3]])
     ];
     const unidade = caixa('sinan-unid');
@@ -389,13 +389,11 @@ window.aplicarLayoutRascunho = function(root) {
   // Ordem da ficha do SINAN (campos 17 a 29). O país fica no início porque define quais campos aparecem.
   const telefone = root.querySelector('#sinan-tel');
   if (telefone) gradeEndereco.append(telefone.closest('.unit-row')?.parentElement || telefone.parentElement);
-  // Geo campo 1 e 2 (campos 24 e 25 do SINAN) após Complemento.
-  ['#sinan-geo1', '#sinan-geo2'].forEach(id => { const geo = root.querySelector(id); if (geo) gradeEndereco.append(geo.parentElement); });
+  // Geo campo 1 e 2 retirados da ficha (decisão VISAT 17/11/2026: uso interno da digitação).
   organizar(gradeEndereco, [
     ['sinan-uf-res', 'sinan-mun-res', 'sinan-ibge-res'],
     ['sinan-bairro', 'sinan-logr', 'sinan-num'],
-    ['sinan-comp', 'sinan-geo1', 'sinan-geo2'],
-    ['sinan-cep', 'sinan-tel'],
+    ['sinan-comp', 'sinan-cep', 'sinan-tel'],
     ['zona']
   ]);
   if (linhaPais && gradeEndereco) gradeEndereco.prepend(linhaPais);

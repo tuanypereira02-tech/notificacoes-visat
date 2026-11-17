@@ -34,6 +34,77 @@ function criarCampo(chave, rotulo, tipo = 'text', opcoes = []) {
   return caixa;
 }
 
+// Ajustes do modelo único VISAT (decisões de 17/11/2026), comuns a todas as fichas.
+function aplicarAjustesVisat(root, options) {
+  const caixaDe = el => el ? (el.closest('.unit-row')?.parentElement || el.parentElement) : null;
+  function novoBloco(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html.trim();
+    return div.firstElementChild;
+  }
+  // 1. Aplicativo: só em Acidente de trabalho (inclui óbito), LER/DORT e Transtornos mentais.
+  const comAplicativo = ['form-acidente-template', 'form-lerdort-template', 'form-mental-template'];
+  const plataforma = root.querySelector('[data-key="plataformaDigital"]');
+  if (plataforma) {
+    const caixa = caixaDe(plataforma);
+    if (!comAplicativo.includes(options.templateId)) {
+      caixa.remove();
+    } else if (!root.querySelector('[data-chips="tipoAplicativo"]')) {
+      caixa.querySelector('.field-label').textContent = 'Trabalha por aplicativo?';
+      const tipo = novoBloco(`<div data-show-when="plataformaDigital=Sim" hidden>
+        <span class="field-label">Tipo de aplicativo</span>
+        <div class="chip-grid" data-chips="tipoAplicativo" data-multi="true" data-summary="Tipo de aplicativo">
+          <button type="button" class="chip" data-value="Transporte de passageiros">Transporte de passageiros</button>
+          <button type="button" class="chip" data-value="Táxi por aplicativo">Táxi por aplicativo</button>
+          <button type="button" class="chip" data-value="Entrega de comida ou produtos">Entrega de comida ou produtos</button>
+          <button type="button" class="chip" data-value="Serviços gerais ou profissionais">Serviços gerais ou profissionais</button>
+        </div>
+        <p class="field-help">Tipos usados pelo IBGE. Pode marcar mais de um.</p>
+      </div>`);
+      const qual = novoBloco(`<div data-show-when="plataformaDigital=Sim" hidden data-visat-opcional>
+        <label class="field-label" for="visat-qualAplicativo">Qual aplicativo?</label>
+        <input class="input input-lg" id="visat-qualAplicativo" type="text" data-key="qualAplicativo" placeholder="Ex.: Uber, 99, iFood, Rappi, Keeta, Lalamove, Loggi">
+      </div>`);
+      caixa.after(tipo, qual);
+    }
+  }
+  // 2. Servidor público: local de atuação (o CNPJ continua o do órgão).
+  const situacao = root.querySelector('[data-key="situacao"]');
+  if (situacao && !root.querySelector('[data-key="localAtuacao"]')) {
+    caixaDe(situacao).after(novoBloco(`<div data-show-in="situacao=Servidor público estatutário|Servidor público celetista" hidden data-visat-opcional>
+      <label class="field-label" for="visat-localAtuacao">Local de atuação (unidade, setor ou órgão)</label>
+      <input class="input input-lg" id="visat-localAtuacao" type="text" data-key="localAtuacao" placeholder="Ex.: CS Tapera – sala de vacina">
+      <p class="field-help">O CNPJ do empregador continua o do órgão. Informe o endereço do local de atuação em "Endereço do local de trabalho".</p>
+    </div>`));
+  }
+  // 3. CAT = Não: orientação com o caminho oficial.
+  root.querySelectorAll('[data-chips="cat"]').forEach(grupo => {
+    const caixa = grupo.parentElement;
+    if (caixa.nextElementSibling?.matches('[data-visat-aviso-cat]')) return;
+    caixa.after(novoBloco(`<div data-show-when="cat=Não" hidden data-visat-aviso-cat class="highlight-box">
+      <p><strong>A CAT ainda pode ser feita.</strong> Se a empresa não registrou, o próprio trabalhador, um familiar, o sindicato, o médico ou uma autoridade pública podem registrar. Nesses casos não há prazo, e o serviço é gratuito.</p>
+      <p><a href="https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat" target="_blank" rel="noopener">Registrar CAT (gov.br / Meu INSS)</a></p>
+      <details><summary>Saiba mais</summary><p>A CAT registra o acidente ou a doença do trabalho no INSS. A empresa deve comunicar até o dia útil seguinte (imediatamente em caso de óbito). Na falta da empresa, outras pessoas podem registrar, sem prazo (Lei 8.213/1991, art. 22, § 2º). Canais: Meu INSS (gov.br/meuinss) e telefone 135. Vale para segurados do INSS (empregado, avulso, doméstico); servidor estatutário segue o regime próprio (“Não se aplica”).</p></details>
+    </div>`));
+  });
+  // 4. Notificador: função e e-mail ao lado do profissional responsável, para constarem no PDF.
+  const profissional = root.querySelector('[data-key="profissional"]');
+  if (profissional) {
+    const caixa = caixaDe(profissional);
+    const extras = [];
+    if (!root.querySelector('[data-key="funcaoProfissional"], [data-key="funcao"], [data-key="funcaoInvestigador"]')) {
+      extras.push(novoBloco(`<div><label class="field-label" for="visat-funcaoProfissional">Função</label>
+        <input class="input input-lg" id="visat-funcaoProfissional" type="text" data-key="funcaoProfissional" placeholder="Ex.: enfermeira, médico"></div>`));
+    }
+    if (!root.querySelector('[data-key="emailProfissional"]')) {
+      extras.push(novoBloco(`<div><label class="field-label" for="visat-emailProfissional">E-mail do profissional</label>
+        <input class="input input-lg" id="visat-emailProfissional" type="email" data-key="emailProfissional" placeholder="nome@exemplo.com"></div>`));
+    }
+    const linha = caixa.parentElement?.classList.contains('pair-row') ? caixa.parentElement : caixa;
+    linha.after(...extras);
+  }
+}
+
 function criarEtapa(titulo) {
   const etapa = document.createElement('section');
   etapa.className = 'screen';
@@ -486,6 +557,7 @@ const root = container.querySelector('.acidente-inline');
 root.querySelectorAll('[data-key="refEmp"], [data-key="refRes"]').forEach(campo => campo.parentElement.remove());
 const TOTAL = montarBlocoSinan(root, options);
 const config = blocosSinan[options.templateId];
+aplicarAjustesVisat(root, options);
 const today = new Intl.DateTimeFormat('sv-SE', {
   timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
 }).format(new Date());
@@ -580,6 +652,12 @@ function aplicarCondicoes() {
     const key = el.dataset.showWhen.slice(0, separador);
     const esperado = el.dataset.showWhen.slice(separador + 1);
     atualizarVisibilidade(el, state.values[key] !== esperado);
+  });
+  root.querySelectorAll('[data-show-in]').forEach((el) => {
+    const separador = el.dataset.showIn.indexOf('=');
+    const key = el.dataset.showIn.slice(0, separador);
+    const esperados = el.dataset.showIn.slice(separador + 1).split('|');
+    atualizarVisibilidade(el, !esperados.includes(state.values[key]));
   });
   root.querySelectorAll('[data-show-includes]').forEach((el) => {
     const separador = el.dataset.showIncludes.indexOf('=');
@@ -1111,13 +1189,14 @@ function addChoices(field, choices, selectedValues) {
 }
 
 function addAnswer(field, value) {
-  if (field.hasAttribute('data-visat-opcional') && !value.trim()) {
+  // Regra única (decisão VISAT 17/11/2026): campo sem valor não sai na ficha.
+  if (!String(value || '').trim()) {
     field.remove();
     return;
   }
   const answer = document.createElement('p');
   answer.className = 'pf-answer';
-  answer.textContent = value || '________________________________';
+  answer.textContent = value;
   field.appendChild(answer);
 }
 
@@ -1159,7 +1238,7 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
       const quantity = following.querySelector('[data-key]');
       const unit = following.querySelector('select[data-key]');
       const field = addField(block, labelText, opcional);
-      addAnswer(field, quantity.value ? `${quantity.value} ${unit.value}` : '');
+      addAnswer(field, quantity.value ? quantidadeComUnidade(quantity.value, unit.value) : '');
       return;
     }
 
@@ -1183,6 +1262,15 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
 
   if (block.children.length > 1) blocks.appendChild(block);
 });
+}
+
+// Unidade de tempo por extenso e no plural correto: "37 anos", "1 ano", "11 meses".
+function quantidadeComUnidade(quantidade, unidade) {
+  const formas = { hora: ['hora', 'horas'], dia: ['dia', 'dias'], mes: ['mês', 'meses'], ano: ['ano', 'anos'] };
+  const chave = String(unidade || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/s$/, '').replace(/e$/, '');
+  const forma = formas[chave] || formas[chave + 'e'];
+  if (!forma) return quantidade + ' ' + unidade;
+  return quantidade + ' ' + forma[Number(quantidade) === 1 ? 0 : 1];
 }
 
 // PDF final da ficha (pdf-lib), usado para baixar e para anexar ao e-mail.

@@ -188,7 +188,8 @@
       evento.preventDefault();
       baixar(pdf, nomePdf);
     };
-    de.value = '';
+    // Preenche com o e-mail do profissional informado na ficha, quando houver (editável).
+    de.value = (raiz.querySelector('[data-key="emailProfissional"]')?.value || '').trim();
     de.removeAttribute('aria-invalid');
     texto.value = corpo;
     status.textContent = '';

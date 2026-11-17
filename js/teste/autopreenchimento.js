@@ -611,6 +611,12 @@
         if (campo.value === valor) limparCampo(campo);
       });
       preenchidos.clear();
+      // Troca de empresa (decisão VISAT 17/11/2026): ao mudar um CNPJ já consultado, o CNAE da empresa
+      // anterior sai, inclusive quando foi digitado ou escolhido à mão.
+      if (el.dataset.cnpjConsultado && el.dataset.cnpjConsultado !== n) {
+        if (destino.cnae) limparCampo(campo(raiz, destino.cnae));
+        delete el.dataset.cnpjConsultado;
+      }
       aviso(el, '');
     });
 
@@ -624,6 +630,7 @@
         .then(function (respostas) {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
           var d = respostas[0];
+          el.dataset.cnpjConsultado = n;
           empresasConsultadas.set(el, { cnpj: n, dados: d, destino: destino });
           var codSinan = cnaeSinan(d.cnae);
           var atividade = codSinan && tabelaCnae.classes.find(function (item) { return item[0] === codSinan; });
@@ -687,7 +694,7 @@
         .catch(function () {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
           delete el.dataset.ultimoCnpj;
-          aviso(el, 'CNPJ não encontrado. Preencha manualmente.', true);
+          aviso(el, 'Não foi possível consultar o CNPJ agora. Tente novamente ou preencha manualmente.', true);
         });
     }
     el.addEventListener('input', buscar);
