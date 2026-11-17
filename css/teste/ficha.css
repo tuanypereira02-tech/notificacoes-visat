@@ -1204,27 +1204,21 @@ body.modo-formulario-acidente .step-area {
 .acidente-inline .draft-grid-12 > .draft-span-8 { grid-column: span 8; }
 .acidente-inline .draft-grid-12 > .draft-span-9 { grid-column: span 9; }
 .acidente-inline .draft-grid-12 > .draft-span-12 { grid-column: 1 / -1; }
-.acidente-inline .draft-grid-12 .field-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Código validado: ✓ dentro do campo, sem linha extra. O texto continua disponível para leitores de tela. */
+.acidente-inline .draft-grid-12 .field-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* A confirmação acompanha o campo, inclusive quando o rótulo quebra em duas linhas. */
 .acidente-inline .draft-grid-12 .visat-estado-codigo[data-estado="validado"] {
-  position: absolute;
-  right: 10px;
-  top: 25px;
-  height: 42px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  font-size: 0;
-  pointer-events: none;
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 .acidente-inline .draft-grid-12 .visat-estado-codigo[data-estado="validado"]::before {
-  content: "✓";
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e6b3a;
+  content: "✓ ";
 }
 .acidente-inline .draft-grid-12 > :has(> .visat-estado-codigo[data-estado="validado"]) .input {
-  padding-right: 32px;
   border-color: #7fb08f;
 }
 /* Seção CID-10 do caso: menos espaço antes do título. */
@@ -1278,9 +1272,6 @@ body.modo-formulario-acidente .step-area {
 .acidente-inline [data-visat-opcoes] > .chip { width: 100%; min-width: 0; margin: 0; white-space: normal; overflow-wrap: normal; word-break: normal; line-height: 1.25; padding-inline: 8px; }
 @media (max-width: 560px) {
   .acidente-inline [data-visat-span] { grid-column: 1 / -1 !important; }
-  /* No celular o rótulo pode ocupar duas linhas: a confirmação volta a aparecer como texto abaixo do campo. */
-  .acidente-inline .draft-grid-12 .visat-estado-codigo[data-estado="validado"] { position: static; height: auto; display: block; margin-top: 6px; font-size: 13px; }
-  .acidente-inline .draft-grid-12 .visat-estado-codigo[data-estado="validado"]::before { content: "✓ "; font-size: 13px; }
 }
 
 /* ===== Uma mensagem por campo (v13) ===== */
@@ -1324,4 +1315,21 @@ body.modo-formulario-acidente #bottomBar { position: static; }
   max-height: 220px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Mantém o foco afastado das bordas do quadro e as ações alinhadas aos cartões. */
+html.visat-em-quadro body.modo-formulario-acidente #principal {
+  scroll-padding-block: 16px 24px;
+}
+.acidente-inline #bottomBar .bottom-inner {
+  padding-inline: var(--draft-inset);
+}
+.acidente-inline .visat-ruas-resultados button:focus-visible {
+  outline-offset: -3px;
+}
+@media (max-width: 560px) {
+  .acidente-inline #bottomBar .bottom-inner > button:not([hidden]) {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
 }
