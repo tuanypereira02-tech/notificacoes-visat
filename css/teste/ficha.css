@@ -1397,3 +1397,33 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
   .acidente-inline .visat-tela-final .summary-grid { grid-template-columns: 1fr; }
   .acidente-inline .visat-tela-final .actions-row .btn { flex: 1 1 100%; }
 }
+
+/* Ficha centralizada e atalhos de seção, sem ocupar área lateral. */
+#resultado .acidente-inline {
+  width: min(100%, 1000px);
+  margin-inline: auto;
+}
+.acidente-inline .visat-indice-ficha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  border: 1px solid #d3e0eb;
+  border-radius: 8px;
+  background: #f5f8fa;
+}
+.acidente-inline .visat-indice-ficha .btn {
+  min-height: 36px;
+  background: transparent;
+  color: #112c45;
+  border: 0;
+  padding: 6px 9px;
+  font-size: 13px;
+  box-shadow: none;
+}
+.acidente-inline .visat-indice-ficha .btn:hover { background: #e5eef4; }
+.acidente-inline .screen-title:focus-visible { outline: 2px solid #cc6a00; outline-offset: 3px; }
+@media (max-width: 560px) {
+  .acidente-inline .visat-indice-ficha .btn { flex: 1 0 auto; }
+}
