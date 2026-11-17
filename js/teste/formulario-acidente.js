@@ -1178,11 +1178,11 @@ async function prepararPdfFinal(botao) {
   }
   buildPrint();
   botao.disabled = true;
-  if (retornoEnvio) retornoEnvio.textContent = 'Gerando o PDF…';
+  if (retornoEnvio && !retornoEnvio.dataset.enviado) retornoEnvio.textContent = 'Gerando o PDF…';
   try {
     const rodape = 'VISAT Florianópolis | ' + VISAT_MODELO + (VISAT_HOMOLOGACAO ? ' | HOMOLOGAÇÃO — DADOS FICTÍCIOS' : '');
     const pdf = await window.VisatEnvio.gerarPdf(root.querySelector('#printArea'), rodape);
-    if (retornoEnvio) retornoEnvio.textContent = '';
+    if (retornoEnvio && !retornoEnvio.dataset.enviado) retornoEnvio.textContent = '';
     return pdf;
   } catch (erro) {
     if (retornoEnvio) retornoEnvio.textContent = 'Não foi possível gerar o PDF. Use Imprimir / salvar PDF do navegador (Ctrl+P).';
@@ -1306,25 +1306,30 @@ function buildSummary() {
 mostrarRevisaoDeCampos();
 const imprimir = root.querySelector('#btnImprimir');
 const acoes = imprimir.parentElement;
-imprimir.textContent = '2. Baixar ficha em PDF';
+imprimir.textContent = 'Baixar PDF';
+imprimir.classList.remove('btn-print');
 imprimir.dataset.variant = 'outline';
 if (!acoes.querySelector('[data-visat-email]')) {
   const enviarEmail = document.createElement('button');
   enviarEmail.type = 'button';
   enviarEmail.className = 'btn';
   enviarEmail.dataset.visatEmail = '1';
-  enviarEmail.textContent = '1. Enviar por e-mail';
+  enviarEmail.textContent = 'Enviar por e-mail';
   acoes.prepend(enviarEmail);
+  const painel = document.createElement('section');
+  painel.className = 'visat-entrega';
+  painel.setAttribute('aria-labelledby', 'visat-entrega-titulo');
+  const titulo = document.createElement('h2');
+  titulo.id = 'visat-entrega-titulo';
+  titulo.textContent = 'Enviar ou baixar a ficha';
   const instrucao = document.createElement('p');
   instrucao.className = 'field-help';
-  instrucao.dataset.visatPdfInstrucao = '1';
-  instrucao.textContent = 'Clique em 1. Enviar por e-mail: a mensagem abre com a ficha em PDF já anexada e o destinatário da VISAT preenchido.';
-  acoes.before(instrucao);
+  instrucao.textContent = 'O PDF é anexado automaticamente ao abrir a janela de e-mail.';
   retornoEnvio = document.createElement('p');
-  retornoEnvio.className = 'field-help';
   retornoEnvio.setAttribute('role', 'status');
   retornoEnvio.dataset.visatRetornoEnvio = '1';
-  acoes.after(retornoEnvio);
+  acoes.before(painel);
+  painel.append(titulo, instrucao, acoes, retornoEnvio);
   enviarEmail.addEventListener('click', async () => {
     const pdf = await prepararPdfFinal(enviarEmail);
     if (!pdf) return;
@@ -1338,14 +1343,12 @@ if (!acoes.querySelector('[data-visat-email]')) {
     });
   });
 }
-const revisao = root.querySelector('[data-visat-revisao]');
-revisao.before(acoes);
-mostrarCoerencia(acoes);
-if (acoes.querySelector('[data-visat-email]')) {
-  const instrucao = root.querySelector('[data-visat-pdf-instrucao]');
-  if (instrucao) acoes.before(instrucao);
-  if (retornoEnvio) acoes.after(retornoEnvio);
-}
+const cartao = imprimir.closest('.success-card');
+root.querySelector('[data-visat-revisao]').before(cartao.querySelector('.visat-entrega'));
+cartao.querySelector('.success-icon')?.setAttribute('aria-hidden', 'true');
+const subtitulo = cartao.querySelector('.screen-sub');
+if (subtitulo) subtitulo.textContent = 'Confira os dados da notificação antes de enviar.';
+mostrarCoerencia(cartao.querySelector('.visat-entrega'));
 const marcados = root.querySelectorAll('[data-summary]');
 const items = marcados.length
   ? Array.from(marcados).map((el) => [rotuloResumo(el), valorResumo(el)])
