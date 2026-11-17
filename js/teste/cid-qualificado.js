@@ -176,7 +176,7 @@
     }
     function sugerir() {
       var termo = norm(el.value.trim());
-      if (termo.length < 2 || codigoDe(el.value) && / – /.test(el.value)) { lista.hidden = true; lista.replaceChildren(); return; }
+      if (termo.length < 3 || codigoDe(el.value) && / – /.test(el.value)) { lista.hidden = true; lista.replaceChildren(); return; }
       carregar(qual).then(function (t) {
         if (norm(el.value.trim()) !== termo) return;
         var cod = termo.toUpperCase().replace('.', '');
