@@ -140,7 +140,6 @@ function montarEmpregador(area) {
     [['numEmp', 'numero'], 'Número'],
     [['compEmp'], 'Complemento'],
     [['bairroEmp', 'bairro'], 'Bairro'],
-    [['refEmp'], 'Ponto de referência'],
     [['telEmp', 'telefone'], 'Telefone do empregador', 'tel']
   ].forEach(item => incluir(endereco, item));
 
@@ -325,12 +324,11 @@ function montarEnderecoResidencial(residencia) {
   const bairro = campo('bairro');
   const numero = campo('num');
   const complemento = campo('comp');
-  const referencia = campo('ref');
-  [logradouro, bairro, numero, complemento, referencia].forEach(bloco => { bloco.dataset.visatOpcional = ''; });
+  [logradouro, bairro, numero, complemento].forEach(bloco => { bloco.dataset.visatOpcional = ''; });
   const endereco = document.createElement('div');
   endereco.className = 'field-group visat-endereco-residencia';
   endereco.append(municipioUf, criarLinhaCampos(logradouro, campo('cep')),
-    criarLinhaCampos(bairro, numero), criarLinhaCampos(complemento, referencia), campo('ibge-res'));
+    criarLinhaCampos(bairro, numero), complemento, campo('ibge-res'));
   residencia.querySelector('.field-group').append(endereco);
 }
 
@@ -458,6 +456,7 @@ const template = document.getElementById(options.templateId);
 if (!template) throw new Error('Modelo do formulario nao encontrado.');
 container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
+root.querySelectorAll('[data-key="refEmp"], [data-key="refRes"]').forEach(campo => campo.parentElement.remove());
 const TOTAL = montarBlocoSinan(root, options);
 const config = blocosSinan[options.templateId];
 const today = new Intl.DateTimeFormat('sv-SE', {
