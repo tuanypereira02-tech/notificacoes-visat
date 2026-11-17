@@ -411,24 +411,45 @@ function montarBlocoSinan(root, options) {
   orientacao.textContent = 'Ficha de notificação inicial. Investigação e encerramento: no instrumento oficial.';
   bloco.lastElementChild.append(orientacao);
   area.prepend(bloco);
+  // Fim da ficha como no SINAN: "Informações complementares e observações", com dois espaços —
+  // a descrição sumária de como ocorreu e as outras informações.
   const acidenteComDescricaoEspecifica = options.templateId === 'form-acidente-template';
-  const textos = criarEtapa(acidenteComDescricaoEspecifica ? 'Observações' : 'Descrições e observações');
-  const orientacaoTextos = acidenteComDescricaoEspecifica
-    ? 'Registre informações complementares que ainda não constam na ficha.'
-    : 'Relate as circunstâncias e registre as informações complementares.';
-  textos.querySelector('.screen-title').insertAdjacentHTML('afterend', '<p class="screen-sub">' + orientacaoTextos + '</p>');
+  const textos = criarEtapa('Informações complementares e observações');
   const textosGrupo = textos.querySelector('.field-group');
-  const camposTextuais = [['observacoesRascunho', 'Observações']];
-  if (!acidenteComDescricaoEspecifica) camposTextuais.unshift(['descricaoRascunho', 'Descrição do acidente / exposição']);
-  for (const [chave,rotulo] of camposTextuais) {
-    const caixa = criarCampo(chave,rotulo);
+  const caixaTexto = (chave, rotulo, dica, linhas) => {
+    const caixa = criarCampo(chave, rotulo);
     const entrada = caixa.querySelector('input');
-    const texto = document.createElement('textarea');texto.id=entrada.id;texto.dataset.key=chave;texto.className='input';texto.rows=4;
-    texto.placeholder = chave === 'descricaoRascunho'
-      ? 'Descreva as circunstâncias, a atividade realizada e a exposição.'
-      : 'Registre as informações complementares.';
-    entrada.replaceWith(texto);textosGrupo.append(caixa);
+    const texto = document.createElement('textarea');
+    texto.id = entrada.id; texto.dataset.key = chave; texto.className = 'input'; texto.rows = linhas; texto.placeholder = dica;
+    entrada.replaceWith(texto);
+    return caixa;
+  };
+  const atividade = acidenteComDescricaoEspecifica && area.querySelector('#atividade');
+  if (atividade) {
+    // A atividade, a máquina/equipamento/substância e as causas entram na descrição sumária, como no SINAN.
+    const caixaAtividade = atividade.parentElement;
+    const etapaOrigem = caixaAtividade.closest('section, [data-visat-secao-complementar]');
+    caixaAtividade.querySelector('label').textContent = 'Descrição sumária de como ocorreu o acidente/ atividade/ causas/ condições/ objeto/ agentes que concorreram direta ou indiretamente para a ocorrência do acidente';
+    atividade.rows = 6;
+    atividade.placeholder = 'O que o trabalhador fazia no momento, máquina, equipamento ou substância envolvida, causas e condições.';
+    atividade.dataset.required = 'Descreva como ocorreu o acidente';
+    const erro = caixaAtividade.querySelector('[data-err="atividade"]');
+    if (erro) erro.textContent = 'Descreva como ocorreu o acidente';
+    area.querySelector('#maquina')?.parentElement.remove();
+    textosGrupo.append(caixaAtividade);
+    // O bloco de origem fica só com os fatores que contribuíram.
+    if (etapaOrigem) {
+      const titulo = etapaOrigem.querySelector('h1, h2, h3');
+      if (titulo) titulo.textContent = 'Fatores que contribuíram';
+      etapaOrigem.querySelector('.screen-sub')?.remove();
+      const rotuloFatores = etapaOrigem.querySelector('[data-chips="fatores"]')?.parentElement.querySelector(':scope > .field-label');
+      if (rotuloFatores && titulo) rotuloFatores.remove();
+    }
+  } else if (!acidenteComDescricaoEspecifica) {
+    textosGrupo.append(caixaTexto('descricaoRascunho', 'Descrição do acidente / exposição',
+      'Descreva as circunstâncias, a atividade realizada e a exposição.', 6));
   }
+  textosGrupo.append(caixaTexto('observacoesRascunho', 'Outras informações', 'Registre as informações complementares.', 6));
   area.insertBefore(textos,area.querySelector('.screen:last-child'));
   const screens = area.querySelectorAll('.screen');
   const total = screens.length - 1;

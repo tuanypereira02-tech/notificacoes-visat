@@ -100,3 +100,7 @@ casos de regressão. Falha de carregamento do mapa mantém o preenchimento manua
 - Fundo único na ficha, sem o painel branco que terminava no meio da rolagem e sem faixas cinzas laterais.
 - No quadro do Sites, a ficha rola até o fim e, depois, a rolagem passa para a página do Sites (sem trava no final).
 - Unidade de tempo (Anos/Meses/Dias) sempre inteira.
+- Fim da ficha como no SINAN: bloco "Informações complementares e observações" com dois espaços. Na ficha de acidente,
+  "Descrição sumária de como ocorreu o acidente/ atividade/ causas/ condições/ objeto/ agentes..." reúne a atividade e a
+  máquina/equipamento/substância (campo `maquina` retirado); o segundo espaço é "Outras informações". O antigo bloco
+  "O que aconteceu" fica só com "Fatores que contribuíram".
