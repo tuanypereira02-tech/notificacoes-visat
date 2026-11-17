@@ -520,6 +520,8 @@ details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 body.modo-formulario-acidente #principal { max-width: 100%; }
 .step-area, .bottom-inner, .form-app .top-bar > .shell-container, .success-card { max-width: 100%; }
 .hospital-alert-container { max-width: 100%; margin-left: auto; margin-right: auto; }
+.visat-linha-campos { display: contents; }
+.visat-linha-campos [data-show-when="parteCorpo=Outro"] { margin-top: 16px; }
 @media (min-width: 820px) {
   .step-area { padding: 32px 28px 24px; }
   .field-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
@@ -533,7 +535,16 @@ body.modo-formulario-acidente #principal { max-width: 100%; }
   .field-group > div:has(.visat-lista-apoio:not([hidden])),
   .field-group > div:has(.empresa-resultados:not([hidden])),
   .field-group > div:has(.visat-cid-info),
+  .field-group > .visat-linha-campos,
+  .field-group > .visat-endereco-residencia,
   .field-group > [data-visat-complementares] { grid-column: 1 / -1; }
+  .visat-linha-campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 18px 28px;
+  }
+  .visat-linha-estabelecimento { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 2fr); }
   .screen-sub { margin-bottom: 28px; }
 }
 /* Partes da tela (paginação pela altura disponível) */
@@ -567,12 +578,12 @@ body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
 .visat-medindo .empresa-resultados,
 .visat-medindo .visat-cid-lista { display: none !important; }
 @media (min-width: 820px) {
-  .visat-medindo .field-group > div:has(.visat-lista-apoio),
-  .visat-medindo .field-group > div:has(.empresa-resultados) { grid-column: auto; }
+  .visat-medindo .field-group > div:has(> .visat-lista-apoio),
+  .visat-medindo .field-group > div:has(> .empresa-resultados) { grid-column: auto; }
 }
 /* Páginas em fluxo contínuo: durante a medição todas as telas ficam visíveis; na mesma página,
    a tela seguinte começa abaixo de uma linha divisória. */
 .visat-todas-telas .screen[data-screen]:not(.visat-tela-final) { display: block !important; animation: none !important; }
-.screen.active ~ .screen.active { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
+.form-app:not(.visat-todas-telas) .screen.active ~ .screen.active { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
 .visat-todas-telas .screen:not(.visat-tela-vazia) ~ .screen:not(.visat-tela-vazia) { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
 .visat-todas-telas .screen[data-screen].visat-tela-vazia { display: none !important; }
