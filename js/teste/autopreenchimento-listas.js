@@ -159,6 +159,7 @@
       fecharListaRapida();
       var atual = abertura;
       var termo = norm(input.value);
+      if (termo.length < 3) return;
       carregar(tipo).then(function (lista) {
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         var palavras = termo.split(' ').filter(Boolean);
@@ -219,7 +220,7 @@
     input.addEventListener('input', function(evento){
       clearTimeout(esperaLista);fecharListaRapida();
       // Só reabre a lista quando a pessoa digita; a escolha de uma sugestão fecha a lista.
-      if(evento.isTrusted && document.activeElement===input && input.value.trim().length>=2){
+      if(evento.isTrusted && document.activeElement===input && norm(input.value).length>=3){
         esperaLista=setTimeout(abrirListaRapida,180);
       }
     });
@@ -238,7 +239,7 @@
 
     function atualizar() {
       var termo = norm(input.value);
-      if (termo.length < 2) { dl.textContent = ''; return; }
+      if (termo.length < 3) { dl.textContent = ''; return; }
       carregar(tipo).then(function (lista) {
         if (norm(input.value) !== termo) return;
         var palavras = termo.split(' ');
@@ -294,7 +295,7 @@
       });
     }
 
-    input.addEventListener('focus', function () { carregar(tipo); if(input.value.trim().length>=2) abrirListaRapida(); });
+    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value).length>=3) abrirListaRapida(); });
     input.addEventListener('input', function (evento) {
       delete input.dataset.visatConfirmado;
       atualizar();
