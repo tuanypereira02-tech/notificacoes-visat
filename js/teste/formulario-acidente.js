@@ -1397,9 +1397,11 @@ if (activeHeading) {
   activeHeading.focus({ preventScroll: true });
 }
 // Ao abrir a ficha, a tela começa no início do formulário, com "Dados gerais" visível.
+// No Google Sites o quadro é alto e quem rola é a página do Sites: scrollIntoView rola também a página que incorpora a ficha.
 requestAnimationFrame(() => {
   const topo = root.getBoundingClientRect().top + window.scrollY - 8;
   window.scrollTo({ top: Math.max(0, topo), behavior: 'auto' });
+  try { root.scrollIntoView({ block: 'start', behavior: 'auto' }); } catch (erro) { /* navegador sem suporte */ }
 });
 return root;
 };
