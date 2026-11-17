@@ -1266,7 +1266,7 @@ function mostrarRevisaoDeCampos() {
     { tela: 1, campos: [
       [['codUnidNotif'], 'Código CNES'],
       [['cid', 'cid10', 'cidCod', 'cidDiag'], 'CID-10 do caso'],
-      [['cidCausa'], 'CID-10 da causa externa']
+      [['cidCausa'], 'Causa do acidente — CID-10']
     ] },
     { tela: 2, campos: [
       [['raca'], 'Raça/cor'],
