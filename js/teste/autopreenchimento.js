@@ -363,8 +363,11 @@
     // Sugestões de rua ao digitar o logradouro (ViaCEP): escolher preenche rua, bairro e CEP.
     const campoRua = dadosEndereco.logradouro;
     if (campoRua) {
+      // O logradouro usa a busca do VISAT, sem sugestões de endereços salvos.
+      campoRua.type = 'search';
+      campoRua.setAttribute('autocomplete', 'off');
       const sugestoes = document.createElement('ul');
-      sugestoes.className = 'empresa-resultados';
+      sugestoes.className = 'empresa-resultados visat-ruas-resultados';
       sugestoes.setAttribute('aria-label', 'Ruas encontradas');
       sugestoes.hidden = true;
       campoRua.after(sugestoes);
