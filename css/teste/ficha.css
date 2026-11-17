@@ -1520,3 +1520,9 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
   min-width: 84px;
   padding-right: 28px;
 }
+
+/* Sem espaço cinza: fundo branco em toda a ficha e largura disponível, com margens pequenas e iguais. */
+html:has(body.modo-formulario-acidente),
+body.modo-formulario-acidente { background: #ffffff !important; }
+body.modo-formulario-acidente #principal { max-width: none; padding-inline: 12px; }
+#resultado .acidente-inline { width: 100%; max-width: none; }
