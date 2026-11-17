@@ -17,13 +17,18 @@
 
   var PADRAO = { uf: 'SC', municipio: 'Florianópolis', ibge: '420540' }; // Sinan: código IBGE com 6 dígitos
 
-  /* Correspondências já usadas pelo portal. Cada destino precisa existir na TB_CNAE
-     extraída. A tabela SQL não fornece uma correspondência completa com a Receita. */
-  var CNAE_SINAN = (function () {
-    var m = {};
-    '0114801147 0115601155 0132601341 0134201325 0135101333 0151201414 0152101422 0154701449 0155501457 0500310006 0600011100 0710313102 0721913218 0722713226 0723513234 0724313242 0725113250 0810014109 0892414222 1051115415 1061915512 1062715520 1081315717 1092915822 1094515849 1112715920 1113515938 1220416004 1330817710 1352917620 1353717639 1413418139 1421517728 1510619100 1531919313 1532719321 1610220109 1710921105 1721421210 1731121318 1910123108 2011824112 2012624120 2014224147 2021524210 2031224317 2032124325 2033924333 2062224724 2071124813 2072024821 2073824830 2091624910 2092424929 2093224945 2094124937 2110624511 2121124520 2122024538 2211125119 2311726115 2312526123 2319226190 2320626204 2341926425 2411327138 2412127146 2421127235 2422927243 2423727251 2424527260 2441527413 2442327421 2512828126 2513628134 2521728215 2541128410 2591828916 2652333502 2732531224 2733331305 2751129815 2814329149 2822429238 2831329327 2840229408 2863129637 2910734100 2920434207 3032635220 3091135912 3092035920 3101236110 3102136129 3104736145 3220536927 3291436978 3512340126 3513140134 3514040142 3600641009 4321545411 4330445500 4511150105 4520050202 4543950423 4613351136 4617651179 4618451187 4633851330 4635451365 4636251373 4687751551 4723752248 4761052469 4784952477 4785752507 4940060305 5011461115 5012261123 5021161220 5130762308 5212563118 6010192215 6410765102 6421265218 6423965234 6424765242 6432865323 6433665331 6434465510 6435265340 6440965404 6450665927 6470165919 6511166117 6512066125 6530866133 6541366214 6542166222 6550266303 7320374136 7733171331 8112570408 8411675116 8413275132 8421375213 8422175221 8423075230 8424875248 8425675256 8513980152 8520180209 8531780314 8532580322 8533380330 8541480969 8542280977 8610185111 9101592517 9420191200 9491091910 9492891928 9603393033 9700595001 9900899007'.split(' ').forEach(function (p) { m[p.slice(0, 5)] = p.slice(5); });
-    return m;
-  })();
+  // Correspondências oficiais por subclasse, com revisão dos casos ambíguos.
+  var correspondenciasCnae = null;
+  var consultaCorrespondencias = null;
+  function carregarCorrespondencias() {
+    if (!consultaCorrespondencias) {
+      consultaCorrespondencias = fetch('data/cnae-correspondencias.json?v=20261117-ibge')
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (t) { correspondenciasCnae = t.subclasses; return t; })
+        .catch(function (erro) { consultaCorrespondencias = null; throw erro; });
+    }
+    return consultaCorrespondencias;
+  }
 
   var tabelaCnae = null;
   var consultaTabelaCnae = null;
@@ -40,15 +45,30 @@
     return consultaTabelaCnae;
   };
 
-  function cnaeSinan(subclasse) {
-    var numero = String(subclasse || '').replace(/\D/g, '');
-    if (!/^\d{6,7}$/.test(numero) || !tabelaCnae) return '';
-    var classe = numero.padStart(7, '0').slice(0, 5);
-    var codigo = CNAE_SINAN[classe];
-    return tabelaCnae.classes.some(function (item) { return item[0] === codigo; }) ? codigo : '';
+  function correspondenciaCnae(subclasse) {
+    var texto = String(subclasse == null ? '' : subclasse).trim();
+    if (!/^[0-9./-]+$/.test(texto)) return null;
+    var numero = texto.replace(/\D/g, '');
+    if (!/^\d{6,7}$/.test(numero) || !tabelaCnae || !correspondenciasCnae) return null;
+    return correspondenciasCnae[numero.padStart(7, '0')] || null;
   }
 
-  window.visatCnaeLegado = function (codigo) { return Object.values(CNAE_SINAN).includes(codigo); };
+  function candidatosCnae(subclasse) {
+    var registro = correspondenciaCnae(subclasse);
+    return registro ? registro.codigos.filter(function (codigo) {
+      return tabelaCnae.classes.some(function (item) { return item[0] === codigo; });
+    }) : [];
+  }
+
+  function cnaeSinan(subclasse) {
+    var registro = correspondenciaCnae(subclasse);
+    var candidatos = candidatosCnae(subclasse);
+    return registro && registro.automatico && candidatos.length === 1 ? candidatos[0] : '';
+  }
+
+  window.visatCnaeLegado = function (codigo) {
+    return !!tabelaCnae && tabelaCnae.classes.some(function (item) { return item[0] === codigo; });
+  };
 
   function ibgeSinan(codigo) { return String(codigo || '').replace(/\D/g, '').slice(0, 6); }
 
@@ -473,8 +493,8 @@
       }
       var codigo = cnae && cnae.value.match(/^\s*(\d{2})\.?(\d{2})-?(\d)(?=\s|$)/);
       var cadastrados = [dados.cnae].concat((dados.secundarios || []).map(function (x) { return x.codigo; }));
-      if (codigo && cadastrados.some(Boolean) && !cadastrados.some(function (x) {
-        return cnaeSinan(x) === codigo.slice(1).join('');
+      if (codigo && cadastrados.some(function (x) { return candidatosCnae(x).length > 0; }) && !cadastrados.some(function (x) {
+        return candidatosCnae(x).includes(codigo.slice(1).join(''));
       })) avisos.push({ campo: cnae, mensagem: 'O CNAE informado difere das atividades retornadas para este CNPJ. Confira a atividade pertinente ao caso.' });
       if (uf && uf.value && dados.uf && normalizar(uf.value) !== normalizar(dados.uf)) {
         avisos.push({ campo: uf, mensagem: 'A UF informada difere do cadastro consultado pelo CNPJ.' });
@@ -492,6 +512,11 @@
     el.dataset.autopreenchimentoCnpj = '1';
     var preenchidos = new Map();
     var consulta = 0;
+    var opcoesCnae = null;
+    function removerOpcoes() {
+      if (opcoesCnae) opcoesCnae.remove();
+      opcoesCnae = null;
+    }
     function preencher(chaves, valor) {
       var destino = campo(raiz, chaves);
       if (definir(destino, valor)) preenchidos.set(destino, destino.value);
@@ -500,6 +525,8 @@
       var n = digitos(el.value);
       if (n === el.dataset.ultimoCnpj) return;
       consulta++;
+      removerOpcoes();
+      empresasConsultadas.delete(el);
       delete el.dataset.ultimoCnpj;
       preenchidos.forEach(function (valor, campo) {
         if (campo.value === valor) limparCampo(campo);
@@ -514,7 +541,7 @@
       el.dataset.ultimoCnpj = n;
       var atual = ++consulta;
       aviso(el, 'Consultando CNPJ…');
-      Promise.all([consultarCnpj(n), window.visatCarregarCnae().catch(function () { return null; })])
+      Promise.all([consultarCnpj(n), window.visatCarregarCnae().catch(function () { return null; }), carregarCorrespondencias().catch(function () { return null; })])
         .then(function (respostas) {
           if (!el.isConnected || atual !== consulta || digitos(el.value) !== n) return;
           var d = respostas[0];
@@ -535,8 +562,46 @@
           if (destino.telefone) preencher(destino.telefone, d.telefone);
           if (destino.cep) preencher(destino.cep, d.cep);
           var mensagem = 'Confira os dados da empresa preenchidos.';
-          if (destino.cnae) mensagem = cnae ? 'Confira o CNAE da tabela do SINAN e a atividade do local de trabalho.' :
-            'CNPJ consultado. Selecione a atividade na tabela do SINAN: a conversão automática do CNAE não está disponível para este cadastro.';
+          if (destino.cnae) {
+            var registro = correspondenciaCnae(d.cnae);
+            var candidatos = candidatosCnae(d.cnae);
+            mensagem = cnae ? 'Confira o CNAE da tabela do SINAN e a atividade do local de trabalho.' :
+              'CNPJ consultado. A correspondência do CNAE exige revisão. Selecione a atividade na tabela do SINAN.';
+            removerOpcoes();
+            if (!cnae && candidatos.length) {
+              var campoCnae = campo(raiz, destino.cnae);
+              if (campoCnae) {
+                opcoesCnae = document.createElement('div');
+                opcoesCnae.className = 'visat-lista-apoio';
+                opcoesCnae.setAttribute('role', 'group');
+                opcoesCnae.setAttribute('aria-label', 'Correspondências CNAE para conferir');
+                var explicacao = document.createElement('p');
+                explicacao.className = 'field-help';
+                explicacao.textContent = 'Atividades possíveis para o CNAE principal do CNPJ. Escolha a correspondente ao trabalho informado.';
+                opcoesCnae.appendChild(explicacao);
+                candidatos.forEach(function (codigo) {
+                  var item = tabelaCnae.classes.find(function (x) { return x[0] === codigo; });
+                  var botao = document.createElement('button');
+                  botao.type = 'button';
+                  botao.className = 'btn';
+                  botao.textContent = item[0] + ' – ' + item[2];
+                  botao.addEventListener('click', function () {
+                    if (atual !== consulta || digitos(el.value) !== n) return;
+                    definir(campoCnae, item[0] + ' – ' + item[2], true);
+                    preenchidos.set(campoCnae, campoCnae.value);
+                    removerOpcoes();
+                    campoCnae.focus();
+                    aviso(el, 'Atividade selecionada na tabela do SINAN. Confira os demais dados da empresa.');
+                  });
+                  opcoesCnae.appendChild(botao);
+                });
+                campoCnae.after(opcoesCnae);
+              }
+            }
+            if (registro && registro.ausentes.length) {
+              mensagem += ' Há correspondência oficial ausente da tabela fornecida. Não foi substituída por outro código.';
+            }
+          }
           aviso(el, mensagem);
         })
         .catch(function () {

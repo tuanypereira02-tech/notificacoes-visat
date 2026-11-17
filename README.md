@@ -49,3 +49,27 @@ Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucion
   (CEP com busca pelo endereço, logradouro, número, complemento, bairro, referência e telefone). Para Aposentado ou Desempregado,
   aviso para informar o empregador da época da exposição ou do acidente. O campo Distrito saiu da residência.
 
+
+### Correspondência Receita → TB_CNAE (17/11/2026)
+
+`data/cnae-correspondencias.json` utiliza as correspondências oficiais CONCLA/IBGE,
+por subclasse, de 2.3 → 2.2 → 2.1 → 2.0 → Fiscal 1.1 e classe CNAE 1.0.
+O universo foi conferido com as 1.332 subclasses da API oficial do IBGE.
+1.220 têm destino único presente na TB_CNAE fornecida e permitem preenchimento
+inicial automático. As outras 112 exigem revisão: o formulário oferece os
+candidatos disponíveis e nunca escolhe arbitrariamente entre eles.
+A composição histórica pode ampliar candidatos; a seleção deve refletir a
+atividade do local de trabalho. A consulta CNPJ continua usando as APIs existentes.
+
+Os códigos antigos 20214 e 99007 estão ausentes da TB_CNAE fornecida. O código
+16218 dessa tabela tem descrição semelhante à classe antiga 20214, mas não foi
+considerado equivalente automaticamente. As 580 linhas originais permanecem
+inalteradas. Lacunas nas planilhas de subclasses utilizam correspondência de
+classe apenas como sugestão para revisão. Fontes, hashes e método de cada
+correspondência constam no JSON.
+
+Para reproduzir, baixar as fontes indicadas no JSON em uma pasta e executar
+`python scripts/gerar-correspondencia-cnae.py PASTA_FONTES` (pandas, xlrd e openpyxl).
+A fonte da API deve ser salva como `subclasses-api.json`. Executar
+`node scripts/testar-correspondencia-cnae.cjs` para conferir os invariantes e
+casos de regressão. Falha de carregamento do mapa mantém o preenchimento manual.
