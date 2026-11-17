@@ -503,3 +503,44 @@ for (const tela of root.querySelectorAll('.screen:not(.visat-tela-final)')) {
     }
   };
 })();
+
+// ===== Fim da ficha "congelado" no Google Sites =====
+// Ao chegar ao fim da ficha, ela não se move mais: a rolagem passa para a página do Sites (só o rodapé sobe e desce).
+// Na volta, a página desce primeiro até a borda inferior do quadro sair da tela; só então a ficha volta a rolar.
+// O quadro é de outro domínio: a posição do quadro na tela vem de um IntersectionObserver em uma marca fixa
+// na borda inferior do quadro (visível = rodapé do Sites aparecendo abaixo da ficha).
+(function congelarFimDaFicha() {
+  if (!document.documentElement.classList.contains('visat-em-quadro') || !('IntersectionObserver' in window)) return;
+  let bordaVisivel = false;
+  let marca;
+  function rolagem() {
+    return document.body && document.body.classList.contains('modo-formulario-acidente') ? document.getElementById('principal') : null;
+  }
+  function atualizar() {
+    const el = rolagem();
+    if (!el) return;
+    const noFim = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+    el.classList.toggle('visat-fim-congelado', bordaVisivel && noFim);
+  }
+  function iniciar() {
+    if (marca) return;
+    marca = document.createElement('div');
+    marca.setAttribute('aria-hidden', 'true');
+    marca.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:2px;pointer-events:none;opacity:0;';
+    document.body.appendChild(marca);
+    new IntersectionObserver(entradas => {
+      bordaVisivel = entradas.some(e => e.isIntersecting && e.intersectionRatio > 0);
+      atualizar();
+    }, { threshold: [0, 0.5, 1] }).observe(marca);
+    document.addEventListener('scroll', atualizar, true);
+    ['click', 'change', 'input', 'keyup'].forEach(tipo => document.addEventListener(tipo, () => requestAnimationFrame(atualizar), true));
+    window.addEventListener('resize', atualizar);
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(atualizar).observe(document.body);
+    }
+    if ('MutationObserver' in window) {
+      new MutationObserver(atualizar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+  if (document.body) iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);
+})();

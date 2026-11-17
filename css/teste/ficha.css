@@ -1544,3 +1544,9 @@ html, body { background: #ffffff !important; }
 .acidente-inline .visat-cid-agentes summary { font-size: 12px; font-weight: 500; color: #0b315d; cursor: pointer; }
 .acidente-inline .visat-cid-agentes ul { margin: 4px 0 0; padding-left: 18px; }
 .acidente-inline details.visat-cid-agentes > summary { font-size: 12px !important; font-weight: 500 !important; line-height: 1.35 !important; margin: 2px 0 0 !important; padding: 0 !important; color: #0b315d; }
+
+/* Fim da ficha congelado no Google Sites: no fim da ficha, com o rodapé do Sites à vista, a ficha não rola;
+   a rolagem passa para a página (uma única rolagem em movimento). */
+html.visat-em-quadro body.modo-formulario-acidente #principal.visat-fim-congelado {
+  overflow-y: hidden;
+}
