@@ -156,6 +156,12 @@ const VISAT_ROTULOS = {
 "UF da ocorrência": "UF ocorrência",
 "UF do atendimento": "UF atendimento",
 "UF do local de trabalho": "UF local trabalho",
+"UF da empresa": "UF empresa",
+"Município da empresa": "Município empresa",
+"Código IBGE da empresa": "Código IBGE empresa",
+"Bairro da empresa": "Bairro empresa",
+"Endereço da empresa": "Endereço empresa",
+"(DDD) Telefone da empresa": "Telefone empresa",
 "Código IBGE da ocorrência": "Código IBGE ocorrência",
 "Código IBGE do atendimento": "Código IBGE atendimento",
 "Código IBGE do local de trabalho": "Código IBGE local trabalho",
@@ -341,6 +347,42 @@ window.aplicarLayoutRascunho = function(root) {
     while (caixaOutros && caixaOutros.parentElement && !caixaOutros.parentElement.matches('.visat-linha-campos, .field-group')) caixaOutros = caixaOutros.parentElement;
     if (quantos && caixaOutros && caixaOutros !== quantos) caixaOutros.after(quantos);
   })();
+  // Painel "Como ocorreu" (rascunho VISAT aprovado em 17/11/2026): forma, detalhe, local onde ocorreu e CID-10 da causa
+  // (campo 54) juntos, logo depois do tipo de acidente.
+  (function painelComoOcorreu() {
+    const como = root.querySelector('[data-chips="comoOcorreu"]');
+    const causa = root.querySelector('[data-key="cidCausa"]');
+    const tipo = root.querySelector('[data-chips="tipoAcidente"]');
+    if (!como || !causa || !tipo) return;
+    const caixaDe = el => {
+      let caixa = el;
+      while (caixa?.parentElement && !caixa.parentElement.matches('.field-group, .draft-row, .visat-linha-campos')) caixa = caixa.parentElement;
+      return caixa;
+    };
+    const painel = document.createElement('section');
+    painel.className = 'visat-painel-causa';
+    painel.setAttribute('aria-labelledby', 'visat-painel-causa-titulo');
+    painel.innerHTML = '<div class="visat-painel-causa-cabecalho"><h3 id="visat-painel-causa-titulo">Como ocorreu <span class="visat-obrigatorio" aria-hidden="true">*</span></h3>' +
+      '<span class="visat-etiqueta">Gera o CID da causa (campo 54)</span>' +
+      '<span class="field-help">Escolha a forma e o detalhe; o código é preenchido automaticamente e pode ser corrigido.</span></div>' +
+      '<div class="visat-painel-causa-grade"></div>';
+    const grade = painel.querySelector('.visat-painel-causa-grade');
+    const caixaComo = como.parentElement;
+    const rotuloComo = caixaComo.querySelector('.field-label');
+    if (rotuloComo) rotuloComo.textContent = 'Forma';
+    const pegar = seletor => { const el = root.querySelector(seletor); return el ? caixaDe(el) : null; };
+    const itens = [caixaComo, pegar('[data-key="detalheCausa"]'), pegar('[data-chips="local"]'),
+      pegar('[data-key="tipoLocalInstalacoes"]'), pegar('[data-key="vitimaVeiculo"]')].filter(Boolean);
+    const caixaCausa = caixaDe(causa);
+    const rotuloCausa = caixaCausa.querySelector('.field-label');
+    if (rotuloCausa) rotuloCausa.textContent = 'CID-10 da causa (campo 54)';
+    caixaCausa.classList.add('visat-painel-causa-resultado');
+    const destino = caixaDe(tipo);
+    const linhaTipo = destino.closest('.draft-row, .visat-linha-campos') || destino;
+    linhaTipo.after(painel);
+    grade.append(...itens);
+    painel.append(caixaCausa);
+  })();
   // CAT emitida? fica na Conclusão, logo depois de Evolução do caso, como na ficha do SINAN.
   (function moverCat() {
     const caixaDe = el => {
@@ -401,7 +443,7 @@ window.aplicarLayoutRascunho = function(root) {
   const emprego = [...root.querySelectorAll('.screen')].find(tela =>
     tela.querySelector('.screen-title')?.textContent === 'Trabalho e empregador');
   const [trabalho, empregador, endereco] = emprego.querySelectorAll(':scope > .field-group > .visat-sequencia > .field-group');
-  emprego.querySelector('.screen-title').insertAdjacentHTML('afterend', '<p class="screen-sub">Ocupação, identificação do empregador e local de trabalho.</p>');
+  emprego.querySelector('.screen-title').insertAdjacentHTML('afterend', '<p class="screen-sub">Ocupação, empresa ou empregador e endereço da empresa, como na ficha do Sinan.</p>');
   organizar(trabalho, [
     ['ocupacao', 'situacao'],
     ['tempoNum|tempoValor|tempoOcupacao|tempoOcup', 'ocupacaoAnterior']
@@ -409,6 +451,7 @@ window.aplicarLayoutRascunho = function(root) {
   // Ordem da ficha do SINAN: 35 CNPJ/CPF, 36 nome, 37 CNAE, 38 UF, 39 município; 46 terceirizada; 47 CNAE, 48 CNPJ e 49 razão social da principal.
   organizar(empregador, [
     ['cnpj', 'empresa|empresaNome|razao', 'cnae'],
+    ['situacaoCadastral', 'matrizFilial', 'cnaeSecundario'],
     ['ufEmp', 'munEmp', 'ibgeEmp'],
     ['terceirizada']
   ]);
@@ -421,8 +464,7 @@ window.aplicarLayoutRascunho = function(root) {
   // Ordem da ficha do SINAN: 40 distrito, 41 bairro, 42 endereço, 43 número, 45 telefone.
   organizar(endereco, [
     ['bairroEmp|bairro', 'endEmp|endereco', 'numEmp|numero'],
-    ['compEmp', 'cepEmp'],
-    ['telEmp|telefone']
+    ['telEmp|telefone', 'cepEmp']
   ]);
   // 46 terceirizada e 47 a 49 empresa principal vêm depois do telefone (45), como na ficha do SINAN.
   const linhaTerceirizada = empregador.querySelector('[data-key="terceirizada"], [data-chips="terceirizada"]')?.closest('.draft-row');
@@ -446,7 +488,7 @@ window.aplicarLayoutRascunho = function(root) {
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).
-const gruposEmLista = ['sexo','gestante','raca'].map(key => root.querySelector('[data-chips="'+key+'"]')).filter(Boolean);
+const gruposEmLista = ['sexo','gestante','raca','comoOcorreu','local'].map(key => root.querySelector('[data-chips="'+key+'"]')).filter(Boolean);
 root.querySelectorAll('[data-chips]').forEach(grupo => {
   const rotulo = grupo.previousElementSibling;
   if (rotulo && /^Há ou houve outros trabalhadores/i.test(rotulo.textContent.trim()) && !gruposEmLista.includes(grupo)) gruposEmLista.push(grupo);

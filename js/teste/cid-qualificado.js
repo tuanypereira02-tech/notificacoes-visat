@@ -23,7 +23,7 @@
     pneumo: [['J60', 'J65'], ['J92', 'J92']],
     mental: [['F00', 'F99'], ['Z730'], ['Y90', 'Y91'], ['R40', 'R46'], ['Z55', 'Z65'], ['Y96', 'Y96'], ['X60', 'X84']],
     lesao: [['S00', 'T98']],
-    causa: [['V01', 'Y98']]
+    causa: [['V01', 'Y95'], ['Y97', 'Y98']]
   };
   var NOMES = {
     cancer: 'Câncer relacionado ao trabalho', dermatose: 'Dermatoses ocupacionais', lerdort: 'LER/DORT',
@@ -33,7 +33,7 @@
   var DESCRICAO_FAIXA = {
     cancer: 'C00 a C97 e D00 a D48', dermatose: 'L00 a L99', lerdort: 'M00 a M99, G50 a G59 e G90 a G99',
     pair: 'H83.3, H90, H91 e H93', pneumo: 'J60 a J65 e J92', mental: 'F00 a F99, Z73.0, Y90 a Y91, R40 a R46, Z55 a Z65, Y96 e X60 a X84',
-    lesao: 'S00 a T98', causa: 'V01 a Y98'
+    lesao: 'S00 a T98', causa: 'V01 a Y98, exceto Y96'
   };
 
   /* ---------- dados ---------- */
@@ -49,7 +49,9 @@
             j.cid.forEach(function (e) { mapa[e.c.replace('.', '')] = e; });
           } else {
             ['lesao', 'causa'].forEach(function (k) {
-              j[k] = j[k].map(function (p) { var e = { c: p[0], d: p[1], f: [k] }; mapa[p[0].replace('.', '')] = e; return e; });
+              j[k] = j[k].filter(function (p) { return naFaixa(p[0], k); }).map(function (p) {
+                var e = { c: p[0], d: p[1], f: [k] }; mapa[p[0].replace('.', '')] = e; return e;
+              });
             });
           }
           j.mapa = mapa;
@@ -84,9 +86,16 @@
     var escopo = escopoDoCampo(el);
     var bruto = String(el.value || '').trim();
     if (!bruto) return { estado: 'vazio' };
+    // Causa "Outro" em Como ocorreu: a VISAT atribui o código na revisão (campo 54 = A revisar).
+    if (escopo === 'causa' && /^a revisar$/i.test(bruto)) return { estado: 'revisar' };
     var c = codigoDe(bruto);
     if (!c) return { estado: 'invalido', mensagem: 'CID-10 em formato inválido. Informe letra e números (ex.: ' + (escopo === 'causa' ? 'W23.9' : escopo === 'lesao' ? 'S61.0' : 'G56.0') + ').' };
     if (!naFaixa(c, escopo)) {
+      // Y96 identifica o agravo (campo 2 da ficha); não é causa nem lesão.
+      if (c.slice(0, 3) === 'Y96' && (escopo === 'lesao' || escopo === 'causa')) {
+        return { estado: 'fora', codigo: c, mensagem: 'Y96 já identifica o agravo no campo 2. ' +
+          (escopo === 'lesao' ? 'Informe o diagnóstico da lesão (S00 a T98).' : 'Informe a causa externa do acidente (campo 54).') };
+      }
       var outras = outrasFichas(c);
       var texto = 'O CID ' + formatar(c) + ' está fora do escopo ' + (escopo === 'lesao' || escopo === 'causa' ? 'do campo de ' : 'da ficha de ') +
         NOMES[escopo] + ' (' + DESCRICAO_FAIXA[escopo] + ').';
@@ -127,7 +136,7 @@
     }
     caixa.replaceChildren();
     caixa.dataset.estado = r.estado;
-    if (r.estado === 'vazio') return;
+    if (r.estado === 'vazio' || r.estado === 'revisar') return;
     function linha(t, classe) { var p = document.createElement('p'); if (classe) p.className = classe; p.textContent = t; caixa.append(p); return p; }
     if (r.mensagem) { linha(r.mensagem, 'visat-cid-erro'); return; }
     var escopo = escopoDoCampo(el);

@@ -1550,3 +1550,29 @@ html, body { background: #ffffff !important; }
 html.visat-em-quadro body.modo-formulario-acidente #principal.visat-fim-congelado {
   overflow-y: hidden;
 }
+
+/* Painel "Como ocorreu" (forma, detalhe, local e CID-10 da causa juntos). */
+.acidente-inline .visat-painel-causa {
+  grid-column: 1 / -1;
+  margin: 8px 0;
+  padding: 16px 18px;
+  border: 1px solid #c9dcec;
+  border-radius: 12px;
+  background: #f3f8fc;
+}
+.acidente-inline .visat-painel-causa-cabecalho {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 12px;
+}
+.acidente-inline .visat-painel-causa-cabecalho h3 { margin: 0; font-size: 16px; font-weight: 700; color: #173452; }
+.acidente-inline .visat-painel-causa-cabecalho .visat-obrigatorio { color: #B3261E; }
+.acidente-inline .visat-etiqueta {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e1edf8; color: #0b4f86; font-size: 11px; font-weight: 600;
+}
+.acidente-inline .visat-painel-causa-grade {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px 16px;
+}
+.acidente-inline .visat-painel-causa-grade > [hidden] { display: none !important; }
+.acidente-inline .visat-painel-causa-resultado {
+  margin-top: 12px; padding: 12px 14px; border: 1px solid #d8e3ed; border-radius: 10px; background: #fff;
+}
+.acidente-inline .visat-painel-causa-resultado [data-visat-causa-sugerida]:empty { display: none; }

@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/teste/ficha.css?v=20261117-fim-congelado">
+  <link rel="stylesheet" href="css/teste/ficha.css?v=20261117-modelo-integrado">
 </head>
 <body>
   <a class="pular" href="#principal">Pular para o conteúdo</a>
@@ -124,7 +124,7 @@
 <label class="field-label" for="sinan-idade">Idade</label>
 <div class="unit-row" >
 <input class="input input-lg" id="sinan-idade" type="number" min="0" data-key="idade">
-<select class="input input-lg" id="sinan-idade-un" aria-label="Unidade da idade" data-key="idadeUnidade"><option>Hora</option><option>Dia</option><option>Mês</option><option selected>Ano</option></select>
+<select class="input input-lg" id="sinan-idade-un" aria-label="Unidade da idade" data-key="idadeUnidade"><option value="Hora">Horas</option><option value="Dia">Dias</option><option value="Mês">Meses</option><option value="Ano" selected>Anos</option></select>
 </div>
 </div>
 <div>
@@ -168,12 +168,12 @@
 <div>
 <label class="field-label" for="sinan-cpf">CPF</label>
 <input class="input input-lg" id="sinan-cpf" type="text" data-key="cpf" placeholder="000.000.000-00" data-mask="cpf" inputmode="numeric" maxlength="14">
+<p class="field-help visat-link-cadsus"><a href="https://cadastro.saude.gov.br/" target="_blank" rel="noopener noreferrer">Acesso ao CADSUS (operadores autorizados)</a></p>
 </div>
 
 <div>
 <label class="field-label" for="sinan-sus">Cartão SUS</label>
-<input class="input input-lg" id="sinan-sus" type="text" data-key="cartaoSus">
-<p class="field-help"><a href="https://cadastro.saude.gov.br/" target="_blank" rel="noopener noreferrer">Consultar no CadSUS Web</a></p>
+<input class="input input-lg" id="sinan-sus" type="text" data-key="cartaoSus" inputmode="numeric">
 </div><div>
 <label class="field-label" for="sinan-mae">Nome da mãe</label>
 <input class="input input-lg" id="sinan-mae" type="text" data-key="nomeMae">
@@ -473,14 +473,19 @@
   <span class="field-label">Como ocorreu</span>
   <div class="chip-row" data-chips="comoOcorreu" data-single="true" data-required="Selecione como ocorreu">
   <button type="button" class="chip" data-value="Queda">Queda</button>
-  <button type="button" class="chip" data-value="Corte">Corte</button>
-  <button type="button" class="chip" data-value="Prensamento">Prensamento</button>
+  <button type="button" class="chip" data-value="Corte ou perfuração">Corte ou perfuração</button>
+  <button type="button" class="chip" data-value="Corpo estranho no olho">Corpo estranho no olho</button>
+  <button type="button" class="chip" data-value="Prensamento ou esmagamento">Prensamento ou esmagamento</button>
   <button type="button" class="chip" data-value="Impacto">Impacto</button>
+  <button type="button" class="chip" data-value="Esforço excessivo">Esforço excessivo</button>
   <button type="button" class="chip" data-value="Queimadura">Queimadura</button>
+  <button type="button" class="chip" data-value="Explosão">Explosão</button>
   <button type="button" class="chip" data-value="Exposição química">Exposição química</button>
   <button type="button" class="chip" data-value="Choque elétrico">Choque elétrico</button>
-  <button type="button" class="chip" data-value="Atropelamento">Atropelamento</button>
+  <button type="button" class="chip" data-value="Trânsito ou atropelamento">Trânsito ou atropelamento</button>
   <button type="button" class="chip" data-value="Agressão">Agressão</button>
+  <button type="button" class="chip" data-value="Animal">Animal</button>
+  <button type="button" class="chip" data-value="Calor ou frio excessivo">Calor ou frio excessivo</button>
   <button type="button" class="chip" data-value="Outro">Outro</button>
   </div>
   <div class="field-error" data-err="comoOcorreu">Selecione como ocorreu</div>
@@ -643,11 +648,12 @@
 
   <script src="js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
   <script src="js/envio-ficha.js?v=20261117-modelo-unico" defer></script>
-  <script src="js/teste/layout-ficha.js?v=20261117-fim-congelado" defer></script>
-  <script src="js/teste/formulario-acidente.js?v=20261117-cat-voz" defer></script>
-  <script src="js/teste/autopreenchimento.js?v=20261117-modelo-unico" defer></script>
+  <script src="js/teste/layout-ficha.js?v=20261117-modelo-integrado" defer></script>
+  <script src="js/teste/causas-acidente-dados.js?v=20261117-causas" defer></script>
+  <script src="js/teste/formulario-acidente.js?v=20261117-modelo-integrado" defer></script>
+  <script src="js/teste/autopreenchimento.js?v=20261117-modelo-integrado" defer></script>
   <script src="js/teste/autopreenchimento-listas.js?v=20261117-ajustes-ficha1" defer></script>
-  <script src="js/teste/cid-qualificado.js?v=20261117-faixas-sinan" defer></script>
+  <script src="js/teste/cid-qualificado.js?v=20261117-modelo-integrado" defer></script>
   <script src="js/teste/app.js?v=20261117-teste5" defer></script>
   <script src="js/teste/teclado-listas.js?v=20261117-listas-curtas1" defer></script>
   <script src="js/teste/balanceador-linhas.js?v=20261117-teste5" defer></script>

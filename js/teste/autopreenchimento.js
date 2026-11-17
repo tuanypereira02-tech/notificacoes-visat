@@ -522,6 +522,7 @@
       .then(function (d) {
         return {
           nome: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
+          situacao: d.descricao_situacao_cadastral, matrizFilial: d.descricao_identificador_matriz_filial,
           uf: d.uf, municipio: d.municipio, ibge: d.codigo_municipio_ibge, bairro: d.bairro,
           tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero, complemento: d.complemento,
           telefone: d.ddd_telefone_1 && String(d.ddd_telefone_1).length >= 10
@@ -536,6 +537,7 @@
             var ap = e.atividade_principal || {};
             return {
               nome: d.razao_social, cnae: ap.id, cnaeDescricao: ap.descricao, cep: e.cep,
+              situacao: e.situacao_cadastral, matrizFilial: e.tipo,
               secundarios: (e.atividades_secundarias || []).map(function (x) { return { codigo: x.id, descricao: x.descricao }; }),
               uf: e.estado && e.estado.sigla, municipio: e.cidade && e.cidade.nome,
               ibge: e.cidade && e.cidade.ibge_id, bairro: e.bairro,
@@ -613,6 +615,11 @@
       preenchidos.clear();
       // Troca de empresa (decisão VISAT 17/11/2026): ao mudar um CNPJ já consultado, o CNAE da empresa
       // anterior sai, inclusive quando foi digitado ou escolhido à mão.
+      var listaSecundaria = destino.cnaeSecundario && campo(raiz, destino.cnaeSecundario);
+      if (listaSecundaria && listaSecundaria.tagName === 'SELECT' && listaSecundaria.options.length > 1) {
+        listaSecundaria.replaceChildren(listaSecundaria.options[0]);
+        listaSecundaria.disabled = true;
+      }
       if (el.dataset.cnpjConsultado && el.dataset.cnpjConsultado !== n) {
         if (destino.cnae) limparCampo(campo(raiz, destino.cnae));
         delete el.dataset.cnpjConsultado;
@@ -648,6 +655,30 @@
           if (destino.complemento) preencher(destino.complemento, d.complemento);
           if (destino.telefone) preencher(destino.telefone, d.telefone);
           if (destino.cep) preencher(destino.cep, d.cep);
+          if (destino.situacao) preencher(destino.situacao, titulo(d.situacao || ''));
+          if (destino.matrizFilial) preencher(destino.matrizFilial, titulo(d.matrizFilial || ''));
+          // CNAE secundário: atividades do CNPJ convertidas para a tabela do Sinan; a escolha substitui o CNAE.
+          var selSecundario = destino.cnaeSecundario && campo(raiz, destino.cnaeSecundario);
+          if (selSecundario && selSecundario.tagName === 'SELECT') {
+            var primeira = selSecundario.options[0];
+            selSecundario.replaceChildren(primeira);
+            var vistos = {};
+            (d.secundarios || []).forEach(function (x) {
+              var cod = cnaeSinan(x.codigo);
+              var item = cod && !vistos[cod] && tabelaCnae.classes.find(function (c) { return c[0] === cod; });
+              if (!item || (atividade && item[0] === atividade[0])) return;
+              vistos[cod] = 1;
+              selSecundario.add(new Option(item[0] + ' – ' + titulo(item[2]), item[0] + ' – ' + titulo(item[2])));
+            });
+            selSecundario.disabled = selSecundario.options.length < 2;
+            if (!selSecundario.dataset.visatSecundario) {
+              selSecundario.dataset.visatSecundario = '1';
+              selSecundario.addEventListener('change', function () {
+                var alvo = campo(raiz, destino.cnae);
+                if (selSecundario.value && alvo) { definir(alvo, selSecundario.value, true); }
+              });
+            }
+          }
           var mensagem = 'Confira os dados da empresa preenchidos.';
           if (destino.cnae) {
             var registro = correspondenciaCnae(d.cnae);
@@ -714,7 +745,10 @@
       numero: ['numEmp', 'numero'],
       complemento: ['compEmp'],
       telefone: ['telEmp', 'telefone'],
-      cep: ['cepEmp']
+      cep: ['cepEmp'],
+      situacao: ['situacaoCadastral'],
+      matrizFilial: ['matrizFilial'],
+      cnaeSecundario: ['cnaeSecundario']
     });
     configurarCnpj(raiz, ['cnpjPrincipal', 'cnpjPrinc'], {
       uf: ['ufPrincipal'], municipio: ['munPrincipal'], ibge: ['ibgePrincipal'],
