@@ -1102,27 +1102,44 @@ function dividirEmPaginas(unidades) {
     });
     return partes;
   }
-  // Confere cada página montada (espaçamentos de seções incluídos) e reduz o limite só o necessário.
-  function excessoDasPaginas(partes) {
-    const total = partes[partes.length - 1] + 1;
-    let excesso = 0;
-    for (let p = 0; p < total; p++) {
-      unidades.forEach((u, i) => u.classList.toggle('visat-fora-da-parte', partes[i] !== p));
-      getScreens().forEach(tela => tela.classList.toggle('visat-tela-vazia', Number(tela.dataset.screen) > TOTAL
-        || !unidades.some((u, i) => partes[i] === p && tela.contains(u))));
-      excesso = Math.max(excesso, area.scrollHeight - alturaMaxArea);
+  // Monta cada página de verdade (a grade de duas colunas se reorganiza quando a página começa
+  // no meio de uma linha) e acrescenta ou retira campos até encher a altura sem passar do quadro.
+  const n = unidades.length;
+  function mostrarIntervalo(ini, fim) {
+    unidades.forEach((u, i) => u.classList.toggle('visat-fora-da-parte', i < ini || i >= fim));
+    getScreens().forEach(tela => tela.classList.toggle('visat-tela-vazia', Number(tela.dataset.screen) > TOTAL
+      || !unidades.some((u, i) => i >= ini && i < fim && tela.contains(u))));
+  }
+  function cabe(ini, fim) {
+    mostrarIntervalo(ini, fim);
+    return area.scrollHeight <= alturaMaxArea;
+  }
+  const proximoAlto = (i) => { while (i < n && !medidas[i].alto) i++; return i; };
+  const previsto = dividir(limite);
+  const partes = new Array(n).fill(0);
+  let ini = 0;
+  let pagina = 0;
+  while (ini < n) {
+    // Proposta pelas medidas da ficha inteira.
+    let fim = ini + 1;
+    const alvo = previsto[proximoAlto(ini)] ?? previsto[ini];
+    while (fim < n && previsto[fim] <= alvo) fim++;
+    // Retira campos enquanto a página passar da altura (mantendo ao menos um campo).
+    while (fim > proximoAlto(ini) + 1 && !cabe(ini, fim)) fim--;
+    // Acrescenta campos enquanto couberem.
+    while (fim < n && cabe(ini, proximoAlto(fim) + 1)) fim = proximoAlto(fim) + 1;
+    // Títulos no fim da página passam para a seguinte, junto do primeiro campo.
+    if (fim < n) {
+      let k = fim - 1;
+      while (k > ini && (!medidas[k].alto || medidas[k].titulo)) k--;
+      if (k > ini || !medidas[ini].titulo) fim = Math.max(k + 1, ini + 1);
     }
-    unidades.forEach(u => u.classList.remove('visat-fora-da-parte'));
-    getScreens().forEach(tela => tela.classList.remove('visat-tela-vazia'));
-    return excesso;
+    for (let i = ini; i < fim; i++) partes[i] = pagina;
+    ini = fim;
+    pagina++;
   }
-  let partes = dividir(limite);
-  for (let tentativa = 0; tentativa < 4; tentativa++) {
-    const excesso = excessoDasPaginas(partes);
-    if (excesso <= 0) break;
-    limite -= excesso + 2;
-    partes = dividir(limite);
-  }
+  unidades.forEach(u => u.classList.remove('visat-fora-da-parte'));
+  getScreens().forEach(tela => tela.classList.remove('visat-tela-vazia'));
   unidades.forEach((u, indice) => { u.dataset.visatParte = partes[indice]; });
   totalPartes = partes[partes.length - 1] + 1;
 }
