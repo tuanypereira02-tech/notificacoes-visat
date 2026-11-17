@@ -238,6 +238,15 @@
     let ultimoCep = '';
     let consulta = 0;
 
+    cep.addEventListener('visat:trocar-empresa', function () {
+      consulta++;
+      ultimoCep = '';
+      preenchidosPeloCep.clear();
+      editados.clear();
+      fecharResultados();
+      aviso(cep, '');
+    });
+
     function aplicarEndereco(endereco) {
       const conflitantes = [];
       for (const [origem, el] of Object.entries(dadosEndereco)) {
@@ -380,6 +389,7 @@
           } catch { /* sem sugestões; o campo segue manual */ }
         }, 500);
       });
+      cep.addEventListener('visat:trocar-empresa', fecharRuas);
       campoRua.addEventListener('blur', () => setTimeout(fecharRuas, 200));
     }
     numeroEndereco?.addEventListener('change', evento => {
@@ -453,7 +463,7 @@
         return {
           nome: d.razao_social, cnae: d.cnae_fiscal, cnaeDescricao: d.cnae_fiscal_descricao, secundarios: d.cnaes_secundarios, cep: d.cep,
           uf: d.uf, municipio: d.municipio, ibge: d.codigo_municipio_ibge, bairro: d.bairro,
-          tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero,
+          tipoLogradouro: d.descricao_tipo_de_logradouro, logradouro: d.logradouro, numero: d.numero, complemento: d.complemento,
           telefone: d.ddd_telefone_1 && String(d.ddd_telefone_1).length >= 10
             ? '(' + String(d.ddd_telefone_1).slice(0, 2) + ') ' + String(d.ddd_telefone_1).slice(2) : d.ddd_telefone_1
         };
@@ -469,7 +479,7 @@
               secundarios: (e.atividades_secundarias || []).map(function (x) { return { codigo: x.id, descricao: x.descricao }; }),
               uf: e.estado && e.estado.sigla, municipio: e.cidade && e.cidade.nome,
               ibge: e.cidade && e.cidade.ibge_id, bairro: e.bairro,
-              tipoLogradouro: e.tipo_logradouro, logradouro: e.logradouro, numero: e.numero,
+              tipoLogradouro: e.tipo_logradouro, logradouro: e.logradouro, numero: e.numero, complemento: e.complemento,
               telefone: e.ddd1 && e.telefone1 ? '(' + e.ddd1 + ') ' + e.telefone1 : ''
             };
           });
@@ -521,6 +531,15 @@
       var destino = campo(raiz, chaves);
       if (definir(destino, valor)) preenchidos.set(destino, destino.value);
     }
+    // A seleção explícita de outra empresa invalida consultas e dados anteriores.
+    el.addEventListener('visat:trocar-empresa', function () {
+      consulta++;
+      removerOpcoes();
+      empresasConsultadas.delete(el);
+      delete el.dataset.ultimoCnpj;
+      preenchidos.clear();
+      aviso(el, '');
+    });
     el.addEventListener('input', function () {
       var n = digitos(el.value);
       if (n === el.dataset.ultimoCnpj) return;
@@ -559,6 +578,7 @@
           if (destino.bairro) preencher(destino.bairro, titulo(d.bairro));
           if (destino.endereco) preencher(destino.endereco, titulo(logradouro));
           if (destino.numero) preencher(destino.numero, d.numero);
+          if (destino.complemento) preencher(destino.complemento, d.complemento);
           if (destino.telefone) preencher(destino.telefone, d.telefone);
           if (destino.cep) preencher(destino.cep, d.cep);
           var mensagem = 'Confira os dados da empresa preenchidos.';
@@ -625,6 +645,7 @@
       bairro: ['bairroEmp', 'bairro'],
       endereco: ['endEmp', 'endereco'],
       numero: ['numEmp', 'numero'],
+      complemento: ['compEmp'],
       telefone: ['telEmp', 'telefone'],
       cep: ['cepEmp']
     });
@@ -670,7 +691,7 @@
     }
     var ajuda = document.createElement('p');
     ajuda.className = 'field-help';
-    ajuda.textContent = 'Digite o nome da empresa para filtrar e consultar o cadastro. Ao escolher, o CNPJ e os dados disponíveis são preenchidos.';
+    ajuda.textContent = 'Digite o nome e selecione a empresa. O CNPJ e os demais dados disponíveis serão preenchidos automaticamente, substituindo os dados anteriores.';
     var retorno = document.createElement('p');
     retorno.className = 'field-help';
     retorno.setAttribute('role', 'status');
@@ -682,7 +703,9 @@
     var enderecoEmpresa = {
       ufEmp: campo(raiz, ['ufEmp']), munEmp: campo(raiz, ['munEmp']), endEmp: campo(raiz, ['endEmp', 'endereco']),
       numEmp: campo(raiz, ['numEmp', 'numero']), bairroEmp: campo(raiz, ['bairroEmp', 'bairro']),
-      compEmp: campo(raiz, ['compEmp']), cepEmp: campo(raiz, ['cepEmp'])
+      compEmp: campo(raiz, ['compEmp']), cepEmp: campo(raiz, ['cepEmp']),
+      ibgeEmp: campo(raiz, ['ibgeEmp']), cnae: campo(raiz, ['cnae']),
+      telEmp: campo(raiz, ['telEmp', 'telefone']), refEmp: campo(raiz, ['refEmp'])
     };
     var consultaAtual = 0;
     var espera;
@@ -693,19 +716,16 @@
     function filtroDe(el) { return el && el.value.trim() ? normalizarNome(el.value) : ''; }
 
     function selecionar(empresa) {
-      var atualDoc = digitos(cnpj.value);
-      var novoDoc = digitos(empresa.cnpj);
-      if (atualDoc && atualDoc !== novoDoc) {
-        retorno.textContent = 'Já existe um CNPJ informado. Apague ou confira esse CNPJ para usar a empresa escolhida.';
-        cnpj.focus();
-        return;
-      }
+      cancelar();
       aplicando = true;
       try {
+        cnpj.dispatchEvent(new Event('visat:trocar-empresa'));
+        if (enderecoEmpresa.cepEmp) enderecoEmpresa.cepEmp.dispatchEvent(new Event('visat:trocar-empresa'));
+        Object.keys(enderecoEmpresa).forEach(function (chave) { limparCampo(enderecoEmpresa[chave]); });
         nome.value = empresa.nome;
         nome.dispatchEvent(new Event('input', { bubbles: true }));
-        // Endereço da base só entra em campo vazio; a consulta do CNPJ completa o restante.
-        Object.keys(enderecoEmpresa).forEach(function (chave) { definir(enderecoEmpresa[chave], empresa[chave]); });
+        // Preenche a seleção e consulta o CNPJ para completar os dados disponíveis.
+        Object.keys(enderecoEmpresa).forEach(function (chave) { definir(enderecoEmpresa[chave], empresa[chave], true); });
         cnpj.value = empresa.cnpj;
         cnpj.dispatchEvent(new Event('input', { bubbles: true }));
         cnpj.dispatchEvent(new Event('change', { bubbles: true }));
@@ -713,7 +733,7 @@
         aplicando = false;
       }
       ocultar();
-      retorno.textContent = 'Empresa selecionada. Confira o CNPJ, a unidade e os dados do local de trabalho.' +
+      retorno.textContent = 'Empresa selecionada. Dados anteriores substituídos. Confira os dados preenchidos e complete os campos sem informação.' +
         (empresa.divergente ? ' O município diverge entre as fontes; confira o endereço.' : '');
       nome.focus();
     }
@@ -911,3 +931,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
   else iniciar();
 })();
+
