@@ -1025,6 +1025,7 @@ seg.classList.toggle('done', i < state.screen);
 }
 
 // No rascunho, todas as seções de preenchimento fazem parte da mesma página.
+let indiceFicha;
 function showScreen(n) {
   root.querySelector('[data-visat-pendencias]')?.remove();
   const revisao = n === TOTAL + 1;
@@ -1038,6 +1039,7 @@ function showScreen(n) {
   counter.textContent = revisao ? 'Ficha concluída' : 'Ficha de notificação';
   btnVoltar.hidden = true;
   btnContinuar.textContent = 'Finalizar ficha';
+  if (indiceFicha) indiceFicha.hidden = revisao;
   if (revisao) buildSummary();
   const destino = revisao
     ? root.querySelector('.visat-tela-final')
@@ -1392,6 +1394,29 @@ root.querySelector('#btnConfirmaNova').addEventListener('click', () => {
 
 // Init
 window.aplicarLayoutRascunho(root);
+indiceFicha = document.createElement('nav');
+indiceFicha.className = 'visat-indice-ficha';
+indiceFicha.setAttribute('aria-label', 'Seções da ficha');
+const nomesSecoes = ['Dados gerais', 'Pessoa', 'Residência', 'Trabalho'];
+function adicionarAtalho(rotulo, destino) {
+  const atalho = document.createElement('button');
+  atalho.type = 'button';
+  atalho.className = 'btn';
+  atalho.dataset.variant = 'ghost';
+  atalho.textContent = rotulo;
+  atalho.addEventListener('click', () => {
+    if (!destino.matches('button')) destino.tabIndex = -1;
+    destino.focus({ preventScroll: true });
+    destino.scrollIntoView({ block: 'start' });
+  });
+  indiceFicha.append(atalho);
+}
+getScreens().slice(0, TOTAL).forEach((tela, indice) => {
+  const titulo = tela.querySelector('h1');
+  if (titulo) adicionarAtalho(nomesSecoes[indice] || titulo.textContent.trim(), titulo);
+});
+adicionarAtalho('Conclusão', btnContinuar);
+area.before(indiceFicha);
 restoreInputs();
 showScreen(1);
 const activeHeading = root.querySelector('.screen.active h1');
