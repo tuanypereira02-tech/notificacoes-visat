@@ -115,6 +115,26 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  function sugerirMunicipios(lista, termo, uf, limite) {
+    var palavras = termo.split(' ').filter(Boolean);
+    var ufPreferida = norm(uf) || 'sc';
+    return lista.map(function (item) {
+      var nome = norm(item.v);
+      var codigo = String(item.c);
+      var alvo = norm(item.d) + ' ' + codigo;
+      var codigoCompleto = /^\d{7}$/.test(termo) && codigo === termo.slice(0, 6);
+      if (!codigoCompleto && !palavras.every(function (palavra) { return alvo.includes(palavra); })) return null;
+      var relevancia = nome === termo || codigo === termo || codigoCompleto ? 0 :
+        nome.startsWith(termo) || codigo.startsWith(termo) ? 1 :
+        nome.split(/[\s'-]+/).some(function (parte) { return parte.startsWith(termo); }) ? 2 : 3;
+      return { item: item, relevancia: relevancia, local: norm(item.uf) === ufPreferida ? 0 : 1 };
+    }).filter(Boolean).sort(function (a, b) {
+      return a.relevancia - b.relevancia || a.local - b.local ||
+        Number(String(b.item.c) === '420540') - Number(String(a.item.c) === '420540') ||
+        a.item.v.localeCompare(b.item.v, 'pt-BR') || String(a.item.c).localeCompare(String(b.item.c));
+    }).slice(0, limite).map(function (resultado) { return resultado.item; });
+  }
+
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
   function anexarLista(input, tipo, aoEscolher, codigoDerivado) {
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
@@ -142,7 +162,7 @@
       carregar(tipo).then(function (lista) {
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         var palavras = termo.split(' ').filter(Boolean);
-        var itens = lista.filter(function (item) {
+        var itens = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
           var alvo = norm(item.c + ' ' + item.d);
           return palavras.every(function (p) { return alvo.includes(p); });
         }).slice(0, 12);
@@ -228,13 +248,14 @@
           var alvo = norm(x.c + ' ' + x.d);
           if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
         }
+        if (tipo === 'mun') achados = sugerirMunicipios(lista, termo, ufVinculada(input), 30);
         // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
         function nota(x) {
           var v = norm(x.v), d = norm(x.d);
           var n = (v === termo || x.c === termo) ? 0 : (v.indexOf(termo) === 0 || d.indexOf(termo) === 0 || x.c.indexOf(termo) === 0) ? 1 : 2;
           return n - (x.uf === 'SC' ? 0.5 : 0);
         }
-        achados.sort(function (a, b) { return nota(a) - nota(b); });
+        if (tipo !== 'mun') achados.sort(function (a, b) { return nota(a) - nota(b); });
         achados = achados.slice(0, 30);
         dl.textContent = '';
         achados.forEach(function (x) {
