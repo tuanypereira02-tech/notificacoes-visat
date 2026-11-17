@@ -1315,3 +1315,13 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 html.visat-em-quadro body.modo-formulario-acidente #principal {
   padding-top: calc(16px + var(--visat-espaco-topo, 0px));
 }
+
+/* A área dos campos deve manter sua altura também dentro do Google Sites. */
+body.modo-formulario-acidente #mainArea { flex: 0 0 auto; }
+body.modo-formulario-acidente #bottomBar { position: static; }
+.acidente-inline .visat-ruas-resultados {
+  position: static;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
