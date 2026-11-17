@@ -160,13 +160,13 @@ window.aplicarLayoutRascunho = function(root) {
   // Ordem da ficha do SINAN (campos 17 a 29). O país fica no início porque define quais campos aparecem.
   const telefone = root.querySelector('#sinan-tel');
   if (telefone) gradeEndereco.append(telefone.closest('.unit-row')?.parentElement || telefone.parentElement);
-  // Geo campo 1 e 2 (campos 24 e 25 do SINAN) entre Complemento e Ponto de referência.
+  // Geo campo 1 e 2 (campos 24 e 25 do SINAN) após Complemento.
   ['#sinan-geo1', '#sinan-geo2'].forEach(id => { const geo = root.querySelector(id); if (geo) gradeEndereco.append(geo.parentElement); });
   organizar(gradeEndereco, [
     ['sinan-uf-res', 'sinan-mun-res', 'sinan-ibge-res'],
     ['sinan-bairro', 'sinan-logr', 'sinan-num'],
     ['sinan-comp', 'sinan-geo1', 'sinan-geo2'],
-    ['sinan-ref', 'sinan-cep', 'sinan-tel'],
+    ['sinan-cep', 'sinan-tel'],
     ['zona']
   ]);
   if (linhaPais && gradeEndereco) gradeEndereco.prepend(linhaPais);
@@ -191,10 +191,10 @@ window.aplicarLayoutRascunho = function(root) {
   organizar(empregador, [contratante]);
   const linhaContratante = empregador.firstElementChild;
   empregador.querySelector('[data-key="terceirizada"], [data-chips="terceirizada"]').closest('.draft-row').after(linhaContratante);
-  // Ordem da ficha do SINAN: 40 distrito, 41 bairro, 42 endereço, 43 número, 44 referência, 45 telefone.
+  // Ordem da ficha do SINAN: 40 distrito, 41 bairro, 42 endereço, 43 número, 45 telefone.
   organizar(endereco, [
     ['bairroEmp|bairro', 'endEmp|endereco', 'numEmp|numero'],
-    ['compEmp', 'refEmp', 'cepEmp'],
+    ['compEmp', 'cepEmp'],
     ['telEmp|telefone']
   ]);
   // 46 terceirizada e 47 a 49 empresa principal vêm depois do telefone (45), como na ficha do SINAN.
