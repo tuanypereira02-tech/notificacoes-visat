@@ -1462,3 +1462,13 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 .acidente-inline div:has(> .visat-lista-apoio:not([hidden]) ul button) > .visat-estado-codigo[data-estado="digitando"] {
   display: none;
 }
+
+/* Um único contorno, sem divisórias entre sugestões. */
+.acidente-inline .form-app :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button.btn {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.acidente-inline .form-app :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button.btn:is(:hover, :focus-visible, .visat-item-ativo) {
+  background: #eef4f8;
+}
