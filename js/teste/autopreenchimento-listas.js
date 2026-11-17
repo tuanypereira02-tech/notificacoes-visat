@@ -146,7 +146,7 @@
     input.insertAdjacentElement('afterend', dl);
     // Sugestões em lista clicável, inclusive em visualizações incorporadas.
     input.removeAttribute('list');
-    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocomplete', 'visat-sem-preenchimento');
     input.title = 'Digite o nome ou código e escolha uma sugestão.';
     var listaRapida;
     var abertura = 0;

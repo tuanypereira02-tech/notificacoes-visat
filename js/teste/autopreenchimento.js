@@ -365,7 +365,7 @@
     if (campoRua) {
       // O logradouro usa a busca do VISAT, sem sugestões de endereços salvos.
       campoRua.type = 'search';
-      campoRua.setAttribute('autocomplete', 'off');
+      campoRua.setAttribute('autocomplete', 'visat-sem-preenchimento');
       const sugestoes = document.createElement('ul');
       sugestoes.className = 'empresa-resultados visat-ruas-resultados';
       sugestoes.setAttribute('aria-label', 'Ruas encontradas');

@@ -7,7 +7,40 @@ document.addEventListener('click', evento => {
   const botao = evento.target instanceof Element && evento.target.closest('button, a');
   if (botao && /Abrir formul/i.test(botao.textContent || '')) window.visatAlturaAbertura = botao.getBoundingClientRect().top;
 }, true);
+// Sem preenchimento automático do navegador (Edge/Chrome: "As informações foram salvas", "Usado pela última vez").
+// O valor "off" é ignorado pelo navegador nos campos de nome e endereço; um valor não reconhecido suprime as sugestões.
+// As listas próprias da ficha (CBO, CNAE, município, rua) continuam funcionando.
+window.VISAT_SEM_PREENCHIMENTO = 'visat-sem-preenchimento';
+window.visatSemPreenchimento = function(raiz) {
+  (raiz || document).querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="date"]):not([type="time"]), textarea, select')
+    .forEach(campo => {
+      campo.setAttribute('autocomplete', window.VISAT_SEM_PREENCHIMENTO);
+      campo.setAttribute('data-form-type', 'other');
+      campo.setAttribute('data-lpignore', 'true');
+    });
+};
+document.addEventListener('focusin', evento => {
+  const campo = evento.target;
+  if (campo instanceof Element && campo.matches('input, textarea, select') && campo.getAttribute('autocomplete') !== window.VISAT_SEM_PREENCHIMENTO
+      && !campo.matches('[type="hidden"], [type="checkbox"], [type="radio"], [type="date"], [type="time"]')) {
+    campo.setAttribute('autocomplete', window.VISAT_SEM_PREENCHIMENTO);
+  }
+}, true);
+// Nome completo e nome da mãe sempre em CAIXA ALTA (também no PDF e no e-mail), mantendo a posição do cursor.
+const VISAT_CAMPOS_MAIUSCULOS = '[data-key="nome"], [data-key="nomeMae"]';
+function visatMaiusculas(campo) {
+  const maiusculo = campo.value.toLocaleUpperCase('pt-BR');
+  if (maiusculo === campo.value) return;
+  const inicio = campo.selectionStart, fim = campo.selectionEnd;
+  campo.value = maiusculo;
+  try { campo.setSelectionRange(inicio, fim); } catch (erro) { /* campo sem seleção */ }
+}
+['input', 'change', 'blur'].forEach(tipo => document.addEventListener(tipo, evento => {
+  if (evento.target instanceof Element && evento.target.matches(VISAT_CAMPOS_MAIUSCULOS)) visatMaiusculas(evento.target);
+}, true));
 window.aplicarLayoutRascunho = function(root) {
+  window.visatSemPreenchimento(root);
+  root.querySelectorAll(VISAT_CAMPOS_MAIUSCULOS).forEach(visatMaiusculas);
   function campoDaGrade(grade, chaves) {
     if (!chaves) return null;
     for (const chave of chaves.split('|')) {

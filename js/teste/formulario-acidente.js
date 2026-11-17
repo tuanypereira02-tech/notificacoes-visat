@@ -475,7 +475,7 @@ const defaults = {
 };
 const state = { screen: 1, values: { ...defaults } };
 root.querySelectorAll('input[data-key], textarea[data-key]').forEach(campo => {
-  campo.setAttribute('autocomplete', 'off');
+  campo.setAttribute('autocomplete', 'visat-sem-preenchimento');
 });
 if (root.querySelector('[data-key="dataFechamento"]') && !state.values.dataFechamento) {
   state.values.dataFechamento = today;

@@ -155,7 +155,7 @@
     el.dataset.visatCid = escopo;
     el.removeAttribute('maxlength');
     el.removeAttribute('list');
-    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocomplete', 'visat-sem-preenchimento');
     el.setAttribute('aria-describedby', (el.getAttribute('aria-describedby') || '') + ' ' + el.id + '-cid-ajuda');
     var ajuda = document.createElement('p');
     ajuda.className = 'field-help';

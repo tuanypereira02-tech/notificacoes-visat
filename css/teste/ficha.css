@@ -1473,3 +1473,50 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 .acidente-inline .form-app :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button.btn:is(:hover, :focus-visible, .visat-item-ativo) {
   background: #eef4f8;
 }
+
+/* ===== Ajustes de 17/11/2026 ===== */
+/* Nome completo e nome da mãe em CAIXA ALTA (o valor também é convertido no script). */
+.acidente-inline :is([data-key="nome"], [data-key="nomeMae"]) { text-transform: uppercase; }
+.acidente-inline :is([data-key="nome"], [data-key="nomeMae"])::placeholder { text-transform: none; }
+
+/* Fundo único na ficha: sem painel branco que termina no meio da rolagem nem faixas cinzas nas laterais.
+   Os cartões brancos ficam sobre a cor de fundo da página, com margens iguais dos dois lados. */
+html:has(body.modo-formulario-acidente),
+body.modo-formulario-acidente { background: #faf8f5; }
+body.modo-formulario-acidente #principal > section[aria-labelledby="h-resultado"],
+body.modo-formulario-acidente #resultado,
+body.modo-formulario-acidente .resultado-conteudo,
+body.modo-formulario-acidente .acidente-inline,
+body.modo-formulario-acidente .form-app {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+body.modo-formulario-acidente #principal { padding-inline: 16px; }
+
+/* No quadro do Sites, a ficha inteira acompanha o conteúdo: nenhuma caixa fica presa à altura do quadro. */
+html.visat-em-quadro body.modo-formulario-acidente #principal { display: block; }
+html.visat-em-quadro body.modo-formulario-acidente #principal > section[aria-labelledby="h-resultado"],
+html.visat-em-quadro body.modo-formulario-acidente #resultado,
+html.visat-em-quadro body.modo-formulario-acidente .acidente-inline,
+html.visat-em-quadro body.modo-formulario-acidente .form-app {
+  display: block;
+  flex: none;
+  height: auto;
+  min-height: 0;
+}
+/* Rolagem sem trava no fim: ao chegar ao início ou ao fim da ficha, a rolagem passa para a página do Sites,
+   que mostra a parte do quadro que estava abaixo da tela (botões Finalizar e PDF). */
+html.visat-em-quadro body.modo-formulario-acidente #principal {
+  overscroll-behavior: auto;
+  padding-bottom: 32px;
+}
+
+/* Unidade de tempo (Anos/Meses/Dias, Ano/Mês/Dia) sempre inteira: a caixa ocupa a largura do texto. */
+.acidente-inline .unit-row {
+  grid-template-columns: minmax(56px, 1fr) max-content;
+}
+.acidente-inline .unit-row > select {
+  min-width: 84px;
+  padding-right: 28px;
+}

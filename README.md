@@ -91,3 +91,12 @@ casos de regressão. Falha de carregamento do mapa mantém o preenchimento manua
 - Para promover: trocar em `notificacao.html` as referências de CSS/JS pelas de `notificacao-teste.html` (ou copiar os arquivos de `js/teste/`
   e `css/teste/` sobre os originais) e aplicar os modelos de `formularios-inline-teste.html`.
 
+
+### Ajustes da ficha (17/11/2026)
+
+- Nome completo e Nome da mãe em CAIXA ALTA (tela, PDF e e-mail).
+- Sem preenchimento automático do navegador ("As informações foram salvas", "Usado pela última vez"): os campos usam
+  `autocomplete="visat-sem-preenchimento"`, porque o Edge/Chrome ignora `off` em nome e endereço. As listas próprias continuam.
+- Fundo único na ficha, sem o painel branco que terminava no meio da rolagem e sem faixas cinzas laterais.
+- No quadro do Sites, a ficha rola até o fim e, depois, a rolagem passa para a página do Sites (sem trava no final).
+- Unidade de tempo (Anos/Meses/Dias) sempre inteira.
