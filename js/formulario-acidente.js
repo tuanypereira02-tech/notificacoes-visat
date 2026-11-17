@@ -1061,12 +1061,19 @@ function paginarFicha() {
   }
 }
 function dividirEmPaginas(unidades) {
-  const disponivel = alturaDisponivelArea();
   const visiveis = unidades.filter(u => u.getBoundingClientRect().height);
   if (!visiveis.length) { totalPartes = 1; return; }
+  // Altura que a área dos campos pode ter sem passar do fim do quadro.
+  const rodapes = [root.querySelector('#bottomBar'), root.querySelector('#form-status')]
+    .filter(el => el && el.offsetParent !== null)
+    .reduce((soma, el) => {
+      const estilo = getComputedStyle(el);
+      return soma + el.getBoundingClientRect().height + parseFloat(estilo.marginTop) + parseFloat(estilo.marginBottom);
+    }, 0);
+  const alturaMaxArea = Math.floor(window.innerHeight - (area.getBoundingClientRect().top + (window.scrollY || 0)) - rodapes);
   const estiloArea = getComputedStyle(area);
   const cabecalho = parseFloat(estiloArea.paddingTop) + parseFloat(estiloArea.paddingBottom);
-  const limite = Math.max(240, (disponivel || window.innerHeight) - cabecalho - 24);
+  let limite = Math.max(240, alturaMaxArea - cabecalho);
   const base = visiveis[0].getBoundingClientRect().top;
   const medidas = unidades.map(u => {
     const r = u.getBoundingClientRect();
@@ -1074,24 +1081,48 @@ function dividirEmPaginas(unidades) {
       titulo: u.matches(SELETOR_TITULO) || u.matches('p.field-help') };
   });
   // Enche cada página até o limite; títulos acompanham o primeiro campo da página seguinte.
-  const partes = new Array(medidas.length).fill(0);
-  let parte = 0;
-  let inicio = null;
-  medidas.forEach((m, indice) => {
-    if (!m.alto) { partes[indice] = parte; return; }
-    if (inicio === null) inicio = m.topo;
-    if (m.fim - inicio > limite && m.topo > inicio) {
-      parte++;
-      inicio = m.topo;
-      for (let k = indice - 1; k >= 0; k--) {
-        if (!medidas[k].alto) continue;
-        if (!medidas[k].titulo) break;
-        partes[k] = parte;
-        inicio = Math.min(inicio, medidas[k].topo);
+  function dividir(lim) {
+    const partes = new Array(medidas.length).fill(0);
+    let parte = 0;
+    let inicio = null;
+    medidas.forEach((m, indice) => {
+      if (!m.alto) { partes[indice] = parte; return; }
+      if (inicio === null) inicio = m.topo;
+      if (m.fim - inicio > lim && m.topo > inicio) {
+        parte++;
+        inicio = m.topo;
+        for (let k = indice - 1; k >= 0; k--) {
+          if (!medidas[k].alto) continue;
+          if (!medidas[k].titulo) break;
+          partes[k] = parte;
+          inicio = Math.min(inicio, medidas[k].topo);
+        }
       }
+      partes[indice] = parte;
+    });
+    return partes;
+  }
+  // Confere cada página montada (espaçamentos de seções incluídos) e reduz o limite só o necessário.
+  function excessoDasPaginas(partes) {
+    const total = partes[partes.length - 1] + 1;
+    let excesso = 0;
+    for (let p = 0; p < total; p++) {
+      unidades.forEach((u, i) => u.classList.toggle('visat-fora-da-parte', partes[i] !== p));
+      getScreens().forEach(tela => tela.classList.toggle('visat-tela-vazia', Number(tela.dataset.screen) > TOTAL
+        || !unidades.some((u, i) => partes[i] === p && tela.contains(u))));
+      excesso = Math.max(excesso, area.scrollHeight - alturaMaxArea);
     }
-    partes[indice] = parte;
-  });
+    unidades.forEach(u => u.classList.remove('visat-fora-da-parte'));
+    getScreens().forEach(tela => tela.classList.remove('visat-tela-vazia'));
+    return excesso;
+  }
+  let partes = dividir(limite);
+  for (let tentativa = 0; tentativa < 4; tentativa++) {
+    const excesso = excessoDasPaginas(partes);
+    if (excesso <= 0) break;
+    limite -= excesso + 2;
+    partes = dividir(limite);
+  }
   unidades.forEach((u, indice) => { u.dataset.visatParte = partes[indice]; });
   totalPartes = partes[partes.length - 1] + 1;
 }

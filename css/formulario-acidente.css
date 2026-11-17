@@ -574,4 +574,5 @@ body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
    a tela seguinte começa abaixo de uma linha divisória. */
 .visat-todas-telas .screen[data-screen]:not(.visat-tela-final) { display: block !important; animation: none !important; }
 .screen.active ~ .screen.active { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
-.visat-todas-telas .screen ~ .screen { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
+.visat-todas-telas .screen:not(.visat-tela-vazia) ~ .screen:not(.visat-tela-vazia) { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
+.visat-todas-telas .screen[data-screen].visat-tela-vazia { display: none !important; }
