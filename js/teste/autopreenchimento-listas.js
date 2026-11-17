@@ -32,8 +32,9 @@
     cnes: function () {
       return fetch('data/cnes-florianopolis.json').then(function (r) { return r.json(); }).then(function (l) {
         return l.map(function (p) {
-          var nome = String(p[1]).split(' · ')[0];
-          return { c: p[0], d: p[1], v: nome, uf: 'SC', municipio: 'Florianópolis', ibge: '420540' };
+          var partes = String(p[1]).split(' · ');
+          var nome = (window.visatTitulo?.(partes[0]) ?? partes[0]);
+          return { c: p[0], d: [nome].concat(partes.slice(1)).join(' · '), v: nome, uf: 'SC', municipio: 'Florianópolis', ibge: '420540' };
         });
       });
     },
@@ -52,7 +53,7 @@
       ]).then(function (a) {
         var l = a[0].map(function (p) { return { c: p[0].trim(), d: p[1].trim() }; });
         a[1].forEach(function (p) { l.push({ c: p[0], d: p[1] }); });
-        l.forEach(function (x) { x.v = x.c + ' – ' + x.d; });
+        l.forEach(function (x) { x.d = (window.visatTitulo?.(x.d) ?? x.d); x.v = x.c + ' – ' + x.d; });
         return l;
       });
     },
@@ -61,7 +62,8 @@
       return window.visatCarregarCnae()
         .then(function (j) {
           return j.classes.map(function (x) {
-            return { c: x[0], d: x[2], v: x[0] + ' – ' + x[2] };
+            var descricao = (window.visatTitulo?.(x[2]) ?? x[2]);
+            return { c: x[0], d: descricao, v: x[0] + ' – ' + descricao };
           });
         });
     },
