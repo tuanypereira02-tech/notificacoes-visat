@@ -1526,3 +1526,8 @@ html:has(body.modo-formulario-acidente),
 body.modo-formulario-acidente { background: #ffffff !important; }
 body.modo-formulario-acidente #principal { max-width: none; padding-inline: 12px; }
 #resultado .acidente-inline { width: 100%; max-width: none; }
+
+/* Sem espaço cinza abaixo: o quadro do Sites é mais alto que o conteúdo em algumas telas;
+   o fundo de toda a página (consulta, ficha e conclusão) é branco, inclusive o rodapé. */
+html, body { background: #ffffff !important; }
+.rodape { background: #ffffff; border-top: 0; }
