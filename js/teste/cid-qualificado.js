@@ -133,7 +133,7 @@
     var escopo = escopoDoCampo(el);
     var avisos = avisosDoCodigo(escopo, r);
     var correto = (r.estado === 'ldrt' || r.estado === 'valido') && !avisos.length;
-    if (r.item) linha((correto ? '✓ ' : '') + formatar(r.codigo) + ' — ' + r.item.d, 'visat-cid-titulo' + (correto ? ' visat-cid-ok' : ''));
+    if (r.item) linha((correto ? '✓ ' : '') + formatar(r.codigo) + ' — ' + (window.visatTitulo?.(r.item.d) ?? r.item.d), 'visat-cid-titulo' + (correto ? ' visat-cid-ok' : ''));
     if (r.estado === 'ldrt') {
       linha('Consta da LDRT — Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.', 'visat-cid-ok');
       var ags = (r.item.a || []).map(function (i) { return dados.dart.agentes[i]; });
@@ -198,7 +198,7 @@
           b.type = 'button';
           b.className = 'btn';
           b.dataset.variant = 'outline';
-          b.textContent = e.c + ' · ' + e.d + (e.l ? ' · LDRT' : '');
+          b.textContent = e.c + ' · ' + (window.visatTitulo?.(e.d) ?? e.d) + (e.l ? ' · LDRT' : '');
           b.addEventListener('click', function () {
             el.value = e.c + ' – ' + e.d;
             lista.hidden = true;
@@ -241,7 +241,7 @@
             return codigoDe(registro.c) === codigo;
           });
           if (!item) return;
-          el.value = item.c + ' – ' + item.d;
+          el.value = item.c + ' – ' + (window.visatTitulo?.(item.d) ?? item.d);
           el.dispatchEvent(new Event('input', { bubbles: true }));
         }).catch(function () {});
       }
