@@ -304,6 +304,13 @@ function organizarCamposComplementares(secao, obrigatorios) {
     return campo && !obrigatorios.includes(campo.id) && !obrigatorios.includes(campo.dataset.chips);
   });
   if (!opcionais.length) return;
+  // Um único campo opcional visível segue na mesma grade, ao lado do último campo,
+  // sem abrir a seção "Dados complementares" só para ele.
+  const visiveis = opcionais.filter((bloco) => !bloco.classList.contains('visat-codigo-derivado'));
+  if (visiveis.length === 1) {
+    grupo.append(...opcionais);
+    return;
+  }
   const detalhes = criarComplementares('Dados complementares', false);
   const campos = document.createElement('div');
   campos.className = 'field-group';
