@@ -1531,3 +1531,8 @@ body.modo-formulario-acidente #principal { max-width: none; padding-inline: 12px
    o fundo de toda a página (consulta, ficha e conclusão) é branco, inclusive o rodapé. */
 html, body { background: #ffffff !important; }
 .rodape { background: #ffffff; border-top: 0; }
+
+/* Descrição e outras informações: caixas mais baixas (cerca de 3 linhas), ainda ajustáveis. */
+.acidente-inline .screen textarea:is(#atividade, [data-key="descricaoRascunho"], [data-key="observacoesRascunho"]) {
+  min-height: 84px;
+}

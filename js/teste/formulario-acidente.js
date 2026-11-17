@@ -429,9 +429,9 @@ function montarBlocoSinan(root, options) {
     // A atividade, a máquina/equipamento/substância e as causas entram na descrição sumária, como no SINAN.
     const caixaAtividade = atividade.parentElement;
     const etapaOrigem = caixaAtividade.closest('section, [data-visat-secao-complementar]');
-    caixaAtividade.querySelector('label').textContent = 'Descrição sumária de como ocorreu o acidente/ atividade/ causas/ condições/ objeto/ agentes que concorreram direta ou indiretamente para a ocorrência do acidente';
-    atividade.rows = 6;
-    atividade.placeholder = 'O que o trabalhador fazia no momento, máquina, equipamento ou substância envolvida, causas e condições.';
+    caixaAtividade.querySelector('label').textContent = 'Descrição sumária do acidente';
+    atividade.rows = 3;
+    atividade.placeholder = 'Atividade, causas, objeto ou agente.';
     atividade.dataset.required = 'Descreva como ocorreu o acidente';
     const erro = caixaAtividade.querySelector('[data-err="atividade"]');
     if (erro) erro.textContent = 'Descreva como ocorreu o acidente';
@@ -447,9 +447,9 @@ function montarBlocoSinan(root, options) {
     }
   } else if (!acidenteComDescricaoEspecifica) {
     textosGrupo.append(caixaTexto('descricaoRascunho', 'Descrição do acidente / exposição',
-      'Descreva as circunstâncias, a atividade realizada e a exposição.', 6));
+      'Circunstâncias, atividade e exposição.', 3));
   }
-  textosGrupo.append(caixaTexto('observacoesRascunho', 'Outras informações', 'Registre as informações complementares.', 6));
+  textosGrupo.append(caixaTexto('observacoesRascunho', 'Outras informações', '', 3));
   area.insertBefore(textos,area.querySelector('.screen:last-child'));
   const screens = area.querySelectorAll('.screen');
   const total = screens.length - 1;
