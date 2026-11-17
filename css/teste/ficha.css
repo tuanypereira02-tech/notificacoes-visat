@@ -1467,6 +1467,7 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 .acidente-inline .form-app :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button.btn {
   border: 0;
   background: transparent;
+  color: #112c45;
   box-shadow: none;
 }
 .acidente-inline .form-app :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button.btn:is(:hover, :focus-visible, .visat-item-ativo) {
