@@ -520,6 +520,8 @@ details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 body.modo-formulario-acidente #principal { max-width: 100%; }
 .step-area, .bottom-inner, .form-app .top-bar > .shell-container, .success-card { max-width: 100%; }
 .hospital-alert-container { max-width: 100%; margin-left: auto; margin-right: auto; }
+.visat-linha-campos { display: contents; }
+.visat-linha-campos [data-show-when="parteCorpo=Outro"] { margin-top: 16px; }
 @media (min-width: 820px) {
   .step-area { padding: 32px 28px 24px; }
   .field-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
@@ -533,7 +535,15 @@ body.modo-formulario-acidente #principal { max-width: 100%; }
   .field-group > div:has(.visat-lista-apoio:not([hidden])),
   .field-group > div:has(.empresa-resultados:not([hidden])),
   .field-group > div:has(.visat-cid-info),
+  .field-group > .visat-linha-campos,
   .field-group > [data-visat-complementares] { grid-column: 1 / -1; }
+  .visat-linha-campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 18px 28px;
+  }
+  .visat-linha-estabelecimento { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 2fr); }
   .screen-sub { margin-bottom: 28px; }
 }
 /* Partes da tela (paginação pela altura disponível) */

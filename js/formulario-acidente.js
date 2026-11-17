@@ -145,6 +145,13 @@ function montarEmpregador(area) {
 }
 
 function montarAtendimentoAcidente(detalhes) {
+  function criarLinha(...campos) {
+    const linha = document.createElement('div');
+    linha.className = 'visat-linha-campos';
+    linha.append(...campos);
+    return linha;
+  }
+
   const ocorrencia = detalhes.querySelector('[data-chips="tipoAcidente"]').closest('[data-visat-secao-complementar]');
   const campos = ocorrencia.querySelector('.field-group');
   const opcoes = ['Sim', 'Não', 'Ignorado'];
@@ -157,33 +164,36 @@ function montarAtendimentoAcidente(detalhes) {
     criarCampo('tempoJornada', 'Tempo desde o início da jornada (horas e minutos)'),
     criarCampo('munOcorrencia', 'Município de ocorrência do acidente'), codigoLocal,
     criarCampo('ufOcorrencia', 'UF da ocorrência'),
-    criarCampo('outrosAtingidos', 'Houve outros trabalhadores atingidos?', 'text', opcoes), quantidade
+    criarLinha(
+      criarCampo('outrosAtingidos', 'Houve outros trabalhadores atingidos?', 'text', opcoes),
+      criarCampo('atendimentoMedico', 'Houve atendimento médico?', 'text', opcoes)
+    ),
+    quantidade
   );
   const atendimento = criarEtapa('Atendimento médico');
   atendimento.classList.remove('screen');
   atendimento.dataset.visatSecaoComplementar = '';
+  atendimento.dataset.showWhen = 'atendimentoMedico=Sim';
   const grupo = atendimento.querySelector('.field-group');
   const codigoAtendimento = criarCampo('ibgeAtendimento', 'Código IBGE do atendimento');
   codigoAtendimento.classList.add('visat-codigo-derivado');
-  const dadosAtendimento = document.createElement('div');
-  dadosAtendimento.className = 'field-group';
-  dadosAtendimento.dataset.showWhen = 'atendimentoMedico=Sim';
-  dadosAtendimento.append(
-    criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
-    criarCampo('munAtendimento', 'Município do atendimento'), codigoAtendimento,
+  const estabelecimento = criarLinha(
     criarCampo('ufAtendimento', 'UF do atendimento'),
     criarCampo('unidAtendimento', 'Estabelecimento de saúde do atendimento'),
     criarCampo('cnesAtendimento', 'Código CNES do estabelecimento')
   );
-  const lesao = detalhes.querySelector('[data-chips="parteCorpo"]').closest('[data-visat-secao-complementar]');
-  ['parteCorpo', 'regime'].forEach(chave => {
-    const campo = detalhes.querySelector('[data-chips="' + chave + '"]');
-    if (campo) dadosAtendimento.append(campo.parentElement);
-  });
+  estabelecimento.classList.add('visat-linha-estabelecimento');
+  const parteCorpo = detalhes.querySelector('[data-chips="parteCorpo"]').parentElement;
+  const regime = detalhes.querySelector('[data-chips="regime"]').parentElement;
+  const lesao = parteCorpo.closest('[data-visat-secao-complementar]');
   const outraParte = criarCampo('parteCorpoOutra', 'Especifique a parte do corpo atingida');
   outraParte.dataset.showWhen = 'parteCorpo=Outro';
-  dadosAtendimento.querySelector('[data-chips="parteCorpo"]').parentElement.after(outraParte);
-  grupo.append(criarCampo('atendimentoMedico', 'Houve atendimento médico?', 'text', opcoes), dadosAtendimento);
+  parteCorpo.append(outraParte);
+  grupo.append(
+    criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
+    criarCampo('munAtendimento', 'Município do atendimento'), codigoAtendimento,
+    estabelecimento, criarLinha(parteCorpo, regime)
+  );
   ocorrencia.after(atendimento);
   lesao.remove();
 }
@@ -1022,9 +1032,11 @@ const SELETOR_TITULO = 'h1, h2, h3, h4, .screen-title, .screen-sub, .visat-seque
 function unidadesDaTela(tela) {
   // Título e subtítulo da tela, campos e títulos, entrando nas subseções.
   const unidades = [];
+  const empilharCampos = !window.matchMedia('(min-width: 820px)').matches;
   function percorrer(el) {
     for (const filho of el.children) {
-      if (filho.matches('.field-group') || filho.matches(SELETOR_SECAO)) percorrer(filho);
+      if (filho.matches('.field-group') || filho.matches(SELETOR_SECAO) ||
+          (empilharCampos && filho.matches('.visat-linha-campos'))) percorrer(filho);
       else unidades.push(filho);
     }
   }
@@ -1047,9 +1059,12 @@ function alturaDisponivelArea() {
   return Math.floor(window.innerHeight - topo - rodapes - 12);
 }
 function paginarFicha() {
+  // Em telas estreitas a paginação trabalha com os campos separados da linha.
+  root.querySelectorAll('.visat-fora-da-parte, [data-visat-parte]').forEach(u => {
+    u.classList.remove('visat-fora-da-parte');
+    delete u.dataset.visatParte;
+  });
   const unidades = unidadesDaFicha();
-  unidades.forEach(u => { u.classList.remove('visat-fora-da-parte'); delete u.dataset.visatParte; });
-  telasDaFicha().forEach(tela => secoesDaTela(tela).forEach(sec => sec.classList.remove('visat-fora-da-parte')));
   // Mede com todas as telas visíveis, sem animação de entrada e sem listas de sugestões abertas,
   // para a divisão não mudar quando uma lista abre ou fecha durante o preenchimento.
   root.classList.add('visat-medindo', 'visat-todas-telas');
