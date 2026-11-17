@@ -12,7 +12,6 @@ window.addEventListener('pageshow', evento => {
 });
 
 const VISAT_MODELO = 'Modelo VISAT 2026.11-2';
-const VISAT_EMAIL = 'saudetrab.sms.pmf@floripa.sc.gov.br';
 const VISAT_HOMOLOGACAO = (() => {
   try { return new URLSearchParams(window.location.search).has('homologacao'); } catch { return false; }
 })();
@@ -1311,6 +1310,19 @@ telaJaExibida = true;
 if (isDone) buildSummary();
 }
 
+function formatarDuracao(quantidade, unidade) {
+  if (!quantidade) return '';
+  const formas = {
+    hora: ['hora', 'horas'], horas: ['hora', 'horas'],
+    dia: ['dia', 'dias'], dias: ['dia', 'dias'],
+    mês: ['mês', 'meses'], meses: ['mês', 'meses'],
+    ano: ['ano', 'anos'], anos: ['ano', 'anos']
+  };
+  const par = formas[unidade.toLowerCase()];
+  const rotulo = par ? par[Number(quantidade) === 1 ? 0 : 1] : unidade;
+  return [quantidade, rotulo].filter(Boolean).join(' ');
+}
+
 function buildPrint(paraConferencia = false) {
 const tituloAgravo = options.obito ? 'Óbito por acidente de trabalho' : config.agravo;
 const area_impressao = root.querySelector('#printArea');
@@ -1324,39 +1336,24 @@ if (tituloImpressao) tituloImpressao.textContent = (VISAT_HOMOLOGACAO ? 'HOMOLOG
 root.querySelector('.pf-note').textContent = paraConferencia
   ? 'Prévia da ficha em preenchimento, sem validade como notificação. Não encaminhe este arquivo: finalize a ficha e gere o PDF final.'
   : (VISAT_HOMOLOGACAO ? 'Teste de homologação com dados fictícios. ' : '') +
-    'Cada campo mostra somente o valor informado. Encaminhar este PDF ao e-mail institucional ' + VISAT_EMAIL + '.';
-root.querySelector('.pf-sign').hidden = paraConferencia;
+    'Este PDF contém os dados informados na ficha.';
+root.querySelector('.pf-sign').hidden = true;
 root.querySelector('#pfDataImpressao').textContent = formatDate(today) + ' · ' + VISAT_MODELO;
 const blocks = root.querySelector('#pfBlocks');
 blocks.replaceChildren();
 
-function addField(block, labelText, opcional) {
+function addField(block, labelText, value) {
+  const text = String(value ?? '').trim();
+  if (!text) return;
   const field = document.createElement('div');
   field.className = 'pf-field';
-  field.toggleAttribute('data-visat-opcional', opcional);
   const label = document.createElement('h4');
   label.textContent = labelText;
-  field.appendChild(label);
-  block.appendChild(field);
-  return field;
-}
-
-function addChoices(field, choices, selectedValues) {
-  const labels = choices
-    .filter((choice) => selectedValues.includes(choice.value))
-    .map((choice) => choice.label);
-  addAnswer(field, labels.join('; '));
-}
-
-function addAnswer(field, value) {
-  if (field.hasAttribute('data-visat-opcional') && !value.trim()) {
-    field.remove();
-    return;
-  }
   const answer = document.createElement('p');
   answer.className = 'pf-answer';
-  answer.textContent = value || '________________________________';
-  field.appendChild(answer);
+  answer.textContent = text;
+  field.append(label, answer);
+  block.appendChild(field);
 }
 
 root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').forEach((screen) => {
@@ -1372,49 +1369,40 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
     const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
     if ((secaoComplementar && secaoComplementar !== screen) ||
         fieldLabel.closest('[hidden]')) return;
-    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares], [data-visat-opcional]')) ||
-      ['visat-inicioSintomas', 'sinan-cep', 'sinan-cod-unid'].includes(fieldLabel.htmlFor);
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
 
     if (following.matches('[data-chips]')) {
-      const field = addField(block, labelText, opcional);
-      const choices = Array.from(following.querySelectorAll('.chip')).map((chip) => ({
-        value: chip.dataset.value,
-        label: chip.textContent.trim()
-      }));
-      const selected = choices.filter((choice) =>
-        following.dataset.multi
-          ? Array.isArray(state.values[following.dataset.chips]) && state.values[following.dataset.chips].includes(choice.value)
-          : state.values[following.dataset.chips] === choice.value
-      ).map((choice) => choice.value);
-      addChoices(field, choices, selected);
+      const selected = state.values[following.dataset.chips];
+      const values = Array.isArray(selected) ? selected : [selected];
+      const labels = Array.from(following.querySelectorAll('.chip'))
+        .filter(chip => values.includes(chip.dataset.value))
+        .map(chip => chip.textContent.trim());
+      addField(block, labelText, labels.join('; '));
       return;
     }
 
     if (following.matches('.unit-row')) {
-      const quantity = following.querySelector('[data-key]');
-      const unit = following.querySelector('select[data-key]');
-      const field = addField(block, labelText, opcional);
-      addAnswer(field, quantity.value ? `${quantity.value} ${unit.value}` : '');
+      const quantity = following.querySelector('input[data-key]').value.trim();
+      const unit = following.querySelector('select[data-key]').value;
+      addField(block, labelText, formatarDuracao(quantity, unit));
       return;
     }
 
     if (fieldLabel instanceof HTMLLabelElement && fieldLabel.htmlFor) {
       const control = root.querySelector(`#${fieldLabel.htmlFor}`);
-      if (!control || (control.matches(seletorDocumentos) && control.closest('[hidden]'))) return;
-      const field = addField(block, labelText, opcional);
+      if (!control || control.closest('[hidden]')) return;
       if (control instanceof HTMLSelectElement) {
         const selected = control.value
           ? Array.from(control.selectedOptions).map((option) => option.textContent.trim())
           : [];
-        addAnswer(field, selected.join('; '));
+        addField(block, labelText, selected.join('; '));
       } else {
         const value = control.type === 'date' && control.value
           ? formatDate(control.value)
           : control.value;
-        addAnswer(field, value);
+        addField(block, labelText, value);
       }
     }
   });
@@ -1480,23 +1468,6 @@ btnPdfConferencia.addEventListener('click', () => {
   buildPrint(true);
   window.print();
 });
-
-function rotuloResumo(el) {
-  return el.dataset.summary;
-}
-
-function valorResumo(el) {
-  const key = el.dataset.key || el.dataset.chips;
-  let valor = state.values[key];
-  if (Array.isArray(valor)) return valor.join('; ');
-  if (el.type === 'date' && valor) return formatDate(valor);
-  if (el.classList && el.classList.contains('unit-row')) {
-    const quantidade = el.querySelector('input[data-key]');
-    const unidade = el.querySelector('select[data-key]');
-    return quantidade && quantidade.value ? `${quantidade.value} ${unidade.value}` : '';
-  }
-  return valor || '';
-}
 
 function mostrarRevisaoDeCampos() {
   const resumo = root.querySelector('#summaryGrid');
@@ -1613,20 +1584,19 @@ if (acoes.querySelector('[data-visat-email]')) {
   if (instrucao) acoes.before(instrucao);
   if (retornoEnvio) acoes.after(retornoEnvio);
 }
-const marcados = root.querySelectorAll('[data-summary]');
-const items = marcados.length
-  ? Array.from(marcados).map((el) => [rotuloResumo(el), valorResumo(el)])
-  : [
-['Nome', state.values.nome],
-['Data do acidente', state.values.dataAcidente ? formatDate(state.values.dataAcidente) : ''],
-['Tipo de acidente', state.values.tipoAcidente],
-['Parte do corpo', state.values.parteCorpo],
-['Evolução', state.values.evolucao],
-['CAT emitida', state.values.cat]
-];
-root.querySelector('#summaryGrid').innerHTML = items.map(([k, val]) =>
-'<div class="summary-item"><span>' + k + '</span><strong>' + escapeHtml(val || '—') + '</strong></div>'
-).join('');
+buildPrint();
+const grid = root.querySelector('#summaryGrid');
+grid.replaceChildren();
+for (const field of root.querySelectorAll('#pfBlocks .pf-field')) {
+  const item = document.createElement('div');
+  item.className = 'summary-item';
+  const label = document.createElement('span');
+  label.textContent = field.querySelector('h4').textContent;
+  const value = document.createElement('strong');
+  value.textContent = field.querySelector('.pf-answer').textContent;
+  item.append(label, value);
+  grid.appendChild(item);
+}
 }
 
 function formatDate(iso) {
@@ -1634,9 +1604,7 @@ const [y, m, d] = iso.split('-');
 return d + '/' + m + '/' + y;
 }
 
-function escapeHtml(s) {
-return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
+
 
 btnVoltar.addEventListener('click', () => {
 if (state.screen > TOTAL) { showScreen(TOTAL, -1); return; }
