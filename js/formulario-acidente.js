@@ -144,14 +144,14 @@ function montarEmpregador(area) {
   return etapa;
 }
 
-function montarAtendimentoAcidente(detalhes) {
-  function criarLinha(...campos) {
-    const linha = document.createElement('div');
-    linha.className = 'visat-linha-campos';
-    linha.append(...campos);
-    return linha;
-  }
+function criarLinhaCampos(...campos) {
+  const linha = document.createElement('div');
+  linha.className = 'visat-linha-campos';
+  linha.append(...campos);
+  return linha;
+}
 
+function montarAtendimentoAcidente(detalhes) {
   const ocorrencia = detalhes.querySelector('[data-chips="tipoAcidente"]').closest('[data-visat-secao-complementar]');
   const campos = ocorrencia.querySelector('.field-group');
   const opcoes = ['Sim', 'Não', 'Ignorado'];
@@ -164,7 +164,7 @@ function montarAtendimentoAcidente(detalhes) {
     criarCampo('tempoJornada', 'Tempo desde o início da jornada (horas e minutos)'),
     criarCampo('munOcorrencia', 'Município de ocorrência do acidente'), codigoLocal,
     criarCampo('ufOcorrencia', 'UF da ocorrência'),
-    criarLinha(
+    criarLinhaCampos(
       criarCampo('outrosAtingidos', 'Houve outros trabalhadores atingidos?', 'text', opcoes),
       criarCampo('atendimentoMedico', 'Houve atendimento médico?', 'text', opcoes)
     ),
@@ -177,7 +177,7 @@ function montarAtendimentoAcidente(detalhes) {
   const grupo = atendimento.querySelector('.field-group');
   const codigoAtendimento = criarCampo('ibgeAtendimento', 'Código IBGE do atendimento');
   codigoAtendimento.classList.add('visat-codigo-derivado');
-  const estabelecimento = criarLinha(
+  const estabelecimento = criarLinhaCampos(
     criarCampo('ufAtendimento', 'UF do atendimento'),
     criarCampo('unidAtendimento', 'Estabelecimento de saúde do atendimento'),
     criarCampo('cnesAtendimento', 'Código CNES do estabelecimento')
@@ -192,7 +192,7 @@ function montarAtendimentoAcidente(detalhes) {
   grupo.append(
     criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
     criarCampo('munAtendimento', 'Município do atendimento'), codigoAtendimento,
-    estabelecimento, criarLinha(parteCorpo, regime)
+    estabelecimento, criarLinhaCampos(parteCorpo, regime)
   );
   ocorrencia.after(atendimento);
   lesao.remove();
@@ -329,6 +329,23 @@ function organizarCamposComplementares(secao, obrigatorios) {
   grupo.after(detalhes);
 }
 
+function montarEnderecoResidencial(residencia) {
+  const campo = id => residencia.querySelector('#sinan-' + id).parentElement;
+  const municipioUf = criarLinhaCampos(campo('mun-res'), campo('uf-res'));
+  municipioUf.dataset.showWhen = 'residencia=BR';
+  const logradouro = campo('logr');
+  const bairro = campo('bairro');
+  const numero = campo('num');
+  const complemento = campo('comp');
+  const referencia = campo('ref');
+  [logradouro, bairro, numero, complemento, referencia].forEach(bloco => { bloco.dataset.visatOpcional = ''; });
+  const endereco = document.createElement('div');
+  endereco.className = 'field-group visat-endereco-residencia';
+  endereco.append(municipioUf, criarLinhaCampos(logradouro, campo('cep')),
+    criarLinhaCampos(bairro, numero), criarLinhaCampos(complemento, referencia), campo('ibge-res'));
+  residencia.querySelector('.field-group').append(endereco);
+}
+
 const camposEspecificosDoModelo = {
   'form-acidente-template': ['horaAcidente', 'tipoAcidente', 'parteCorpo', 'regime'],
   'form-biologico-template': [
@@ -414,8 +431,9 @@ function montarBlocoSinan(root, options) {
     'sinan-tipo', 'sinan-agravo', 'sinan-cidAgravo', 'sinan-data-notif', 'sinan-uf-notif',
     'sinan-mun-notif', 'sinan-unid', 'sinan-cod-unid', 'visat-inicioSintomas', data?.id, 'dataObito', 'evolucao'
   ]);
-  organizarCamposComplementares(individual, ['sinan-nome', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
-  organizarCamposComplementares(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-cep', 'sinan-uf-res', 'sinan-mun-res']);
+  organizarCamposComplementares(individual, ['sinan-nome', 'sinan-tel', 'sinan-nasc', 'sinan-idade', 'sexo', 'gestante']);
+  montarEnderecoResidencial(residencia);
+  organizarCamposComplementares(residencia, ['sinan-residencia-pais', 'sinan-pais', 'sinan-mun-res']);
   if (options.templateId === 'form-acidente-template') montarAtendimentoAcidente(detalhesAgravo);
   bloco.append(empregador);
   if (detalhesAgravo.childElementCount) {
@@ -609,7 +627,7 @@ function atualizarGestante() {
 
 residencia.addEventListener('change', () => {
   endereco.querySelectorAll('[data-key]').forEach(campo => {
-    if (!['residencia', 'telefoneRes', 'telefone'].includes(campo.dataset.key)) campo.value = '';
+    if (campo.dataset.key !== 'residencia') campo.value = '';
   });
   endereco.querySelectorAll('[data-chips="zona"] .selected').forEach(chip => chip.classList.remove('selected'));
   // Invalida inclusive uma consulta de CEP que ainda esteja em andamento.
@@ -1027,12 +1045,15 @@ seg.classList.toggle('done', i < state.screen);
 // disponível do quadro; o botão Seguinte só leva à página seguinte quando o espaço acaba.
 let parteAtual = 0;
 let totalPartes = 1;
-const SELETOR_SECAO = '.visat-sequencia, [data-visat-secao-complementar]';
+const SELETOR_SECAO = '.visat-sequencia, .visat-endereco-residencia, [data-visat-secao-complementar]';
 const SELETOR_TITULO = 'h1, h2, h3, h4, .screen-title, .screen-sub, .visat-sequencia-titulo, summary';
+const MEDIA_DUAS_COLUNAS = '(min-width: 820px)';
+const ehTituloDaPagina = unidade => unidade.matches(SELETOR_TITULO + ', p.field-help');
+const temConteudoVisivel = unidade => !unidade.closest('[hidden]') && !unidade.classList.contains('visat-codigo-derivado');
 function unidadesDaTela(tela) {
   // Título e subtítulo da tela, campos e títulos, entrando nas subseções.
   const unidades = [];
-  const empilharCampos = !window.matchMedia('(min-width: 820px)').matches;
+  const empilharCampos = !window.matchMedia(MEDIA_DUAS_COLUNAS).matches;
   function percorrer(el) {
     for (const filho of el.children) {
       if (filho.matches('.field-group') || filho.matches(SELETOR_SECAO) ||
@@ -1045,7 +1066,17 @@ function unidadesDaTela(tela) {
 }
 function telasDaFicha() { return getScreens().filter(tela => Number(tela.dataset.screen) <= TOTAL); }
 function unidadesDaFicha() { return telasDaFicha().flatMap(tela => unidadesDaTela(tela)); }
-function secoesDaTela(tela) { return [...tela.querySelectorAll(SELETOR_SECAO)]; }
+function subsecoesDaFicha(unidades) {
+  return telasDaFicha().flatMap(tela => [...tela.querySelectorAll(SELETOR_SECAO)].map(secao => ({
+    secao, campos: unidades.filter(u => secao.contains(u) && !ehTituloDaPagina(u))
+  })));
+}
+function aplicarVisibilidadeSubsecoes(subsecoes, pertenceAPagina) {
+  for (const { secao, campos } of subsecoes) {
+    secao.classList.toggle('visat-fora-da-parte', campos.length > 0 &&
+      !campos.some(u => pertenceAPagina(u) && temConteudoVisivel(u)));
+  }
+}
 // Altura máxima da área dos campos, calculada pelo tamanho do quadro (e não pelo conteúdo
 // mostrado no momento), para a divisão em páginas ser sempre a mesma.
 function alturaDisponivelArea() {
@@ -1056,7 +1087,7 @@ function alturaDisponivelArea() {
       return soma + el.getBoundingClientRect().height + parseFloat(estilo.marginTop) + parseFloat(estilo.marginBottom);
     }, 0);
   const topo = area.getBoundingClientRect().top + (window.scrollY || 0);
-  return Math.floor(window.innerHeight - topo - rodapes - 12);
+  return Math.floor(window.innerHeight - topo - rodapes);
 }
 function paginarFicha() {
   // Em telas estreitas a paginação trabalha com os campos separados da linha.
@@ -1078,22 +1109,15 @@ function paginarFicha() {
 function dividirEmPaginas(unidades) {
   const visiveis = unidades.filter(u => u.getBoundingClientRect().height);
   if (!visiveis.length) { totalPartes = 1; return; }
-  // Altura que a área dos campos pode ter sem passar do fim do quadro.
-  const rodapes = [root.querySelector('#bottomBar'), root.querySelector('#form-status')]
-    .filter(el => el && el.offsetParent !== null)
-    .reduce((soma, el) => {
-      const estilo = getComputedStyle(el);
-      return soma + el.getBoundingClientRect().height + parseFloat(estilo.marginTop) + parseFloat(estilo.marginBottom);
-    }, 0);
-  const alturaMaxArea = Math.floor(window.innerHeight - (area.getBoundingClientRect().top + (window.scrollY || 0)) - rodapes);
+  const alturaMaxArea = alturaDisponivelArea();
   const estiloArea = getComputedStyle(area);
   const cabecalho = parseFloat(estiloArea.paddingTop) + parseFloat(estiloArea.paddingBottom);
-  let limite = Math.max(240, alturaMaxArea - cabecalho);
+  const limite = Math.max(240, alturaMaxArea - cabecalho);
   const base = visiveis[0].getBoundingClientRect().top;
   const medidas = unidades.map(u => {
     const r = u.getBoundingClientRect();
     return { alto: r.height > 0, topo: r.top - base, fim: r.bottom - base,
-      titulo: u.matches(SELETOR_TITULO) || u.matches('p.field-help') };
+      titulo: ehTituloDaPagina(u) };
   });
   // Enche cada página até o limite; títulos acompanham o primeiro campo da página seguinte.
   function dividir(lim) {
@@ -1120,16 +1144,31 @@ function dividirEmPaginas(unidades) {
   // Monta cada página de verdade (a grade de duas colunas se reorganiza quando a página começa
   // no meio de uma linha) e acrescenta ou retira campos até encher a altura sem passar do quadro.
   const n = unidades.length;
+  const telas = telasDaFicha();
+  const subsecoes = subsecoesDaFicha(unidades);
   function mostrarIntervalo(ini, fim) {
     unidades.forEach((u, i) => u.classList.toggle('visat-fora-da-parte', i < ini || i >= fim));
-    getScreens().forEach(tela => tela.classList.toggle('visat-tela-vazia', Number(tela.dataset.screen) > TOTAL
-      || !unidades.some((u, i) => i >= ini && i < fim && tela.contains(u))));
+    const visiveisNaPagina = unidades.slice(ini, fim).filter(temConteudoVisivel);
+    telas.forEach(tela => tela.classList.toggle('visat-tela-vazia', !visiveisNaPagina.some(u => tela.contains(u))));
+    aplicarVisibilidadeSubsecoes(subsecoes, u => visiveisNaPagina.includes(u));
   }
   function cabe(ini, fim) {
     mostrarIntervalo(ini, fim);
     return area.scrollHeight <= alturaMaxArea;
   }
   const proximoAlto = (i) => { while (i < n && !medidas[i].alto) i++; return i; };
+  function manterEnderecoJunto(ini, fim) {
+    if (!window.matchMedia(MEDIA_DUAS_COLUNAS).matches) return fim;
+    const endereco = unidades[proximoAlto(fim)]?.closest('.visat-endereco-residencia');
+    if (!endereco || !unidades.slice(ini, fim).some(u => endereco.contains(u) && temConteudoVisivel(u))) return fim;
+    const inicioEndereco = unidades.findIndex(u => endereco.contains(u));
+    const fimEndereco = unidades.findLastIndex(u => endereco.contains(u)) + 1;
+    const residencia = endereco.closest('.screen');
+    const inicioResidencia = unidades.findIndex(u => residencia.contains(u));
+    if (inicioResidencia > ini && cabe(inicioResidencia, fimEndereco)) return inicioResidencia;
+    if (inicioEndereco > ini && cabe(inicioEndereco, fimEndereco)) return inicioEndereco;
+    return fim;
+  }
   const previsto = dividir(limite);
   const partes = new Array(n).fill(0);
   let ini = 0;
@@ -1142,7 +1181,13 @@ function dividirEmPaginas(unidades) {
     // Retira campos enquanto a página passar da altura (mantendo ao menos um campo).
     while (fim > proximoAlto(ini) + 1 && !cabe(ini, fim)) fim--;
     // Acrescenta campos enquanto couberem.
-    while (fim < n && cabe(ini, proximoAlto(fim) + 1)) fim = proximoAlto(fim) + 1;
+    while (fim < n) {
+      const proximo = proximoAlto(fim);
+      if (proximo === n) { fim = n; break; }
+      if (!cabe(ini, proximo + 1)) break;
+      fim = proximo + 1;
+    }
+    fim = manterEnderecoJunto(ini, fim);
     // Títulos no fim da página passam para a seguinte, junto do primeiro campo.
     if (fim < n) {
       let k = fim - 1;
@@ -1154,31 +1199,25 @@ function dividirEmPaginas(unidades) {
     pagina++;
   }
   unidades.forEach(u => u.classList.remove('visat-fora-da-parte'));
-  getScreens().forEach(tela => tela.classList.remove('visat-tela-vazia'));
+  subsecoes.forEach(({ secao }) => secao.classList.remove('visat-fora-da-parte'));
+  telas.forEach(tela => tela.classList.remove('visat-tela-vazia'));
   unidades.forEach((u, indice) => { u.dataset.visatParte = partes[indice]; });
   totalPartes = partes[partes.length - 1] + 1;
 }
 function telaDaUnidade(u) { return Number(u.closest('.screen')?.dataset.screen || 1); }
 function aplicarParte() {
   const unidades = unidadesDaFicha();
+  const pertenceAPagina = u => Number(u.dataset.visatParte || 0) === parteAtual;
   unidades.forEach(u => {
-    u.classList.toggle('visat-fora-da-parte', Number(u.dataset.visatParte || 0) !== parteAtual);
+    u.classList.toggle('visat-fora-da-parte', !pertenceAPagina(u));
   });
+  const visiveis = unidades.filter(u => pertenceAPagina(u) && temConteudoVisivel(u));
   getScreens().forEach(tela => {
-    if (Number(tela.dataset.screen) > TOTAL) { tela.classList.remove('active'); return; }
-    const daTela = unidades.filter(u => tela.contains(u));
-    const temVisivel = daTela.some(u => !u.classList.contains('visat-fora-da-parte') && u.getBoundingClientRect);
-    tela.classList.toggle('active', daTela.some(u => !u.classList.contains('visat-fora-da-parte')));
-    // Subseção sem nenhum campo nesta página fica oculta (inclusive a linha divisória).
-    secoesDaTela(tela).forEach(sec => {
-      const campos = daTela.filter(u => sec.contains(u) && !u.matches(SELETOR_TITULO) && !u.matches('p.field-help'));
-      const visivel = campos.some(u => !u.classList.contains('visat-fora-da-parte'));
-      sec.classList.toggle('visat-fora-da-parte', campos.length > 0 && !visivel);
-    });
-    return temVisivel;
+    tela.classList.toggle('active', visiveis.some(u => tela.contains(u)));
   });
+  aplicarVisibilidadeSubsecoes(subsecoesDaFicha(unidades), pertenceAPagina);
   // A barra de progresso acompanha a tela do primeiro campo da página.
-  const primeira = unidades.find(u => !u.classList.contains('visat-fora-da-parte'));
+  const primeira = visiveis[0];
   if (primeira) state.screen = telaDaUnidade(primeira);
   renderProgress();
 }
@@ -1328,7 +1367,7 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
     const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
     if ((secaoComplementar && secaoComplementar !== screen) ||
         fieldLabel.closest('[hidden]')) return;
-    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares]')) ||
+    const opcional = Boolean(fieldLabel.closest('[data-visat-complementares], [data-visat-opcional]')) ||
       ['visat-inicioSintomas', 'sinan-cep', 'sinan-cod-unid'].includes(fieldLabel.htmlFor);
     const labelText = fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;

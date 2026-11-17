@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
   <link rel="stylesheet" href="css/styles.css?v=20261116-largura-total">
-  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261116-linhas-atendimento">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261116-residencia-e-fluxo">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
@@ -115,11 +115,16 @@
 <input class="input input-lg" id="sinan-nome" type="text" data-key="nome" data-summary="Nome completo" aria-describedby="sinan-nome-ajuda">
 <p class="field-help" id="sinan-nome-ajuda">Informe o nome completo, sem abreviações.</p>
 </div>
+<div data-visat-opcional>
+<label class="field-label" for="sinan-tel">(DDD) Telefone</label>
+<input class="input input-lg" id="sinan-tel" type="tel" data-key="telefoneRes" placeholder="(00) 00000-0000">
+</div>
 <div>
 <label class="field-label" for="sinan-nasc">Data de nascimento</label>
 <input class="input input-lg" id="sinan-nasc" type="date" data-key="nascimento">
 <p class="field-help">Se a data de nascimento for desconhecida, informe a idade abaixo.</p>
 </div>
+<div class="visat-linha-campos">
 <div>
 <label class="field-label" for="sinan-idade">Idade</label>
 <div class="unit-row" >
@@ -133,6 +138,7 @@
 <button type="button" class="chip" data-value="Masculino">Masculino</button>
 <button type="button" class="chip" data-value="Feminino">Feminino</button>
 <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+</div>
 </div>
 </div>
 <div>
@@ -239,10 +245,6 @@
 <div>
 <label class="field-label" for="sinan-ref">Ponto de referência</label>
 <input class="input input-lg" id="sinan-ref" type="text" data-key="refRes">
-</div>
-<div>
-<label class="field-label" for="sinan-tel">(DDD) Telefone</label>
-<input class="input input-lg" id="sinan-tel" type="tel" data-key="telefoneRes" placeholder="(00) 00000-0000">
 </div>
 <div>
 <span class="field-label">Zona</span>
@@ -657,7 +659,7 @@
 
   <script src="js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
   <script src="js/envio-ficha.js?v=20261116-envio-email" defer></script>
-  <script src="js/formulario-acidente.js?v=20261116-linhas-atendimento" defer></script>
+  <script src="js/formulario-acidente.js?v=20261116-residencia-e-fluxo" defer></script>
   <script src="js/app.js?v=20261116-consulta-cheia2" defer></script>
   <script src="js/autopreenchimento.js?v=20261116-rua-completa" defer></script>
   <script src="js/autopreenchimento-listas.js?v=20261113-modelo-auto" defer></script>
