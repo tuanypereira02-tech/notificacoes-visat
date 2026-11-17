@@ -1404,8 +1404,7 @@ requestAnimationFrame(() => {
   try { root.scrollIntoView({ block: 'start', behavior: 'auto' }); } catch (erro) { /* navegador sem suporte */ }
   const rolagem = document.querySelector('html.visat-em-quadro #principal');
   if (rolagem) {
-    const altura = window.visatAlturaAbertura || 0;
-    rolagem.style.setProperty('--visat-espaco-topo', Math.max(0, Math.min(altura - 160, rolagem.clientHeight - 500)) + 'px');
+    rolagem.style.removeProperty('--visat-espaco-topo');
     rolagem.scrollTop = 0;
   }
 });
