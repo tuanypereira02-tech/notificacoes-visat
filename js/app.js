@@ -759,4 +759,34 @@
   }
 
   iniciar();
+
+  // Tela de consulta: a lista de agravos cresce até o rodapé ocupar o fim do quadro,
+  // sem deixar espaço vazio (ex.: quadro alto no Google Sites). Refeito quando o conteúdo muda.
+  (function encherAlturaDaConsulta() {
+    const lista = document.getElementById('lista-agravos');
+    const rodape = document.querySelector('footer.rodape');
+    if (!lista || !rodape || !window.ResizeObserver) return;
+    const BASE = parseFloat(getComputedStyle(lista).maxHeight) || 340;
+    let ajustando = false;
+    function ajustar() {
+      if (ajustando) return;
+      ajustando = true;
+      requestAnimationFrame(() => {
+        if (document.body.classList.contains('modo-formulario-acidente')) { ajustando = false; return; }
+        lista.style.maxHeight = '';
+        const fim = rodape.getBoundingClientRect().bottom + (window.scrollY || 0);
+        const folga = Math.floor(window.innerHeight - fim);
+        const conteudo = lista.scrollHeight;
+        if (folga > 0) lista.style.maxHeight = Math.min(conteudo + 2, BASE + folga) + 'px';
+        requestAnimationFrame(() => { ajustando = false; });
+      });
+    }
+    const observador = new ResizeObserver(ajustar);
+    const principal = document.getElementById('principal');
+    if (principal) [...principal.children].filter(el => !el.contains(lista)).forEach(el => observador.observe(el));
+    window.addEventListener('resize', ajustar);
+    window.addEventListener('load', ajustar);
+    new MutationObserver(ajustar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    ajustar();
+  })();
 })();
