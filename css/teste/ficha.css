@@ -1536,3 +1536,10 @@ html, body { background: #ffffff !important; }
 .acidente-inline .screen textarea:is(#atividade, [data-key="descricaoRascunho"], [data-key="observacoesRascunho"]) {
   min-height: 84px;
 }
+
+/* CID: retorno curto abaixo do campo. */
+.acidente-inline .visat-cid-info p { margin: 4px 0 0; font-size: 12px; line-height: 1.35; }
+.acidente-inline .visat-cid-agentes { margin-top: 2px; font-size: 12px; }
+.acidente-inline .visat-cid-agentes summary { font-size: 12px; font-weight: 500; color: #0b315d; cursor: pointer; }
+.acidente-inline .visat-cid-agentes ul { margin: 4px 0 0; padding-left: 18px; }
+.acidente-inline details.visat-cid-agentes > summary { font-size: 12px !important; font-weight: 500 !important; line-height: 1.35 !important; margin: 2px 0 0 !important; padding: 0 !important; color: #0b315d; }

@@ -105,8 +105,8 @@
   function avisosDoCodigo(escopo, r) {
     var a = [];
     var c = r.codigo;
-    if (r.estado === 'foraLdrt') a.push('CID do escopo da ficha, mas não consta da LDRT (Portaria GM/MS nº 5.674/2024). Aceito com aviso: descreva na ficha a relação com o trabalho.');
-    if (r.item && r.item.ast) a.push('Código asterisco (manifestação): pode não ser aceito como diagnóstico principal no sistema. Confira o código da doença de base.');
+    if (r.estado === 'foraLdrt') a.push('Fora da LDRT: descreva a relação com o trabalho.');
+    if (r.item && r.item.ast) a.push('Código asterisco: prefira o código da doença de base.');
     if (escopo === 'lesao' && c >= 'T36' && c < 'T66') a.push('Efeito tóxico/intoxicação: a Intoxicação Exógena é notificada à Vigilância Epidemiológica. Confirme se o caso é acidente de trabalho.');
     if (escopo === 'causa' && c >= 'X60' && c < 'X85') a.push('Lesão autoprovocada: notificar também à Vigilância Epidemiológica (violência).');
     return a;
@@ -133,14 +133,17 @@
     var escopo = escopoDoCampo(el);
     var avisos = avisosDoCodigo(escopo, r);
     var correto = (r.estado === 'ldrt' || r.estado === 'valido') && !avisos.length;
-    if (r.item) linha((correto ? '✓ ' : '') + formatar(r.codigo) + ' — ' + (window.visatTitulo?.(r.item.d) ?? r.item.d), 'visat-cid-titulo' + (correto ? ' visat-cid-ok' : ''));
+    // Mensagem curta: o código e o nome já aparecem no campo; a referência completa fica no title.
+    if (r.item && !/ – /.test(el.value)) linha(formatar(r.codigo) + ' — ' + (window.visatTitulo?.(r.item.d) ?? r.item.d), 'visat-cid-titulo');
     if (r.estado === 'ldrt') {
-      linha('Consta da LDRT — Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.', 'visat-cid-ok');
+      var ok = linha('✓ Consta da LDRT', 'visat-cid-ok');
+      ok.title = 'Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.';
       var ags = (r.item.a || []).map(function (i) { return dados.dart.agentes[i]; });
       if (ags.length) {
         var det = document.createElement('details');
+        det.className = 'visat-cid-agentes';
         var s = document.createElement('summary');
-        s.textContent = 'Agentes e fatores de risco listados na LDRT (' + ags.length + ')';
+        s.textContent = 'Agentes da LDRT (' + ags.length + ')';
         var ul = document.createElement('ul');
         ags.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.append(li); });
         det.append(s, ul);
@@ -160,7 +163,9 @@
     var ajuda = document.createElement('p');
     ajuda.className = 'field-help';
     ajuda.id = el.id + '-cid-ajuda';
-    ajuda.textContent = 'Código ou nome. Aceita ' + DESCRICAO_FAIXA[escopo] + '.';
+    ajuda.textContent = '';
+    ajuda.hidden = true;
+    el.placeholder = 'Código ou nome (' + DESCRICAO_FAIXA[escopo] + ')';
     el.insertAdjacentElement('afterend', ajuda);
     var lista = document.createElement('ul');
     lista.className = 'visat-cid-lista';
@@ -176,12 +181,14 @@
     }
     function sugerir() {
       var termo = norm(el.value.trim());
-      if (termo.length < 3 || codigoDe(el.value) && / – /.test(el.value)) { lista.hidden = true; lista.replaceChildren(); return; }
+      // Campo vazio: nas doenças, mostra os CIDs da LDRT da ficha; nos campos do acidente, espera a primeira letra.
+      if (!termo && qual === 'at' || codigoDe(el.value) && / – /.test(el.value)) { lista.hidden = true; lista.replaceChildren(); return; }
       carregar(qual).then(function (t) {
         if (norm(el.value.trim()) !== termo) return;
         var cod = termo.toUpperCase().replace('.', '');
         var palavras = termo.split(/\s+/).filter(Boolean);
         var achados = itensDoEscopo(t).filter(function (e) {
+          if (!termo) return !!e.l;
           if (e.c.replace('.', '').indexOf(cod) === 0) return true;
           var alvo = norm(e.c + ' ' + e.d);
           return palavras.every(function (p) { return alvo.indexOf(p) >= 0; });
@@ -229,7 +236,7 @@
       mostrar(el, r);
       if (!tabelaDo(escopo) && r.estado !== 'vazio') carregar(qual).then(function () { if (el.isConnected) mostrar(el, classificar(el)); }).catch(function () {});
     }
-    el.addEventListener('focus', function () { carregar(qual).catch(function () {}); });
+    el.addEventListener('focus', function () { carregar(qual).then(function () { if (!el.value.trim()) sugerir(); }).catch(function () {}); });
     el.addEventListener('input', function () { sugerir(); conferir(); });
     el.addEventListener('change', function () {
       var digitado = el.value.trim();
