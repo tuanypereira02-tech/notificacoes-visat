@@ -693,6 +693,7 @@ body.modo-formulario-acidente .rodape { display: none; }
 
 /* VISAT — CID-10 qualificado (js/cid-qualificado.js) */
 .visat-cid-lista { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; max-height: 320px; overflow: auto; }
+.visat-cid-lista[hidden] { display: none; }
 .visat-cid-lista .btn { width: 100%; justify-content: flex-start; text-align: left; white-space: normal; height: auto; padding: 8px 10px; }
 .visat-cid-info { margin-top: 6px; font-size: 13px; color: #112C45; }
 .visat-cid-info:empty { display: none; }

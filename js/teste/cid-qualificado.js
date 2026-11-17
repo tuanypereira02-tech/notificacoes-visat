@@ -179,12 +179,20 @@
       if (qual === 'at') return t[escopo];
       return t.cid.filter(function (e) { return e.f.indexOf(escopo) >= 0; });
     }
+    var solicitacao = 0;
+    function fecharLista() {
+      solicitacao++;
+      lista.hidden = true;
+      el.setAttribute('aria-expanded', 'false');
+      el.removeAttribute('aria-activedescendant');
+    }
     function sugerir() {
+      var atual = ++solicitacao;
       var termo = norm(el.value.trim());
       // Campo vazio: nas doenças, mostra os CIDs da LDRT da ficha; nos campos do acidente, espera a primeira letra.
-      if (!termo && qual === 'at' || codigoDe(el.value) && / – /.test(el.value)) { lista.hidden = true; lista.replaceChildren(); return; }
+      if (!termo && qual === 'at' || codigoDe(el.value) && / – /.test(el.value)) { fecharLista(); return; }
       carregar(qual).then(function (t) {
-        if (norm(el.value.trim()) !== termo) return;
+        if (atual !== solicitacao || !el.isConnected || norm(el.value.trim()) !== termo) return;
         var cod = termo.toUpperCase().replace('.', '');
         var palavras = termo.split(/\s+/).filter(Boolean);
         var achados = itensDoEscopo(t).filter(function (e) {
@@ -208,7 +216,7 @@
           b.textContent = e.c + ' · ' + (window.visatTitulo?.(e.d) ?? e.d) + (e.l ? ' · LDRT' : '');
           b.addEventListener('click', function () {
             el.value = e.c + ' – ' + e.d;
-            lista.hidden = true;
+            fecharLista();
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
             el.focus();
@@ -222,13 +230,16 @@
           lista.append(li);
         }
         lista.hidden = false;
+        el.setAttribute('aria-expanded', 'true');
       }).catch(function () {
+        if (atual !== solicitacao || !el.isConnected) return;
         lista.replaceChildren();
         var li = document.createElement('li');
         li.textContent = 'A tabela de CID não carregou agora. Digite o código (ex.: ' + (escopo === 'causa' ? 'W23.9' : escopo === 'lesao' ? 'S61.0' : 'G56.0') +
           '): a regra de escopo da ficha continua valendo e a descrição é conferida quando a tabela voltar.';
         lista.append(li);
         lista.hidden = false;
+        el.setAttribute('aria-expanded', 'true');
       });
     }
     function conferir() {
@@ -236,8 +247,17 @@
       mostrar(el, r);
       if (!tabelaDo(escopo) && r.estado !== 'vazio') carregar(qual).then(function () { if (el.isConnected) mostrar(el, classificar(el)); }).catch(function () {});
     }
-    el.addEventListener('focus', function () { carregar(qual).then(function () { if (!el.value.trim()) sugerir(); }).catch(function () {}); });
-    el.addEventListener('input', function () { sugerir(); conferir(); });
+    el.addEventListener('click', sugerir);
+    el.addEventListener('input', function (evento) {
+      if (evento.isTrusted) sugerir();
+      else fecharLista();
+      conferir();
+    });
+    function fecharAoSair(evento) {
+      if (evento.relatedTarget !== el && !lista.contains(evento.relatedTarget)) fecharLista();
+    }
+    el.addEventListener('focusout', fecharAoSair);
+    lista.addEventListener('focusout', fecharAoSair);
     el.addEventListener('change', function () {
       var digitado = el.value.trim();
       var codigo = codigoDe(digitado);
@@ -254,8 +274,16 @@
       }
       conferir();
     });
-    el.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') lista.hidden = true; });
-    lista.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { lista.hidden = true; el.focus(); } });
+    el.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') fecharLista();
+      if (ev.key === 'ArrowDown' && lista.hidden && !ev.defaultPrevented) {
+        ev.preventDefault();
+        sugerir();
+      }
+    });
+    lista.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { fecharLista(); el.focus(); }
+    });
     if (el.value) conferir();
   }
 
