@@ -371,7 +371,7 @@ function montarBlocoSinan(root, options) {
     gerais.append(blocoCid);
   }
   if (data && !['dataAcidente', 'inicioSintomas'].includes(config.event)) {
-    data.parentElement.before(criarCampo('inicioSintomas', 'Data dos primeiros sintomas', 'date'));
+    data.parentElement.before(criarCampo('inicioSintomas', 'Data primeiros sintomas', 'date'));
   }
   const detalhesAgravo = document.createDocumentFragment();
   for (const etapa of etapasDoAgravo) {
