@@ -598,7 +598,7 @@
           empresasConsultadas.set(el, { cnpj: n, dados: d, destino: destino });
           var codSinan = cnaeSinan(d.cnae);
           var atividade = codSinan && tabelaCnae.classes.find(function (item) { return item[0] === codSinan; });
-          var cnae = atividade ? atividade[0] + ' – ' + atividade[2] : '';
+          var cnae = atividade ? atividade[0] + ' – ' + titulo(atividade[2]) : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
           var mun = ibgeSinan(d.ibge) === PADRAO.ibge ? PADRAO.municipio : titulo(d.municipio);
           if (destino.nome) preencher(destino.nome, titulo(d.nome));
@@ -635,10 +635,10 @@
                   var botao = document.createElement('button');
                   botao.type = 'button';
                   botao.className = 'btn';
-                  botao.textContent = item[0] + ' – ' + item[2];
+                  botao.textContent = item[0] + ' – ' + titulo(item[2]);
                   botao.addEventListener('click', function () {
                     if (atual !== consulta || digitos(el.value) !== n) return;
-                    definir(campoCnae, item[0] + ' – ' + item[2], true);
+                    definir(campoCnae, item[0] + ' – ' + titulo(item[2]), true);
                     preenchidos.set(campoCnae, campoCnae.value);
                     removerOpcoes();
                     campoCnae.focus();
@@ -733,7 +733,7 @@
       numEmp: campo(raiz, ['numEmp', 'numero']), bairroEmp: campo(raiz, ['bairroEmp', 'bairro']),
       compEmp: campo(raiz, ['compEmp']), cepEmp: campo(raiz, ['cepEmp']),
       ibgeEmp: campo(raiz, ['ibgeEmp']), cnae: campo(raiz, ['cnae']),
-      telEmp: campo(raiz, ['telEmp', 'telefone']), refEmp: campo(raiz, ['refEmp'])
+      telEmp: campo(raiz, ['telEmp', 'telefone'])
     };
     var consultaAtual = 0;
     var espera;
