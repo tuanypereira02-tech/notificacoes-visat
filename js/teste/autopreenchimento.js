@@ -324,7 +324,7 @@
           botao.type = 'button';
           botao.className = 'btn';
           botao.dataset.variant = 'outline';
-          botao.textContent = [endereco.cep, endereco.logradouro, endereco.bairro, endereco.complemento].filter(Boolean).join(' · ');
+          botao.textContent = [endereco.cep, titulo(endereco.logradouro), titulo(endereco.bairro), titulo(endereco.complemento)].filter(Boolean).join(' · ');
           botao.addEventListener('click', () => selecionar(endereco));
           item.append(botao);
           lista.append(item);
@@ -396,7 +396,7 @@
               botao.type = 'button';
               botao.className = 'btn';
               botao.dataset.variant = 'outline';
-              botao.textContent = [endereco.logradouro, endereco.bairro, endereco.complemento, endereco.cep].filter(Boolean).join(' · ');
+              botao.textContent = [titulo(endereco.logradouro), titulo(endereco.bairro), titulo(endereco.complemento), endereco.cep].filter(Boolean).join(' · ');
               botao.addEventListener('pointerdown', ev => ev.preventDefault());
               botao.addEventListener('click', () => {
                 fecharRuas();
@@ -472,12 +472,18 @@
   /* ---------- 5. CNPJ (BrasilAPI) ---------- */
 
   function titulo(t) {
-    if (!t) return '';
-    var minusculas = ['de', 'da', 'do', 'das', 'dos', 'e'];
-    return String(t).toLowerCase().split(' ').map(function (p, i) {
-      return (i > 0 && minusculas.indexOf(p) >= 0) ? p : p.charAt(0).toUpperCase() + p.slice(1);
-    }).join(' ');
+    var texto = String(t || '').trim().replace(/\s+/g, ' ');
+    if (!texto || /\p{Ll}/u.test(texto)) return texto;
+    var conectivos = new Set(['a', 'as', 'da', 'das', 'de', 'do', 'dos', 'e', 'em', 'na', 'nas', 'no', 'nos', 'ou', 'para', 'por', 'com']);
+    var siglas = new Set('CS UBS USF ESF UPA CAPS CEO CNES SUS CRAS CREAS SESC SESI SENAI SENAC SAMU CIATOX HEMOSC HU UFSC UDESC IFSC SMS PMF LTDA ME EPP EIRELI CNAE CBO CID LDRT HIV AIDS COVID DORT LER ECG DNA RNA UTI SC'.split(' '));
+    return texto.replace(/\p{L}+(?:\d+\p{L}*)?/gu, function (palavra, posicao) {
+      if (siglas.has(palavra) || /\d|^[IVXLCDM]{2,4}$/.test(palavra)) return palavra;
+      var inferior = palavra.toLocaleLowerCase('pt-BR');
+      return posicao > 0 && conectivos.has(inferior) ? inferior :
+        inferior.charAt(0).toLocaleUpperCase('pt-BR') + inferior.slice(1);
+    });
   }
+  window.visatTitulo = titulo;
 
   /* Consulta a BrasilAPI e, se falhar (limite de uso ou indisponibilidade), a CNPJ.ws.
      Devolve sempre o mesmo formato. */
@@ -595,7 +601,7 @@
           var cnae = atividade ? atividade[0] + ' – ' + atividade[2] : '';
           var logradouro = [d.tipoLogradouro, d.logradouro].filter(Boolean).join(' ');
           var mun = ibgeSinan(d.ibge) === PADRAO.ibge ? PADRAO.municipio : titulo(d.municipio);
-          if (destino.nome) preencher(destino.nome, d.nome);
+          if (destino.nome) preencher(destino.nome, titulo(d.nome));
           if (destino.cnae) preencher(destino.cnae, cnae);
           if (destino.uf) preencher(destino.uf, d.uf);
           if (destino.municipio) preencher(destino.municipio, mun);
@@ -744,7 +750,7 @@
         cnpj.dispatchEvent(new Event('visat:trocar-empresa'));
         if (enderecoEmpresa.cepEmp) enderecoEmpresa.cepEmp.dispatchEvent(new Event('visat:trocar-empresa'));
         Object.keys(enderecoEmpresa).forEach(function (chave) { limparCampo(enderecoEmpresa[chave]); });
-        nome.value = empresa.nome;
+        nome.value = titulo(empresa.nome);
         nome.dispatchEvent(new Event('input', { bubbles: true }));
         // Preenche a seleção e consulta o CNPJ para completar os dados disponíveis.
         Object.keys(enderecoEmpresa).forEach(function (chave) { definir(enderecoEmpresa[chave], empresa[chave], true); });
@@ -769,7 +775,7 @@
         b.className = 'btn';
         b.dataset.variant = 'outline';
         var local = [empresa.munEmp, empresa.ufEmp].filter(Boolean).join('/');
-        b.textContent = [empresa.nome, local, empresa.tipo, empresa.cnpjFormatado, empresa.divergente ? 'Conferir município' : ''].filter(Boolean).join(' · ');
+        b.textContent = [titulo(empresa.nome), local, empresa.tipo, empresa.cnpjFormatado, empresa.divergente ? 'Conferir município' : ''].filter(Boolean).join(' · ');
         b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); });
         b.addEventListener('click', function () { cancelar(); selecionar(empresa); });
         li.append(b);
