@@ -411,10 +411,16 @@ function montarBlocoSinan(root, options) {
   orientacao.textContent = 'Ficha de notificação inicial. Investigação e encerramento: no instrumento oficial.';
   bloco.lastElementChild.append(orientacao);
   area.prepend(bloco);
-  const textos = criarEtapa('Descrições e observações');
-  textos.querySelector('.screen-title').insertAdjacentHTML('afterend', '<p class="screen-sub">Relate as circunstâncias e registre as informações complementares.</p>');
+  const acidenteComDescricaoEspecifica = options.templateId === 'form-acidente-template';
+  const textos = criarEtapa(acidenteComDescricaoEspecifica ? 'Observações' : 'Descrições e observações');
+  const orientacaoTextos = acidenteComDescricaoEspecifica
+    ? 'Registre informações complementares que ainda não constam na ficha.'
+    : 'Relate as circunstâncias e registre as informações complementares.';
+  textos.querySelector('.screen-title').insertAdjacentHTML('afterend', '<p class="screen-sub">' + orientacaoTextos + '</p>');
   const textosGrupo = textos.querySelector('.field-group');
-  for (const [chave,rotulo] of [['descricaoRascunho','Descrição do acidente / exposição'],['observacoesRascunho','Observações']]) {
+  const camposTextuais = [['observacoesRascunho', 'Observações']];
+  if (!acidenteComDescricaoEspecifica) camposTextuais.unshift(['descricaoRascunho', 'Descrição do acidente / exposição']);
+  for (const [chave,rotulo] of camposTextuais) {
     const caixa = criarCampo(chave,rotulo);
     const entrada = caixa.querySelector('input');
     const texto = document.createElement('textarea');texto.id=entrada.id;texto.dataset.key=chave;texto.className='input';texto.rows=4;
