@@ -274,6 +274,27 @@
         : 'CEP localizado.');
     }
 
+    // Endereço residencial válido: com logradouro e sem "unidade" (agências e caixas postais dos Correios,
+    // grandes usuários, CPC), que o ViaCEP devolve junto nas cidades pequenas.
+    function enderecoDeRua(endereco) {
+      return /^\d{8}$/.test(digitos(endereco.cep)) && String(endereco.logradouro || '').trim() && !String(endereco.unidade || '').trim();
+    }
+    // Município com CEP único (sem CEP por logradouro): o ViaCEP devolve o CEP geral quando a rua não é encontrada.
+    async function cepGeralDoMunicipio(uf, municipio) {
+      try {
+        const caminho = [uf, municipio, 'zzzz'].map(encodeURIComponent).join('/');
+        const resposta = await fetch('https://viacep.com.br/ws/' + caminho + '/json/', { credentials: 'omit', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(8000) });
+        if (!resposta.ok) return null;
+        const lista = await resposta.json();
+        return Array.isArray(lista) ? lista.find(e => /^\d{8}$/.test(digitos(e.cep)) && !String(e.logradouro || '').trim() && !String(e.unidade || '').trim()) || null : null;
+      } catch { return null; }
+    }
+    function usarCepGeral(geral) {
+      ultimoCep = digitos(geral.cep);
+      definir(cep, geral.cep, true);
+      aviso(cep, 'Município com CEP único: CEP geral preenchido.');
+    }
+
     async function pesquisarEndereco() {
       fecharResultados();
       const dados = enderecoInformado();
@@ -296,13 +317,16 @@
         if (atual !== consultaEndereco || !cep.isConnected || enderecoInformado().some((valor, i) => valor !== dados[i])) return;
         const opcoes = new Map();
         for (const endereco of enderecos) {
-          if (/^\d{8}$/.test(digitos(endereco.cep)) &&
+          if (enderecoDeRua(endereco) &&
               (!bairro || normalizar(endereco.bairro).includes(normalizar(bairro)))) {
             opcoes.set(endereco.cep, endereco);
           }
         }
         if (!opcoes.size) {
-          aviso(cep, 'Nenhum CEP para este endereço.', true);
+          const geral = await cepGeralDoMunicipio(uf, municipio);
+          if (atual !== consultaEndereco || !cep.isConnected) return;
+          if (geral) usarCepGeral(geral);
+          else aviso(cep, 'Nenhum CEP para este endereço.', true);
           return;
         }
         function selecionar(endereco) {
@@ -389,7 +413,7 @@
             if (atual !== consultaRua || !Array.isArray(lista)) return;
             const vistos = new Set();
             for (const endereco of lista) {
-              if (!/^\d{8}$/.test(digitos(endereco.cep)) || vistos.has(endereco.cep)) continue;
+              if (!enderecoDeRua(endereco) || vistos.has(endereco.cep)) continue;
               vistos.add(endereco.cep);
               const item = document.createElement('li');
               const botao = document.createElement('button');
@@ -411,6 +435,11 @@
               if (vistos.size >= 15) break;
             }
             sugestoes.hidden = !sugestoes.childElementCount;
+            // Sem rua no ViaCEP: cidade de CEP único. O logradouro segue digitado à mão e o CEP geral entra, se o CEP estiver vazio.
+            if (!sugestoes.childElementCount && !digitos(cep.value)) {
+              const geral = await cepGeralDoMunicipio(uf, municipio);
+              if (geral && atual === consultaRua && !digitos(cep.value)) usarCepGeral(geral);
+            }
           } catch { /* sem sugestões; o campo segue manual */ }
         }, 500);
       });

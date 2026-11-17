@@ -129,10 +129,106 @@ function visatMaiusculas(campo) {
     });
   }
   // Valores preenchidos automaticamente (CNPJ, CEP, CBO) não disparam eventos: revisão leve enquanto a ficha está aberta.
-  setInterval(() => { if (document.body.classList.contains('modo-formulario-acidente')) ajustarTodos(); }, 700);
+  setInterval(() => { if (document.body.classList.contains('modo-formulario-acidente')) { window.visatRotulosCurtos(); ajustarTodos(); } }, 700);
   window.addEventListener('resize', () => setTimeout(ajustarTodos, 300));
 })();
+// Rótulos curtos em todas as fichas (sem "da/do/de" quando o sentido se mantém).
+const VISAT_ROTULOS = {
+"Data da notificação": "Data notificação",
+"Data de nascimento": "Data nascimento",
+"Data do acidente": "Data acidente",
+"Data do atendimento": "Data atendimento",
+"Data do diagnóstico": "Data diagnóstico",
+"Data do óbito": "Data óbito",
+"Data de início dos sintomas": "Início sintomas",
+"Hora do acidente": "Hora acidente",
+"Tipo de notificação": "Tipo notificação",
+"Tipo de acidente": "Tipo acidente",
+"Tipo de exposição": "Tipo exposição",
+"Tipo de ruído predominante": "Ruído predominante",
+"Município de notificação": "Município notificação",
+"Município de residência": "Município residência",
+"Município de ocorrência do acidente": "Município ocorrência",
+"Município do atendimento": "Município atendimento",
+"Município do local de trabalho": "Município local trabalho",
+"UF de notificação": "UF notificação",
+"UF de residência": "UF residência",
+"UF da ocorrência": "UF ocorrência",
+"UF do atendimento": "UF atendimento",
+"UF do local de trabalho": "UF local trabalho",
+"Código IBGE da ocorrência": "Código IBGE ocorrência",
+"Código IBGE do atendimento": "Código IBGE atendimento",
+"Código IBGE do local de trabalho": "Código IBGE local trabalho",
+"Código CNES do estabelecimento": "Código CNES estabelecimento",
+"Código da unidade": "Código unidade",
+"País de residência": "País residência",
+"Nome do país de residência": "Nome país residência",
+"CEP do local de trabalho": "CEP local trabalho",
+"Logradouro do local de trabalho": "Logradouro local trabalho",
+"CNPJ ou CPF do empregador": "CNPJ ou CPF empregador",
+"Telefone do empregador": "Telefone empregador",
+"Empresa ou empregador (nome)": "Empresa ou empregador",
+"CNAE da empresa principal": "CNAE empresa principal",
+"CNPJ da empresa principal (contratante)": "CNPJ empresa principal (contratante)",
+"Nome da empresa principal (contratante)": "Nome empresa principal (contratante)",
+"O empregador é empresa terceirizada?": "Empregador terceirizado?",
+"Trabalha com plataformas digitais (aplicativos)?": "Trabalha por aplicativo?",
+"Unidade de saúde ou fonte notificadora": "Unidade ou fonte notificadora",
+"Estabelecimento de saúde do atendimento": "Estabelecimento atendimento",
+"Tempo de trabalho na ocupação": "Tempo na ocupação",
+"Tempo de exercício na ocupação": "Tempo na ocupação",
+"Situação no mercado de trabalho": "Situação mercado de trabalho",
+"Tempo de afastamento do trabalho para tratamento": "Tempo afastamento para tratamento",
+"Houve afastamento do trabalho para tratamento?": "Houve afastamento para tratamento?",
+"Tempo de exposição ao agente de risco": "Tempo exposição ao agente",
+"Tempo de exposição ao tabaco": "Tempo exposição ao tabaco",
+"Tempo de exposição às situações de risco": "Tempo exposição às situações de risco",
+"Tempo desde o início da jornada (horas e minutos)": "Horas após início da jornada",
+"Evolução do caso": "Evolução",
+"Regime de tratamento": "Regime tratamento",
+"Hábito de fumar": "Tabagismo",
+"Uso de EPI no momento do acidente": "Uso EPI no acidente",
+"Conduta no momento do acidente": "Conduta no acidente",
+"Circunstância do acidente": "Circunstância",
+"Localização da lesão (parte do corpo atingida)": "Localização lesão",
+"Especifique a parte do corpo atingida": "Outra parte do corpo",
+"Principal agente causador da dermatose": "Agente causador principal",
+"Resultado da avaliação funcional": "Resultado avaliação funcional",
+"Avaliação funcional (prova de função pulmonar)": "Prova de função pulmonar",
+"Situação vacinal do acidentado para hepatite B (3 doses)": "Vacina hepatite B (3 doses)",
+"Município/Unidade de saúde investigadora": "Município/unidade investigadora",
+"Nome do investigador": "Nome investigador",
+"Número da Declaração de Óbito, se disponível": "Número DO, se disponível",
+"Descrição do acidente / exposição": "Descrição acidente/exposição",
+"Há ou houve outros trabalhadores com a mesma doença no local de trabalho?": "Outros trabalhadores com a mesma doença?",
+"Houve exposição, durante toda a vida profissional, a algum dos agentes abaixo?": "Exposição na vida profissional a algum agente abaixo?",
+"A exposição a poeiras e minerais ocorreu em um ou mais vínculos distintos da empresa?": "Exposição em mais de um vínculo?",
+"O paciente foi encaminhado a um Centro de Atenção Psicossocial (CAPS) no SUS ou outro serviço especializado em tratamento de transtornos mentais?": "Encaminhado ao CAPS ou serviço especializado?",
+"O paciente está exposto em seu local de trabalho a": "Exposto no trabalho a",
+"Limitação e incapacidade para o exercício de tarefas": "Limitação para tarefas",
+"Com afastamento do trabalho, o quadro": "Com afastamento, o quadro",
+"Com afastamento do trabalho": "Com afastamento",
+"Histórico de saúde vocal e tratamentos": "Histórico vocal e tratamentos",
+"Agentes aos quais houve exposição": "Agentes de exposição",
+"Se alta com conversão sorológica, qual vírus": "Vírus da soroconversão",
+"Local onde ocorreu": "Local ocorrência",
+"Diagnóstico específico — CID-10": "CID-10 diagnóstico",
+"CID da causa externa (cap. XX — V01 a Y98)": "CID causa externa (V01–Y98)",
+"CID da lesão (cap. XIX — S00 a T98)": "CID lesão (S00–T98)"
+};
+window.visatRotulosCurtos = function (raiz) {
+  (raiz || document).querySelectorAll('.acidente-inline .field-label, .acidente-inline label').forEach(rotulo => {
+    for (const no of rotulo.childNodes) {
+      if (no.nodeType !== 3 || !no.textContent.trim()) continue;
+      const texto = no.textContent.replace(/\s+/g, ' ').trim().replace(/\s*\*$/, '');
+      const novo = VISAT_ROTULOS[texto];
+      if (novo) no.textContent = no.textContent.replace(/\S[\s\S]*?(?=\s*\*?\s*$)/, novo);
+      break;
+    }
+  });
+};
 window.aplicarLayoutRascunho = function(root) {
+  window.visatRotulosCurtos(root);
   window.visatSemPreenchimento(root);
   // CNAE: descrição longa ("72400 – Atividades de banco de dados...") ocupa meia linha, como os nomes de empresa.
   root.querySelectorAll('[data-key="cnae"], [data-key="cnaePrincipal"], #visat-cnae').forEach(campo => {
