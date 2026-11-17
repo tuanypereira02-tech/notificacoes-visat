@@ -1437,3 +1437,9 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 .acidente-inline :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button :is(strong,b) {
   font-weight: inherit;
 }
+
+/* Sugestões no fluxo da ficha: as setas rolam a ficha até a opção destacada. */
+.acidente-inline :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista, .visat-ruas-resultados) {
+  max-height: none;
+  overflow: visible;
+}
