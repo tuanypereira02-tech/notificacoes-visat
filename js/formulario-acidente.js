@@ -1013,17 +1013,17 @@ seg.classList.toggle('done', i < state.screen);
 });
 }
 
-// Partes da tela: o que não cabe na altura disponível vai para a parte seguinte (botão Seguinte).
+// Páginas da ficha: os campos de todas as telas seguem em fluxo contínuo e enchem a altura
+// disponível do quadro; o botão Seguinte só leva à página seguinte quando o espaço acaba.
 let parteAtual = 0;
 let totalPartes = 1;
 const SELETOR_SECAO = '.visat-sequencia, [data-visat-secao-complementar]';
-const SELETOR_TITULO = 'h1, h2, h3, h4, .screen-title, .visat-sequencia-titulo, summary';
+const SELETOR_TITULO = 'h1, h2, h3, h4, .screen-title, .screen-sub, .visat-sequencia-titulo, summary';
 function unidadesDaTela(tela) {
-  // Campos e títulos da tela, entrando nas subseções; título e subtítulo da tela ficam sempre visíveis.
+  // Título e subtítulo da tela, campos e títulos, entrando nas subseções.
   const unidades = [];
   function percorrer(el) {
     for (const filho of el.children) {
-      if (el === tela && filho.matches('.screen-title, .screen-sub')) continue;
       if (filho.matches('.field-group') || filho.matches(SELETOR_SECAO)) percorrer(filho);
       else unidades.push(filho);
     }
@@ -1031,9 +1031,11 @@ function unidadesDaTela(tela) {
   percorrer(tela);
   return unidades;
 }
+function telasDaFicha() { return getScreens().filter(tela => Number(tela.dataset.screen) <= TOTAL); }
+function unidadesDaFicha() { return telasDaFicha().flatMap(tela => unidadesDaTela(tela)); }
 function secoesDaTela(tela) { return [...tela.querySelectorAll(SELETOR_SECAO)]; }
 // Altura máxima da área dos campos, calculada pelo tamanho do quadro (e não pelo conteúdo
-// mostrado no momento), para a divisão em partes ser sempre a mesma.
+// mostrado no momento), para a divisão em páginas ser sempre a mesma.
 function alturaDisponivelArea() {
   const rodapes = [root.querySelector('#bottomBar'), root.querySelector('#form-status')]
     .filter(el => el && el.offsetParent !== null)
@@ -1044,139 +1046,122 @@ function alturaDisponivelArea() {
   const topo = area.getBoundingClientRect().top + (window.scrollY || 0);
   return Math.floor(window.innerHeight - topo - rodapes - 12);
 }
-function paginarTela(tela) {
-  const unidades = unidadesDaTela(tela);
+function paginarFicha() {
+  const unidades = unidadesDaFicha();
   unidades.forEach(u => { u.classList.remove('visat-fora-da-parte'); delete u.dataset.visatParte; });
-  secoesDaTela(tela).forEach(sec => sec.classList.remove('visat-fora-da-parte'));
-  // Mede sem animação de entrada e sem listas de sugestões abertas, para a divisão não mudar
-  // quando uma lista abre ou fecha durante o preenchimento.
-  tela.getAnimations?.({ subtree: true }).forEach(animacao => { try { animacao.finish(); } catch {} });
-  root.classList.add('visat-medindo');
+  telasDaFicha().forEach(tela => secoesDaTela(tela).forEach(sec => sec.classList.remove('visat-fora-da-parte')));
+  // Mede com todas as telas visíveis, sem animação de entrada e sem listas de sugestões abertas,
+  // para a divisão não mudar quando uma lista abre ou fecha durante o preenchimento.
+  root.classList.add('visat-medindo', 'visat-todas-telas');
+  getScreens().forEach(tela => tela.getAnimations?.({ subtree: true }).forEach(a => { try { a.finish(); } catch {} }));
   try {
-    dividirTelaEmPartes(tela, unidades);
+    dividirEmPaginas(unidades);
   } finally {
-    root.classList.remove('visat-medindo');
+    root.classList.remove('visat-medindo', 'visat-todas-telas');
   }
 }
-function dividirTelaEmPartes(tela, unidades) {
+function dividirEmPaginas(unidades) {
   const disponivel = alturaDisponivelArea();
-  if (!disponivel || area.scrollHeight <= disponivel + 4) { totalPartes = 1; return; }
   const visiveis = unidades.filter(u => u.getBoundingClientRect().height);
-  const primeiro = visiveis[0] || tela;
-  const cabecalho = primeiro.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
-  const limite = Math.max(240, disponivel - cabecalho - 24);
-  const base = primeiro.getBoundingClientRect().top;
-  // Medidas de cada campo/título com a tela inteira visível (sem partes ocultas).
+  if (!visiveis.length) { totalPartes = 1; return; }
+  const estiloArea = getComputedStyle(area);
+  const cabecalho = parseFloat(estiloArea.paddingTop) + parseFloat(estiloArea.paddingBottom);
+  const limite = Math.max(240, (disponivel || window.innerHeight) - cabecalho - 24);
+  const base = visiveis[0].getBoundingClientRect().top;
   const medidas = unidades.map(u => {
     const r = u.getBoundingClientRect();
     return { alto: r.height > 0, topo: r.top - base, fim: r.bottom - base,
       titulo: u.matches(SELETOR_TITULO) || u.matches('p.field-help') };
   });
-  // Divide em partes que não passam do limite; títulos acompanham o primeiro campo da parte seguinte.
-  function dividir(lim) {
-    const partes = new Array(medidas.length).fill(0);
-    let parte = 0;
-    let inicio = null;
-    medidas.forEach((m, indice) => {
-      if (!m.alto) { partes[indice] = parte; return; }
-      if (inicio === null) inicio = m.topo;
-      if (m.fim - inicio > lim && m.topo > inicio) {
-        parte++;
-        inicio = m.topo;
-        for (let k = indice - 1; k >= 0; k--) {
-          if (!medidas[k].alto) continue;
-          if (!medidas[k].titulo) break;
-          partes[k] = parte;
-          inicio = Math.min(inicio, medidas[k].topo);
-        }
+  // Enche cada página até o limite; títulos acompanham o primeiro campo da página seguinte.
+  const partes = new Array(medidas.length).fill(0);
+  let parte = 0;
+  let inicio = null;
+  medidas.forEach((m, indice) => {
+    if (!m.alto) { partes[indice] = parte; return; }
+    if (inicio === null) inicio = m.topo;
+    if (m.fim - inicio > limite && m.topo > inicio) {
+      parte++;
+      inicio = m.topo;
+      for (let k = indice - 1; k >= 0; k--) {
+        if (!medidas[k].alto) continue;
+        if (!medidas[k].titulo) break;
+        partes[k] = parte;
+        inicio = Math.min(inicio, medidas[k].topo);
       }
-      partes[indice] = parte;
-    });
-    return partes;
-  }
-  let partes = dividir(limite);
-  const quantidade = partes[partes.length - 1] + 1;
-  if (quantidade > 1) {
-    // Equilibra as partes: menor limite que mantém a mesma quantidade de partes,
-    // para não sobrar uma última parte curta com muito espaço livre.
-    let menor = 160;
-    let maior = limite;
-    while (maior - menor > 8) {
-      const meio = Math.floor((menor + maior) / 2);
-      const tentativa = dividir(meio);
-      if (tentativa[tentativa.length - 1] + 1 <= quantidade) maior = meio; else menor = meio;
     }
-    partes = dividir(maior);
-  }
+    partes[indice] = parte;
+  });
   unidades.forEach((u, indice) => { u.dataset.visatParte = partes[indice]; });
   totalPartes = partes[partes.length - 1] + 1;
 }
-function aplicarParte(tela) {
-  const unidades = unidadesDaTela(tela);
+function telaDaUnidade(u) { return Number(u.closest('.screen')?.dataset.screen || 1); }
+function aplicarParte() {
+  const unidades = unidadesDaFicha();
   unidades.forEach(u => {
-    u.classList.toggle('visat-fora-da-parte', totalPartes > 1 && Number(u.dataset.visatParte || 0) !== parteAtual);
+    u.classList.toggle('visat-fora-da-parte', Number(u.dataset.visatParte || 0) !== parteAtual);
   });
-  // Subseção sem nenhum campo nesta parte fica oculta (inclusive a linha divisória).
-  secoesDaTela(tela).forEach(sec => {
-    const campos = unidades.filter(u => sec.contains(u) && !u.matches(SELETOR_TITULO) && !u.matches('p.field-help'));
-    const temVisivel = campos.some(u => !u.classList.contains('visat-fora-da-parte'));
-    sec.classList.toggle('visat-fora-da-parte', totalPartes > 1 && campos.length > 0 && !temVisivel);
+  getScreens().forEach(tela => {
+    if (Number(tela.dataset.screen) > TOTAL) { tela.classList.remove('active'); return; }
+    const daTela = unidades.filter(u => tela.contains(u));
+    const temVisivel = daTela.some(u => !u.classList.contains('visat-fora-da-parte') && u.getBoundingClientRect);
+    tela.classList.toggle('active', daTela.some(u => !u.classList.contains('visat-fora-da-parte')));
+    // Subseção sem nenhum campo nesta página fica oculta (inclusive a linha divisória).
+    secoesDaTela(tela).forEach(sec => {
+      const campos = daTela.filter(u => sec.contains(u) && !u.matches(SELETOR_TITULO) && !u.matches('p.field-help'));
+      const visivel = campos.some(u => !u.classList.contains('visat-fora-da-parte'));
+      sec.classList.toggle('visat-fora-da-parte', campos.length > 0 && !visivel);
+    });
+    return temVisivel;
   });
+  // A barra de progresso acompanha a tela do primeiro campo da página.
+  const primeira = unidades.find(u => !u.classList.contains('visat-fora-da-parte'));
+  if (primeira) state.screen = telaDaUnidade(primeira);
+  renderProgress();
 }
 function atualizarRotulos(n) {
   const isDone = n === TOTAL + 1;
-  counter.textContent = isDone ? 'Concluído'
-    : 'Tela ' + n + ' de ' + TOTAL + (totalPartes > 1 ? ' · parte ' + (parteAtual + 1) + ' de ' + totalPartes : '');
-  btnVoltar.style.visibility = n === 1 && parteAtual === 0 ? 'hidden' : 'visible';
+  counter.textContent = isDone ? 'Concluído' : 'Página ' + (parteAtual + 1) + ' de ' + totalPartes;
+  btnVoltar.style.visibility = !isDone && parteAtual === 0 ? 'hidden' : 'visible';
   const ultimaParte = parteAtual >= totalPartes - 1;
-  btnContinuar.textContent = (n === TOTAL && ultimaParte) || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
+  btnContinuar.textContent = ultimaParte || emCorrecao ? 'Finalizar ficha' : 'Seguinte';
 }
 function irParaParte(parte) {
-  const tela = getScreens()[state.screen - 1];
-  if (!tela) return;
   parteAtual = Math.max(0, Math.min(parte, totalPartes - 1));
-  aplicarParte(tela);
+  aplicarParte();
   atualizarRotulos(state.screen);
   area.scrollTop = 0;
   levarAoTopoDaFicha();
 }
 function mostrarParteDoCampo(campo) {
-  const tela = campo.closest('.screen');
-  if (!tela || Number(tela.dataset.screen) !== state.screen) return;
-  const unidade = unidadesDaTela(tela).find(u => u.contains(campo));
+  if (state.screen > TOTAL) return;
+  const unidade = unidadesDaFicha().find(u => u.contains(campo));
   if (unidade && unidade.dataset.visatParte != null && Number(unidade.dataset.visatParte) !== parteAtual) {
     irParaParte(Number(unidade.dataset.visatParte));
   }
 }
-// Quando campos condicionais aparecem e a tela passa da altura, a divisão é refeita,
-// mantendo na parte atual o campo em uso.
+// Campos condicionais mudam a altura: a divisão é refeita, mantendo na página o campo em uso.
 let reavaliando = false;
+function refazerPaginas() {
+  if (state.screen > TOTAL || !root.isConnected) return;
+  const emUso = document.activeElement && root.contains(document.activeElement) ? document.activeElement : null;
+  const ancora = emUso || unidadesDaFicha().find(u => !u.classList.contains('visat-fora-da-parte'));
+  paginarFicha();
+  const unidade = ancora && unidadesDaFicha().find(u => u === ancora || u.contains(ancora));
+  parteAtual = unidade ? Number(unidade.dataset.visatParte || 0) : Math.min(parteAtual, totalPartes - 1);
+  aplicarParte();
+  atualizarRotulos(state.screen);
+}
 const observadorAltura = new ResizeObserver(() => {
-  if (reavaliando || !root.isConnected) return;
-  const tela = getScreens()[state.screen - 1];
-  // Refaz a divisão quando a tela passa da altura ou quando já está dividida e o conteúdo mudou
-  // (ex.: lista de sugestões fechada), evitando partes com um único campo e sobra branca.
-  if (!tela || state.screen > TOTAL || (area.scrollHeight <= alturaDisponivelArea() + 4 && totalPartes === 1)) return;
+  if (reavaliando || !root.isConnected || state.screen > TOTAL) return;
   reavaliando = true;
   requestAnimationFrame(() => {
-    const emUso = document.activeElement && tela.contains(document.activeElement) ? document.activeElement : null;
-    paginarTela(tela);
-    const unidade = emUso && unidadesDaTela(tela).find(u => u.contains(emUso));
-    parteAtual = unidade ? Number(unidade.dataset.visatParte || 0) : Math.min(parteAtual, totalPartes - 1);
-    aplicarParte(tela);
-    atualizarRotulos(state.screen);
+    refazerPaginas();
     requestAnimationFrame(() => { reavaliando = false; });
   });
 });
 getScreens().forEach(tela => observadorAltura.observe(tela));
-window.addEventListener('resize', () => {
-  const tela = getScreens()[state.screen - 1];
-  if (!tela || !root.isConnected) return;
-  paginarTela(tela);
-  parteAtual = Math.min(parteAtual, totalPartes - 1);
-  aplicarParte(tela);
-  atualizarRotulos(state.screen);
-});
+window.addEventListener('resize', () => refazerPaginas());
 
 // Rolagem mínima: só traz o topo da ficha para a tela quando ele está escondido.
 // 'nearest' evita empurrar molduras externas (ex.: visualização do Google Sites) além do necessário.
@@ -1186,38 +1171,33 @@ function levarAoTopoDaFicha() {
 }
 let telaJaExibida = false;
 let conferenciaDivisao = 0;
+// showScreen(n): abre a página que contém o início da tela n (parte < 0: a última página da tela).
 function showScreen(n, parte = 0) {
 root.querySelector('[data-visat-pendencias]')?.remove();
-state.screen = n;
-getScreens().forEach(s => s.classList.toggle('active', Number(s.dataset.screen) === n));
 const isDone = n === TOTAL + 1;
+state.screen = n;
 bottomBar.style.display = isDone ? 'none' : 'block';
-renderProgress();
 area.scrollTop = 0;
-const telaAtiva = getScreens()[n - 1];
-totalPartes = 1;
-if (telaAtiva && !isDone) {
-  paginarTela(telaAtiva);
-  parteAtual = parte < 0 ? totalPartes - 1 : Math.min(parte, totalPartes - 1);
-  aplicarParte(telaAtiva);
-} else {
+if (isDone) {
+  getScreens().forEach(s => s.classList.toggle('active', Number(s.dataset.screen) === n));
+  renderProgress();
   parteAtual = 0;
+  totalPartes = 1;
+} else {
+  paginarFicha();
+  const daTela = unidadesDaFicha().filter(u => telaDaUnidade(u) === n && u.getBoundingClientRect);
+  const paginas = daTela.map(u => Number(u.dataset.visatParte || 0));
+  parteAtual = paginas.length ? (parte < 0 ? Math.max(...paginas) : Math.min(...paginas)) : 0;
+  aplicarParte();
 }
 atualizarRotulos(n);
-// Campos complementados logo após a abertura (ex.: ajuda do CID) mudam a altura da tela:
-// a divisão é conferida de novo assim que a tela se completa, mantendo a parte em exibição.
-if (telaAtiva && !isDone) {
+// Campos complementados logo após a abertura (ex.: ajuda do CID) mudam a altura:
+// a divisão é conferida de novo assim que a página se completa.
+if (!isDone) {
   clearTimeout(conferenciaDivisao);
-  conferenciaDivisao = setTimeout(() => {
-    if (!root.isConnected || state.screen !== n) return;
-    const antes = totalPartes;
-    paginarTela(telaAtiva);
-    parteAtual = Math.min(parteAtual, totalPartes - 1);
-    aplicarParte(telaAtiva);
-    if (antes !== totalPartes) atualizarRotulos(n);
-  }, 250);
+  conferenciaDivisao = setTimeout(() => refazerPaginas(), 250);
 }
-// A cada troca de tela, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
+// A cada troca de página, volta ao início da ficha. Incorporada no Google Sites (sem rolagem interna),
 // scrollIntoView também rola a página do Sites até o topo do quadro.
 if (telaJaExibida) levarAoTopoDaFicha();
 telaJaExibida = true;
@@ -1552,8 +1532,8 @@ return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&g
 }
 
 btnVoltar.addEventListener('click', () => {
-if (parteAtual > 0) { irParaParte(parteAtual - 1); return; }
-if (state.screen > 1) showScreen(state.screen - 1, -1);
+if (state.screen > TOTAL) { showScreen(TOTAL, -1); return; }
+if (parteAtual > 0) irParaParte(parteAtual - 1);
 });
 
 btnContinuar.addEventListener('click', () => {
@@ -1562,12 +1542,7 @@ if (!emCorrecao && parteAtual < totalPartes - 1) {
   irParaParte(parteAtual + 1);
   return;
 }
-if (emCorrecao || state.screen === TOTAL) {
-  finalizarFicha();
-} else {
-  persistInputs();
-  showScreen(state.screen + 1);
-}
+finalizarFicha();
 });
 
 root.querySelector('#btnRevisar').addEventListener('click', () => {

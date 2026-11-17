@@ -570,3 +570,8 @@ body.modo-formulario-acidente .app-footer { padding-bottom: 8px; }
   .visat-medindo .field-group > div:has(.visat-lista-apoio),
   .visat-medindo .field-group > div:has(.empresa-resultados) { grid-column: auto; }
 }
+/* Páginas em fluxo contínuo: durante a medição todas as telas ficam visíveis; na mesma página,
+   a tela seguinte começa abaixo de uma linha divisória. */
+.visat-todas-telas .screen[data-screen]:not(.visat-tela-final) { display: block !important; animation: none !important; }
+.screen.active ~ .screen.active { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
+.visat-todas-telas .screen ~ .screen { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border, #d9e1e8); }
