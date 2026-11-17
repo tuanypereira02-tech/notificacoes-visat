@@ -261,6 +261,11 @@
     el.addEventListener('change', function () {
       var digitado = el.value.trim();
       var codigo = codigoDe(digitado);
+      // Formato da ficha oficial (decisão VISAT 17/11/2026): letra, dois números, ponto e 4º caractere (ex.: Z57.9).
+      if (codigo && !digitado.includes(' – ') && /^[A-Za-z]\d{2}\.?\d?$/.test(digitado.replace(/\s+/g, ''))) {
+        el.value = formatar(codigo);
+        digitado = el.value;
+      }
       if (codigo && !digitado.includes(' – ')) {
         carregar(qual).then(function (tabela) {
           if (!el.isConnected || el.value.trim() !== digitado) return;

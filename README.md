@@ -119,3 +119,5 @@ Decisões da comparação entre VISAT via Link, site de Notificações da VE, Go
 - **CAT = Não:** orientação com o caminho oficial (gov.br/Meu INSS), sem prazo para o trabalhador e outros legitimados (Lei 8.213/1991, art. 22, § 2º).
 - **Troca de CNPJ:** ao mudar um CNPJ já consultado, o CNAE da empresa anterior sai, inclusive quando digitado ou escolhido à mão; falha na consulta: "Não foi possível consultar o CNPJ agora. Tente novamente ou preencha manualmente."
 - Implementação em `aplicarAjustesVisat()` (js/teste/formulario-acidente.js), comum a todas as fichas.
+- **Distúrbio de voz:** "CAT emitida?" antes das informações complementares, com a mesma orientação quando a resposta é Não.
+- **CID no formato da ficha oficial:** código digitado sem descrição é ajustado para letra, dois números, ponto e 4º caractere (ex.: "m545" → "M54.5") antes da busca na tabela.

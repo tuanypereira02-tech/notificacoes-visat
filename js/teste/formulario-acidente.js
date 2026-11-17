@@ -77,6 +77,20 @@ function aplicarAjustesVisat(root, options) {
       <p class="field-help">O CNPJ do empregador continua o do órgão. Informe o endereço do local de atuação em "Endereço do local de trabalho".</p>
     </div>`));
   }
+  // 3a. Ficha de distúrbio de voz: CAT emitida? (decisão VISAT 17/11/2026), antes das informações complementares.
+  if (options.templateId === 'form-voz-template' && !root.querySelector('[data-chips="cat"]')) {
+    const catVoz = novoBloco(`<div>
+      <span class="field-label">CAT emitida?</span>
+      <div class="chip-grid" data-chips="cat" data-single="true" data-summary="CAT emitida?">
+        <button type="button" class="chip" data-value="Sim">Sim</button>
+        <button type="button" class="chip" data-value="Não">Não</button>
+        <button type="button" class="chip" data-value="Não se aplica">Não se aplica</button>
+        <button type="button" class="chip" data-value="Ignorado">Ignorado</button>
+      </div>
+    </div>`);
+    const referencia = caixaDe(root.querySelector('[data-key="observacoes"]')) || caixaDe(root.querySelector('[data-key="relacaoTrabalho"]'));
+    if (referencia) referencia.before(catVoz);
+  }
   // 3. CAT = Não: orientação com o caminho oficial.
   root.querySelectorAll('[data-chips="cat"]').forEach(grupo => {
     const caixa = grupo.parentElement;
