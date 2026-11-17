@@ -73,3 +73,21 @@ Para reproduzir, baixar as fontes indicadas no JSON em uma pasta e executar
 A fonte da API deve ser salva como `subclasses-api.json`. Executar
 `node scripts/testar-correspondencia-cnae.cjs` para conferir os invariantes e
 casos de regressão. Falha de carregamento do mapa mantém o preenchimento manual.
+
+### Página de teste do rascunho de colunas (17/11/2026)
+
+`notificacao-teste.html` leva ao repositório o rascunho VISAT v22, para conferência antes de substituir `notificacao.html`
+(a página incorporada no Google Sites, que não foi alterada). Usa arquivos próprios em `js/teste/`, `css/teste/` e
+`formularios-inline-teste.html`; o envio por e-mail (`js/envio-ficha.js`), o PDF e os dados (`data/`) são os mesmos da página principal.
+
+- Grade única de 4 colunas: caixas alinhadas entre as linhas; linhas com 2 a 4 campos, sem campo sozinho;
+  rótulo sempre em uma linha (o campo ganha 1/2 da linha ou a linha inteira quando o texto não cabe).
+- Ordem dos campos do SINAN em Dados gerais, Pessoa, Residência (com Geo campo 1 e 2), Empresa contratante e Acidente;
+  atendimento médico logo após "Houve atendimento médico?"; CAT emitida na conclusão.
+- Listas (município, unidade, CBO, CNAE, CID, empresa, CEP, agravos): setas destacam, Enter ou Espaço escolhem e fecham a lista, clique também escolhe.
+- CEP buscado automaticamente pelo endereço, sem botão; Ocupação anterior com a lista da CBO.
+- Material biológico: Paciente fonte — Anti-HBc e esquemas AZT+3TC, AZT+3TC+Indinavir e AZT+3TC+Nelfinavir na conduta.
+- Explicações abaixo dos campos reduzidas; uma mensagem por campo.
+- Para promover: trocar em `notificacao.html` as referências de CSS/JS pelas de `notificacao-teste.html` (ou copiar os arquivos de `js/teste/`
+  e `css/teste/` sobre os originais) e aplicar os modelos de `formularios-inline-teste.html`.
+
