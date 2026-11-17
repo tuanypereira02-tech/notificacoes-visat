@@ -452,11 +452,12 @@ function montarBlocoSinan(root, options) {
   bloco.lastElementChild.append(orientacao);
   area.prepend(bloco);
   const screens = area.querySelectorAll('.screen');
+  const total = screens.length - 1;
   screens.forEach((screen, index) => {
     screen.dataset.screen = index + 1;
     screen.classList.toggle('active', index === 0);
+    screen.classList.toggle('visat-tela-final', index === total);
   });
-  const total = screens.length - 1;
   const track = root.querySelector('.progress-track');
   track.replaceChildren();
   track.style.gridTemplateColumns = 'repeat(' + total + ', 1fr)';
@@ -1160,18 +1161,6 @@ function dividirEmPaginas(unidades) {
     return area.scrollHeight <= alturaMaxArea;
   }
   const proximoAlto = (i) => { while (i < n && !medidas[i].alto) i++; return i; };
-  function manterEnderecoJunto(ini, fim) {
-    if (!window.matchMedia(MEDIA_DUAS_COLUNAS).matches) return fim;
-    const endereco = unidades[proximoAlto(fim)]?.closest('.visat-endereco-residencia');
-    if (!endereco || !unidades.slice(ini, fim).some(u => endereco.contains(u) && temConteudoVisivel(u))) return fim;
-    const inicioEndereco = unidades.findIndex(u => endereco.contains(u));
-    const fimEndereco = unidades.findLastIndex(u => endereco.contains(u)) + 1;
-    const residencia = endereco.closest('.screen');
-    const inicioResidencia = unidades.findIndex(u => residencia.contains(u));
-    if (inicioResidencia > ini && cabe(inicioResidencia, fimEndereco)) return inicioResidencia;
-    if (inicioEndereco > ini && cabe(inicioEndereco, fimEndereco)) return inicioEndereco;
-    return fim;
-  }
   const previsto = dividir(limite);
   const partes = new Array(n).fill(0);
   let ini = 0;
@@ -1190,7 +1179,6 @@ function dividirEmPaginas(unidades) {
       if (!cabe(ini, proximo + 1)) break;
       fim = proximo + 1;
     }
-    fim = manterEnderecoJunto(ini, fim);
     // Títulos no fim da página passam para a seguinte, junto do primeiro campo.
     if (fim < n) {
       let k = fim - 1;
