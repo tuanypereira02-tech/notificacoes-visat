@@ -56,14 +56,12 @@
         return l;
       });
     },
-    // Tabela efetivamente usada no registro: CNAE do Sinan, classe de 5 dígitos
-    // (classes da CNAE 1.0 e classes da CNAE 2.0 de denominação distinta) — data/cnae-sinan.json.
+    // Códigos e descrições da carga dbsinan.tb_cnae fornecida pela equipe.
     cnae: function () {
-      return fetch('data/cnae-sinan.json')
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      return window.visatCarregarCnae()
         .then(function (j) {
           return j.classes.map(function (x) {
-            return { c: x[0], d: x[2] + ' (CNAE ' + x[1] + ')', v: x[0] + ' – ' + x[2], origem: x[1] };
+            return { c: x[0], d: x[2], v: x[0] + ' – ' + x[2] };
           });
         });
     },
@@ -239,7 +237,8 @@
         if (!lista.length) { estadoCodigo(input, 'indisponivel', tipo); return; }
         var uf = tipo === 'mun' ? ufVinculada(input) : '';
         var exatos = lista.filter(function (x) {
-          return norm(x.d) === valor || (tipo === 'cnae' && norm(x.d.replace(/ \(CNAE [^)]*\)$/, '')) === valor) || x.c === valor || norm(x.v + ' – ' + x.c) === valor ||
+          return norm(x.d) === valor || x.c === valor || norm(x.v + ' – ' + x.c) === valor ||
+            (tipo === 'cnae' && /^\d{2}\.\d{2}-\d$/.test(valor) && x.c === valor.replace(/\D/g, '')) ||
             (tipo === 'mun' && /^\d{7}$/.test(valor) && x.c === valor.slice(0, 6));
         });
         if (!exatos.length) exatos = lista.filter(function (x) { return norm(x.v) === valor; });
@@ -249,7 +248,7 @@
           input.dataset.visatConfirmado = norm(input.value);
           estadoCodigo(input, 'validado', tipo, exatos[0].c);
         } else {
-          if (semPreencher !== true) estadoCodigo(input, exatos.length > 1 ? 'varios' : 'manual', tipo, exatos.length);
+          estadoCodigo(input, exatos.length > 1 ? 'varios' : 'manual', tipo, exatos.length);
         }
       });
     }
@@ -292,7 +291,8 @@
     el.textContent = {
       '': '',
       digitando: 'Escolha uma sugestão da lista para preencher o código automaticamente.',
-      validado: tipo === 'mun' ? 'Município identificado.' : 'Unidade identificada.',
+      validado: { mun: 'Município identificado.', cnes: 'Unidade identificada.', cbo: 'Ocupação identificada.',
+        cnae: 'Código identificado na tabela do SINAN. Confira a atividade do empregador.' }[tipo],
       varios: 'Há ' + extra + ' opções com este nome. Escolha uma sugestão da lista para preencher o código.',
       manual: 'Preenchimento manual: o código não foi validado. Escolha uma sugestão da lista da ' + FONTE_OFICIAL[tipo] + '.',
       indisponivel: 'Tabela de referência indisponível. Confira o município ou a unidade e tente novamente.'
@@ -346,7 +346,7 @@
       avisos.push({ campo: ocupacao, mensagem: 'A ocupação está em texto livre. Se possível, selecione o código CBO correspondente.' });
     }
     camposCnae.forEach(function (el) {
-      var partes = el.value.match(/^\s*(\d{2})\.?(\d{2})-?(\d)(?:\/?\d{2})?\b/);
+      var partes = el.value.match(/^\s*(\d{2})\.?(\d{2})-?(\d)(?=\s|$)/);
       var codigo = partes && partes.slice(1).join('');
       if (!codigo || (atividades.length && !atividades.some(function (x) { return x.c === codigo; }))) {
         avisos.push({ campo: el, mensagem: 'O CNAE informado não consta da tabela CNAE do Sinan (classe com 5 dígitos). Confira o código e a versão.' });
@@ -464,9 +464,11 @@
 
     // Ocupação -> CBO
     var ocupacao = campo(raiz, ['ocupacao']);
-    var cnae = campo(raiz, ['cnae']);
     anexarLista(ocupacao, 'cbo', function (item) { definir(ocupacao, item.v, true); });
-    anexarLista(cnae, 'cnae', function (item) { definir(cnae, item.v, true); });
+    ['cnae', 'cnaePrincipal', 'cnaePrinc'].forEach(function (chave) {
+      var cnae = campo(raiz, [chave]);
+      anexarLista(cnae, 'cnae', function (item) { definir(cnae, item.v, true); });
+    });
     // A emissão da CAT é um serviço externo distinto da notificação.
     raiz.querySelectorAll('[data-chips="cat"]').forEach(function (grupo) {
       if (grupo.nextElementSibling?.matches('[data-visat-link-cat]')) return;
