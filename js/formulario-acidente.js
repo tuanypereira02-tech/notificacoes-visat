@@ -190,8 +190,11 @@ function montarAtendimentoAcidente(detalhes) {
   outraParte.dataset.showWhen = 'parteCorpo=Outro';
   parteCorpo.append(outraParte);
   grupo.append(
-    criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
-    criarCampo('munAtendimento', 'Município do atendimento'), codigoAtendimento,
+    criarLinhaCampos(
+      criarCampo('dataAtendimento', 'Data do atendimento', 'date'),
+      criarCampo('munAtendimento', 'Município do atendimento')
+    ),
+    codigoAtendimento,
     estabelecimento, criarLinhaCampos(parteCorpo, regime)
   );
   ocorrencia.after(atendimento);
