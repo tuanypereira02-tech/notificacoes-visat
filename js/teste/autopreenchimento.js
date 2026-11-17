@@ -791,7 +791,7 @@
       retorno.textContent = '';
       var termo = nome.value.trim();
       var busca = normalizarNome(termo);
-      if (!busca) return;
+      if (busca.length < 3) return;
       var atual = consultaAtual;
       var uf = filtroDe(enderecoEmpresa.ufEmp);
       var cidade = filtroDe(enderecoEmpresa.munEmp);
@@ -826,10 +826,6 @@
           return mostrar(lista);
         }
         var temLocais = exibir();
-        if (busca.length < 3) {
-          if (!temLocais) retorno.textContent = 'Digite mais letras para ampliar a busca.';
-          return;
-        }
         retorno.textContent = 'Buscando também no cadastro online…';
         espera = setTimeout(function () {
           var url = 'https://fichario.app/api/v1/busca?q=' + encodeURIComponent(termo) +
