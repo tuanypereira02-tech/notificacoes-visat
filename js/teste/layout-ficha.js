@@ -38,8 +38,49 @@ function visatMaiusculas(campo) {
 ['input', 'change', 'blur'].forEach(tipo => document.addEventListener(tipo, evento => {
   if (evento.target instanceof Element && evento.target.matches(VISAT_CAMPOS_MAIUSCULOS)) visatMaiusculas(evento.target);
 }, true));
+// Texto escolhido sempre inteiro na caixa (Escolaridade, CNAE, CBO, município...): quando não cabe,
+// a letra diminui só o necessário, até 12 px, sem mudar a largura das colunas. O texto completo fica no title.
+(function () {
+  const MINIMO = 12;
+  const regua = document.createElement('canvas').getContext('2d');
+  function textoDe(campo) {
+    if (campo.tagName === 'SELECT') return campo.options[campo.selectedIndex]?.text || '';
+    return campo.value || campo.placeholder || '';
+  }
+  function ajustar(campo) {
+    if (!campo.isConnected || !campo.offsetWidth) return;
+    const estilo = getComputedStyle(campo);
+    if (!campo.dataset.visatFonte) campo.dataset.visatFonte = parseFloat(estilo.fontSize) || 15;
+    const base = parseFloat(campo.dataset.visatFonte);
+    const texto = textoDe(campo);
+    const seta = campo.tagName === 'SELECT' ? 22 : 0;
+    const util = campo.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight) - seta - 2;
+    regua.font = estilo.fontWeight + ' ' + base + 'px ' + estilo.fontFamily;
+    const largura = regua.measureText(texto).width;
+    const tamanho = largura > util && util > 0 ? Math.max(MINIMO, Math.floor(base * util / largura * 10) / 10) : base;
+    const novo = tamanho < base ? tamanho + 'px' : '';
+    if (campo.style.fontSize !== novo) campo.style.fontSize = novo;
+    if (campo.value && largura > util) campo.title = texto; else if (campo.title === campo.dataset.visatTitulo) campo.removeAttribute('title');
+    if (campo.title) campo.dataset.visatTitulo = campo.title;
+  }
+  function ajustarTodos() {
+    document.querySelectorAll('.acidente-inline select, .acidente-inline input.input:not([type="date"]):not([type="time"]):not([type="number"])').forEach(ajustar);
+  }
+  ['input', 'change'].forEach(tipo => document.addEventListener(tipo, evento => {
+    if (evento.target instanceof Element && evento.target.matches('.acidente-inline select, .acidente-inline input')) ajustar(evento.target);
+  }, true));
+  // Valores preenchidos automaticamente (CNPJ, CEP, CBO) não disparam eventos: revisão leve enquanto a ficha está aberta.
+  setInterval(() => { if (document.body.classList.contains('modo-formulario-acidente')) ajustarTodos(); }, 700);
+  window.addEventListener('resize', ajustarTodos);
+})();
 window.aplicarLayoutRascunho = function(root) {
   window.visatSemPreenchimento(root);
+  // CNAE: descrição longa ("72400 – Atividades de banco de dados...") ocupa meia linha, como os nomes de empresa.
+  root.querySelectorAll('[data-key="cnae"], [data-key="cnaePrincipal"], #visat-cnae').forEach(campo => {
+    let caixa = campo;
+    while (caixa.parentElement && !caixa.parentElement.matches('.field-group, .draft-row, .visat-linha-campos, .pair-row')) caixa = caixa.parentElement;
+    caixa.setAttribute('data-visat-peso', '2');
+  });
   root.querySelectorAll(VISAT_CAMPOS_MAIUSCULOS).forEach(visatMaiusculas);
   function campoDaGrade(grade, chaves) {
     if (!chaves) return null;
