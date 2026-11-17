@@ -1333,3 +1333,63 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
     justify-content: center;
   }
 }
+
+/* Conclusão: ações, retorno do envio e revisão em blocos distintos. */
+.acidente-inline .visat-tela-final {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.acidente-inline .visat-tela-final .success-card {
+  padding: clamp(16px, 3vw, 30px);
+}
+.acidente-inline .visat-tela-final .success-icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 0 10px;
+}
+.acidente-inline .visat-tela-final .success-icon svg { width: 24px; height: 24px; }
+.acidente-inline .visat-tela-final .center-text { text-align: left; }
+.acidente-inline .visat-tela-final .screen-sub { margin-bottom: 20px; }
+.acidente-inline .visat-entrega {
+  border: 1px solid #d3e0eb;
+  border-radius: 10px;
+  padding: 16px;
+  background: #f5f8fa;
+}
+.acidente-inline .visat-entrega h2,
+.acidente-inline [data-visat-revisao] h3 { margin: 0 0 6px; }
+.acidente-inline .visat-entrega .actions-row { margin-top: 12px; justify-content: flex-start; }
+.acidente-inline .visat-entrega .btn { min-height: 42px; box-shadow: none; }
+.acidente-inline [data-visat-retorno-envio]:not(:empty) {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: #fff;
+  border: 1px solid #d3e0eb;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.acidente-inline [data-visat-retorno-envio][data-enviado]:not(:empty) {
+  background: #e9f6ee;
+  border-color: #b3d7bf;
+  color: #205d37;
+}
+.acidente-inline .visat-tela-final [data-visat-revisao] { margin: 16px 0; padding: 14px 16px; }
+.acidente-inline .visat-tela-final [data-visat-revisao] p { margin: 0; }
+.acidente-inline .visat-tela-final .summary-grid { margin-top: 12px; gap: 12px 16px; }
+.acidente-inline .visat-tela-final .summary-item {
+  padding: 10px 12px;
+  min-width: 0;
+  border: 1px solid #d3e0eb;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.acidente-inline .visat-tela-final .success-card > .actions-row {
+  margin-top: 20px;
+  justify-content: flex-start;
+}
+@media (max-width: 560px) {
+  .acidente-inline .visat-tela-final .summary-grid { grid-template-columns: 1fr; }
+  .acidente-inline .visat-tela-final .actions-row .btn { flex: 1 1 100%; }
+}
