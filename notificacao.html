@@ -6,8 +6,10 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com/ https://fichario.app https://viacep.com.br https://brasilapi.com.br https://publica.cnpj.ws https://servicodados.ibge.gov.br https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Notificação Compulsória — Saúde do Trabalhador — VISAT Florianópolis</title>
+  <link rel="stylesheet" href="css/styles.css?v=20261116-largura-total">
+  <link rel="stylesheet" href="css/formulario-acidente.css?v=20261116-altura-util2">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/teste/ficha.css?v=20261117-teste2">
+  <link rel="stylesheet" href="css/visat-padrao.css?v=20261111-visual1">
 </head>
 <body>
   <a class="pular" href="#principal">Pular para o conteúdo</a>
@@ -100,7 +102,7 @@
 <div>
 <label class="field-label" for="sinan-cod-unid">Código da unidade (CNES)</label>
 <input class="input input-lg" id="sinan-cod-unid" type="text" data-key="codUnidNotif">
-<p class="field-help">Outras unidades: <a href="https://estabelecimentos.datasus.gov.br/pages/estabelecimentos/consulta.jsp" target="_blank" rel="noopener noreferrer">CNES/DATASUS</a></p>
+<p class="field-help">A lista sugere unidades de Florianópolis. Para outras unidades, consulte o <a href="https://estabelecimentos.datasus.gov.br/pages/estabelecimentos/consulta.jsp" target="_blank" rel="noopener noreferrer">CNES/DATASUS</a>.</p>
 </div>
 </div>
 </section>
@@ -111,7 +113,7 @@
 <div>
 <label class="field-label" for="sinan-nome">Nome completo</label>
 <input class="input input-lg" id="sinan-nome" type="text" data-key="nome" data-summary="Nome completo" aria-describedby="sinan-nome-ajuda">
-<p class="field-help" id="sinan-nome-ajuda">Sem abreviações.</p>
+<p class="field-help" id="sinan-nome-ajuda">Informe o nome completo, sem abreviações.</p>
 </div>
 <div data-visat-opcional>
 <label class="field-label" for="sinan-tel">(DDD) Telefone</label>
@@ -120,6 +122,7 @@
 <div>
 <label class="field-label" for="sinan-nasc">Data de nascimento</label>
 <input class="input input-lg" id="sinan-nasc" type="date" data-key="nascimento">
+<p class="field-help">Se a data de nascimento for desconhecida, informe a idade abaixo.</p>
 </div>
 <div class="visat-linha-campos">
 <div>
@@ -175,7 +178,7 @@
 <div>
 <label class="field-label" for="sinan-sus">Cartão SUS</label>
 <input class="input input-lg" id="sinan-sus" type="text" data-key="cartaoSus">
-<p class="field-help"><a href="https://cadastro.saude.gov.br/" target="_blank" rel="noopener noreferrer">Consultar no CadSUS Web</a></p>
+<p class="field-help">Profissional autorizado: <a href="https://cadastro.saude.gov.br/" target="_blank" rel="noopener noreferrer">consultar CPF ou CNS no CadSUS Web</a>.</p>
 </div><div>
 <label class="field-label" for="sinan-mae">Nome da mãe</label>
 <input class="input input-lg" id="sinan-mae" type="text" data-key="nomeMae">
@@ -414,7 +417,7 @@
   <div class="field-error" data-err="cnpj">Informe o CNPJ ou CPF</div>
   <div class="auto-note">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-  <span>Preenche os dados da empresa</span>
+  <span>Preenche razão social, CNAE e endereço da empresa automaticamente</span>
   </div>
   </div>
   </div>
@@ -656,13 +659,10 @@
 
   <script src="js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
   <script src="js/envio-ficha.js?v=20261116-envio-email" defer></script>
-  <script src="js/teste/layout-ficha.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/formulario-acidente.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/autopreenchimento.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/autopreenchimento-listas.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/cid-qualificado.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/app.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/teclado-listas.js?v=20261117-teste2" defer></script>
-  <script src="js/teste/balanceador-linhas.js?v=20261117-teste2" defer></script>
+  <script src="js/formulario-acidente.js?v=20261116-altura-util3" defer></script>
+  <script src="js/app.js?v=20261116-consulta-cheia2" defer></script>
+  <script src="js/autopreenchimento.js?v=20261117-empresa-auto" defer></script>
+  <script src="js/autopreenchimento-listas.js?v=20261117-tb-cnae" defer></script>
+  <script src="js/cid-qualificado.js?v=20261113-modelo-auto" defer></script>
 </body>
 </html>
