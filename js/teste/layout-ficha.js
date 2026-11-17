@@ -38,40 +38,99 @@ function visatMaiusculas(campo) {
 ['input', 'change', 'blur'].forEach(tipo => document.addEventListener(tipo, evento => {
   if (evento.target instanceof Element && evento.target.matches(VISAT_CAMPOS_MAIUSCULOS)) visatMaiusculas(evento.target);
 }, true));
-// Texto escolhido sempre inteiro na caixa (Escolaridade, CNAE, CBO, município...): quando não cabe,
-// a letra diminui só o necessário, até 12 px, sem mudar a largura das colunas. O texto completo fica no title.
+// Caixas do tamanho do conteúdo, sem diminuir a letra: numa linha em que algum texto (rótulo, opção escolhida
+// ou valor) não cabe na caixa, as larguras da linha são redistribuídas conforme o que cada campo precisa
+// (ex.: Agravo maior e CID-10 menor). Linhas em que tudo cabe ficam como estão.
 (function () {
-  const MINIMO = 12;
   const regua = document.createElement('canvas').getContext('2d');
-  function textoDe(campo) {
-    if (campo.tagName === 'SELECT') return campo.options[campo.selectedIndex]?.text || '';
-    return campo.value || campo.placeholder || '';
+  function medir(texto, el) {
+    const e = getComputedStyle(el);
+    regua.font = e.fontWeight + ' ' + e.fontSize + ' ' + e.fontFamily;
+    return regua.measureText(texto || '').width;
   }
-  function ajustar(campo) {
-    if (!campo.isConnected || !campo.offsetWidth) return;
-    const estilo = getComputedStyle(campo);
-    if (!campo.dataset.visatFonte) campo.dataset.visatFonte = parseFloat(estilo.fontSize) || 15;
-    const base = parseFloat(campo.dataset.visatFonte);
-    const texto = textoDe(campo);
-    const seta = campo.tagName === 'SELECT' ? 22 : 0;
-    const util = campo.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight) - seta - 2;
-    regua.font = estilo.fontWeight + ' ' + base + 'px ' + estilo.fontFamily;
-    const largura = regua.measureText(texto).width;
-    const tamanho = largura > util && util > 0 ? Math.max(MINIMO, Math.floor(base * util / largura * 10) / 10) : base;
-    const novo = tamanho < base ? tamanho + 'px' : '';
-    if (campo.style.fontSize !== novo) campo.style.fontSize = novo;
-    if (campo.value && largura > util) campo.title = texto; else if (campo.title === campo.dataset.visatTitulo) campo.removeAttribute('title');
-    if (campo.title) campo.dataset.visatTitulo = campo.title;
+  function campoDe(item) { return item.querySelector('select, input:not([type="hidden"]), textarea'); }
+  function precisa(item) {
+    const rotulo = item.querySelector(':scope > .field-label, :scope > label');
+    const campo = campoDe(item);
+    let largura = rotulo ? medir(rotulo.textContent.replace(/\s+/g, ' ').trim(), rotulo) + 4 : 0;
+    if (campo && !campo.closest('[data-chips]')) {
+      const e = getComputedStyle(campo);
+      const folga = parseFloat(e.paddingLeft) + parseFloat(e.paddingRight) + (campo.tagName === 'SELECT' ? 26 : 6);
+      let texto = '';
+      if (campo.tagName === 'SELECT') texto = [...campo.options].reduce((m, o) => o.text.length > m.length ? o.text : m, '');
+      else if (/^(date|time)$/.test(campo.type)) texto = '00/00/0000';
+      else texto = campo.value || campo.placeholder || '0000';
+      const unidade = item.querySelector('.unit-row select');
+      const extra = unidade && unidade !== campo ? 100 : 0;
+      largura = Math.max(largura, medir(texto, campo) + folga + extra);
+    }
+    return Math.ceil(largura);
+  }
+  function transborda(item) {
+    const campo = campoDe(item);
+    const rotulo = item.querySelector(':scope > .field-label, :scope > label');
+    if (rotulo && rotulo.scrollWidth > rotulo.clientWidth + 1) return true;
+    if (!campo || campo.closest('[data-chips]') || campo.tagName === 'TEXTAREA') return false;
+    return precisa(item) > item.getBoundingClientRect().width + 1;
+  }
+  // Linha própria (Dados gerais): colunas proporcionais ao conteúdo.
+  function ajustarGradePropria(linha) {
+    const itens = [...linha.children].filter(el => el.offsetParent);
+    if (itens.length < 2) return;
+    if (!linha.dataset.visatConteudo && !itens.some(transborda)) return;
+    const gap = parseFloat(getComputedStyle(linha).columnGap) || 0;
+    const total = linha.clientWidth - gap * (itens.length - 1);
+    const necessidades = itens.map(precisa);
+    const soma = necessidades.reduce((a, b) => a + b, 0);
+    // Sobra repartida igualmente, para nenhuma caixa ficar justa demais.
+    const sobra = Math.max(0, total - soma) / itens.length;
+    const colunas = necessidades.map(n => 'minmax(0, ' + Math.round(n + sobra) + 'fr)').join(' ');
+    linha.dataset.visatConteudo = '1';
+    if (linha.style.gridTemplateColumns !== colunas) {
+      linha.style.gridTemplateColumns = colunas;
+      itens.forEach(el => { el.style.gridColumn = 'auto'; });
+    }
+  }
+  // Linhas da grade comum (12 colunas): spans conforme o conteúdo, somando 12.
+  function ajustarLinhaComum(itens, grade) {
+    if (itens.length < 2 || !itens.some(transborda)) return;
+    const gap = parseFloat(getComputedStyle(grade).columnGap) || 0;
+    const coluna = (grade.clientWidth - 11 * gap) / 12;
+    const necessidades = itens.map(precisa);
+    const minimos = necessidades.map(n => Math.max(2, Math.ceil((n + gap) / (coluna + gap))));
+    let soma = minimos.reduce((a, b) => a + b, 0);
+    if (soma > 12) return; // não cabe em uma linha: mantém a distribuição atual
+    const spans = minimos.slice();
+    while (soma < 12) {
+      // Coluna extra para o campo que fica mais apertado em relação ao que precisa.
+      let k = 0;
+      spans.forEach((s, i) => { if (necessidades[i] / s > necessidades[k] / spans[k]) k = i; });
+      spans[k]++; soma++;
+    }
+    itens.forEach((el, i) => {
+      if (el.style.getPropertyValue('--visat-span') !== String(spans[i])) {
+        el.setAttribute('data-visat-span', String(spans[i]));
+        el.style.setProperty('--visat-span', String(spans[i]));
+      }
+    });
   }
   function ajustarTodos() {
-    document.querySelectorAll('.acidente-inline select, .acidente-inline input.input:not([type="date"]):not([type="time"]):not([type="number"])').forEach(ajustar);
+    if (window.innerWidth < 561) return;
+    document.querySelectorAll('.acidente-inline .draft-row.draft-grid-12').forEach(ajustarGradePropria);
+    document.querySelectorAll('.acidente-inline .field-group').forEach(grade => {
+      const itens = [...grade.querySelectorAll('[data-visat-span]')].filter(el => el.offsetParent && el.closest('.field-group') === grade);
+      const linhas = new Map();
+      itens.forEach(el => {
+        const topo = Math.round(el.getBoundingClientRect().top);
+        if (!linhas.has(topo)) linhas.set(topo, []);
+        linhas.get(topo).push(el);
+      });
+      linhas.forEach(linha => ajustarLinhaComum(linha, grade));
+    });
   }
-  ['input', 'change'].forEach(tipo => document.addEventListener(tipo, evento => {
-    if (evento.target instanceof Element && evento.target.matches('.acidente-inline select, .acidente-inline input')) ajustar(evento.target);
-  }, true));
   // Valores preenchidos automaticamente (CNPJ, CEP, CBO) não disparam eventos: revisão leve enquanto a ficha está aberta.
   setInterval(() => { if (document.body.classList.contains('modo-formulario-acidente')) ajustarTodos(); }, 700);
-  window.addEventListener('resize', ajustarTodos);
+  window.addEventListener('resize', () => setTimeout(ajustarTodos, 300));
 })();
 window.aplicarLayoutRascunho = function(root) {
   window.visatSemPreenchimento(root);
