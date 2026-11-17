@@ -1446,3 +1446,19 @@ html.visat-em-quadro body.modo-formulario-acidente #principal {
 
 /* As opções seguintes aparecem ao avançar com a seta, sem estender a lista. */
 .acidente-inline [data-visat-fora-da-janela] { display: none !important; }
+
+/* Resultados próximos do campo, sem mensagens de instrução repetidas. */
+.acidente-inline :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) {
+  margin-top: 4px;
+  padding: 4px;
+  gap: 3px;
+}
+.acidente-inline .visat-lista-apoio ul { margin: 0; gap: 3px; }
+.acidente-inline :is(.visat-lista-apoio, .empresa-resultados, .visat-cid-lista) button {
+  min-height: 32px;
+  padding: 5px 9px;
+}
+.acidente-inline .visat-lista-apoio:has(ul button) > p[role="status"],
+.acidente-inline div:has(> .visat-lista-apoio:not([hidden]) ul button) > .visat-estado-codigo[data-estado="digitando"] {
+  display: none;
+}
