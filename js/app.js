@@ -767,6 +767,7 @@
     const rodape = document.querySelector('footer.rodape');
     if (!lista || !rodape || !window.ResizeObserver) return;
     const BASE = parseFloat(getComputedStyle(lista).maxHeight) || 340;
+    const cartao = document.querySelector('#principal > section[aria-labelledby="h-resultado"]');
     let ajustando = false;
     function ajustar() {
       if (ajustando) return;
@@ -774,16 +775,23 @@
       requestAnimationFrame(() => {
         if (document.body.classList.contains('modo-formulario-acidente')) { ajustando = false; return; }
         lista.style.maxHeight = '';
-        const fim = rodape.getBoundingClientRect().bottom + (window.scrollY || 0);
-        const folga = Math.floor(window.innerHeight - fim);
-        const conteudo = lista.scrollHeight;
-        if (folga > 0) lista.style.maxHeight = Math.min(conteudo + 2, BASE + folga) + 'px';
+        if (cartao) cartao.style.minHeight = '';
+        const fimRodape = () => rodape.getBoundingClientRect().bottom + (window.scrollY || 0);
+        let folga = Math.floor(window.innerHeight - fimRodape());
+        if (folga > 0) {
+          // Primeiro a lista mostra mais agravos; o que ainda sobrar estende o cartão do direcionamento.
+          const extraLista = Math.max(0, Math.min(folga, lista.scrollHeight + 2 - BASE));
+          if (extraLista) lista.style.maxHeight = (BASE + extraLista) + 'px';
+          folga = Math.floor(window.innerHeight - fimRodape());
+          if (folga > 0 && cartao) cartao.style.minHeight = (cartao.getBoundingClientRect().height + folga) + 'px';
+        }
         requestAnimationFrame(() => { ajustando = false; });
       });
     }
     const observador = new ResizeObserver(ajustar);
     const principal = document.getElementById('principal');
-    if (principal) [...principal.children].filter(el => !el.contains(lista)).forEach(el => observador.observe(el));
+    if (principal) [...principal.children].filter(el => !el.contains(lista) && el !== cartao).forEach(el => observador.observe(el));
+    if (cartao) [...cartao.children].forEach(el => observador.observe(el));
     window.addEventListener('resize', ajustar);
     window.addEventListener('load', ajustar);
     new MutationObserver(ajustar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
