@@ -9,8 +9,36 @@
   var CAMPOS = 'input:not([type="hidden"]):not([type="date"]):not([type="time"]):not([type="radio"]):not([type="checkbox"]), textarea';
 
   function visivel(el) { return !!el && !el.hidden && el.getClientRects().length > 0; }
+  var TAMANHO_JANELA = 4;
+  var janelas = new WeakMap();
+  function caixaDaOpcao(lista, botao) {
+    var item = botao.closest('li');
+    return item && lista.contains(item) ? item : botao;
+  }
   function itensDe(lista) {
-    return Array.prototype.filter.call(lista.querySelectorAll('button:not([disabled])'), visivel);
+    return Array.prototype.filter.call(lista.querySelectorAll('button:not([disabled])'), function (botao) {
+      return visivel(botao) || (lista.id !== 'lista-agravos' &&
+        caixaDaOpcao(lista, botao).hasAttribute('data-visat-fora-da-janela') &&
+        !botao.closest('[hidden]'));
+    });
+  }
+  function ajustarJanela(lista, itens, indice) {
+    if (lista.id === 'lista-agravos' || !itens.length) return;
+    var estado = janelas.get(lista);
+    if (!estado || estado.primeiro !== itens[0] || estado.total !== itens.length) {
+      estado = { primeiro: itens[0], total: itens.length, inicio: 0 };
+      janelas.set(lista, estado);
+    }
+    if (indice >= 0) estado.inicio = Math.floor(indice / TAMANHO_JANELA) * TAMANHO_JANELA;
+    itens.forEach(function (botao, pos) {
+      caixaDaOpcao(lista, botao).toggleAttribute('data-visat-fora-da-janela',
+        pos < estado.inicio || pos >= estado.inicio + TAMANHO_JANELA);
+    });
+  }
+  function atualizarJanelas() {
+    document.querySelectorAll(LISTAS).forEach(function (lista) {
+      if (lista.id !== 'lista-agravos' && visivel(lista)) ajustarJanela(lista, itensDe(lista));
+    });
   }
   function listaDoCampo(campo) {
     if (campo.id === 'busca') return document.getElementById('lista-agravos');
@@ -81,6 +109,7 @@
       else novo = Math.max(pos - 5, 0);
       ev.preventDefault();
       ev.stopPropagation();
+      ajustarJanela(lista, itens, novo < 0 ? 0 : novo);
       destacar(campo, lista, novo >= 0 ? itens[novo] : null);
       return;
     }
@@ -115,14 +144,18 @@
       var itens = itensDe(lista);
       var pos = itens.indexOf(alvo);
       if (pos < 0) return;
-      if (ev.key === 'ArrowDown') { ev.preventDefault(); focar(itens[Math.min(pos + 1, itens.length - 1)]); }
+      function moverPara(indice) {
+        ajustarJanela(lista, itens, indice);
+        focar(itens[indice]);
+      }
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); moverPara(Math.min(pos + 1, itens.length - 1)); }
       else if (ev.key === 'ArrowUp') {
         ev.preventDefault();
-        if (pos > 0) focar(itens[pos - 1]);
+        if (pos > 0) moverPara(pos - 1);
         else { var origem = campoDaLista(lista); if (origem) origem.focus(); }
       }
-      else if (ev.key === 'Home') { ev.preventDefault(); focar(itens[0]); }
-      else if (ev.key === 'End') { ev.preventDefault(); focar(itens[itens.length - 1]); }
+      else if (ev.key === 'Home') { ev.preventDefault(); moverPara(0); }
+      else if (ev.key === 'End') { ev.preventDefault(); moverPara(itens.length - 1); }
       else if (ev.key === 'Escape') {
         var campo = campoDaLista(lista);
         if (lista.id !== 'lista-agravos') lista.hidden = true;
@@ -166,7 +199,8 @@
   new MutationObserver(function () {
     if (agendado) return;
     agendado = true;
-    requestAnimationFrame(function () { agendado = false; anotar(document); });
+    requestAnimationFrame(function () { agendado = false; anotar(document); atualizarJanelas(); });
   }).observe(document.body, { childList: true, subtree: true });
   anotar(document);
+  atualizarJanelas();
 })();
