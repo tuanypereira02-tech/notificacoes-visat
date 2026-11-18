@@ -1583,3 +1583,4 @@ html.visat-em-quadro body.modo-formulario-acidente #principal.visat-fim-congelad
   display: grid !important; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)) !important; gap: 8px;
 }
 .acidente-inline [data-chips="tipoAplicativo"] .chip { white-space: normal; min-height: 44px; }
+.acidente-inline .visat-cid-info .visat-cid-ldrt { color: #0b315d; font-size: 12px; font-weight: 500; margin: 2px 0 0; }

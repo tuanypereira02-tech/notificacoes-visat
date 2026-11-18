@@ -145,18 +145,21 @@
     // Mensagem curta: o código e o nome já aparecem no campo; a referência completa fica no title.
     if (r.item && !/ – /.test(el.value)) linha(formatar(r.codigo) + ' — ' + (window.visatTitulo?.(r.item.d) ?? r.item.d), 'visat-cid-titulo');
     if (r.estado === 'ldrt') {
-      var ok = linha('✓ Consta da LDRT', 'visat-cid-ok');
-      ok.title = 'Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.';
+      // Sem linha verde: a informação da LDRT fica no próprio resumo dos agentes.
+      var fonte = 'Portaria GM/MS nº 5.674/2024, Anexo LXXX, Lista B' + (r.item.cap ? ', cap. ' + r.item.cap : '') + (r.item.p ? ', p. ' + r.item.p : '') + '.';
       var ags = (r.item.a || []).map(function (i) { return dados.dart.agentes[i]; });
       if (ags.length) {
         var det = document.createElement('details');
         det.className = 'visat-cid-agentes';
         var s = document.createElement('summary');
-        s.textContent = 'Agentes da LDRT (' + ags.length + ')';
+        s.textContent = 'Consta da LDRT · agentes (' + ags.length + ')';
+        s.title = fonte;
         var ul = document.createElement('ul');
         ags.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.append(li); });
         det.append(s, ul);
         caixa.append(det);
+      } else {
+        linha('Consta da LDRT', 'visat-cid-ldrt').title = fonte;
       }
     }
     avisos.forEach(function (t) { linha(t, 'visat-cid-aviso'); });
