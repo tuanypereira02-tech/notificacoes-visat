@@ -383,6 +383,7 @@ function montarEmpregador(area) {
   const secundario = criarCampo('cnaeSecundario', 'CNAE secundário', 'text', ['x']);
   secundario.querySelector('select').replaceChildren(new Option('Usar só se a atividade da pessoa for outra', ''));
   secundario.dataset.visatOpcional = '';
+  secundario.dataset.visatSomenteTela = ''; // ferramenta de escolha: o CNAE escolhido sai no campo CNAE
   const ajudaSecundario = document.createElement('p');
   ajudaSecundario.className = 'field-help';
   ajudaSecundario.textContent = 'Lista vinda do CNPJ. A escolha substitui o CNAE acima.';
@@ -1467,7 +1468,7 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
   screen.querySelectorAll('.field-label').forEach((fieldLabel) => {
     const secaoComplementar = fieldLabel.closest('[data-visat-secao-complementar]');
     if ((secaoComplementar && secaoComplementar !== screen) ||
-        fieldLabel.closest('[hidden]')) return;
+        fieldLabel.closest('[hidden], [data-visat-somente-tela]')) return;
     const opcional = Boolean(fieldLabel.closest('[data-visat-complementares], [data-visat-opcional]')) ||
       ['visat-inicioSintomas', 'sinan-cep', 'sinan-cod-unid'].includes(fieldLabel.htmlFor);
     const labelText = fieldLabel.textContent.trim();
