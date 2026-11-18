@@ -281,15 +281,39 @@
       cep.addEventListener('change', aplicar);
       aplicar();
     });
-    // Unidades de tempo no plural (Horas, Dias, Meses, Anos); o valor gravado continua o mesmo.
-    const PLURAL = { 'hora': 'Horas', 'dia': 'Dias', 'mês': 'Meses', 'mes': 'Meses', 'ano': 'Anos' };
+    // Unidades de tempo conforme o número: 1 → Hora, Dia, Mês, Ano; demais → Horas, Dias, Meses, Anos.
+    // O valor gravado continua o mesmo. Tempo na ocupação: só Meses e Anos (todas as fichas).
+    const UNIDADES = {
+      hora: ['Hora', 'Horas'], horas: ['Hora', 'Horas'], dia: ['Dia', 'Dias'], dias: ['Dia', 'Dias'],
+      'mês': ['Mês', 'Meses'], mes: ['Mês', 'Meses'], meses: ['Mês', 'Meses'], ano: ['Ano', 'Anos'], anos: ['Ano', 'Anos']
+    };
+    const camposNumero = [...root.querySelectorAll('input[data-key]')];
     root.querySelectorAll('.unit-row select, select[data-key$="Unidade"], select[data-key$="Un"], select[data-key$="Unid"]').forEach(sel => {
-      [...sel.options].forEach(o => {
-        const plural = PLURAL[o.text.trim().toLowerCase()];
-        if (!plural) return;
+      const opcoes = [...sel.options].filter(o => UNIDADES[o.text.trim().toLowerCase()]);
+      if (!opcoes.length) return;
+      opcoes.forEach(o => {
+        const formas = UNIDADES[o.text.trim().toLowerCase()];
         if (!o.hasAttribute('value')) o.value = o.text.trim();
-        o.text = plural;
+        o.dataset.visatFormas = formas.join('|');
       });
+      if (/^tempoOcup|^tempoUnidade$/.test(sel.dataset.key || '')) {
+        opcoes.filter(o => /^(Hora|Dia)/.test(o.dataset.visatFormas)).forEach(o => {
+          if (o.selected) { const ano = opcoes.find(x => /^Ano/.test(x.dataset.visatFormas)); if (ano) ano.selected = true; }
+          o.remove();
+        });
+      }
+      const numero = camposNumero.filter(i => i.compareDocumentPosition(sel) & Node.DOCUMENT_POSITION_FOLLOWING).pop();
+      const atualizar = () => {
+        const n = Number(String(numero?.value || '').replace(',', '.'));
+        const singular = n === 1;
+        [...sel.options].forEach(o => {
+          if (!o.dataset.visatFormas) return;
+          const [um, varios] = o.dataset.visatFormas.split('|');
+          o.text = singular ? um : varios;
+        });
+      };
+      if (numero) { numero.addEventListener('input', atualizar); numero.addEventListener('change', atualizar); }
+      atualizar();
     });
     // Telefone no padrão (DD) 99999-9999 ou (DD) 9999-9999: só números, DDD de 2 dígitos sem o zero,
     // no máximo 11 dígitos. Incompleto: aviso ao sair do campo.
