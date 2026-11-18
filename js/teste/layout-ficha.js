@@ -416,7 +416,7 @@ window.aplicarLayoutRascunho = function(root) {
   organizar(pessoa.querySelector('.field-group'), [
     ['sinan-nome', 'sinan-nasc', 'sinan-idade'],
     ['sexo', 'gestante', 'raca'],
-    ['sinan-esc', 'sinan-sus', 'sinan-cpf'],
+    ['sinan-esc', 'sinan-cpf', 'sinan-sus'],
     ['sinan-mae']
   ]);
 
@@ -485,6 +485,49 @@ window.aplicarLayoutRascunho = function(root) {
       if (secao && secao !== grupoAntigo) secao.hidden = true;
     }
   }
+
+  // Responsável pela notificação (rascunho VISAT): nome, função, e-mail e data juntos, no fim da ficha.
+  (function grupoResponsavel() {
+    const nome = root.querySelector('[data-key="profissional"], [data-key="investigador"]');
+    if (!nome) return;
+    const caixa = el => el ? (el.closest('.unit-row')?.parentElement || el.parentElement) : null;
+    // Última etapa preenchível (a tela de conclusão, com o resumo, fica de fora).
+    const telas = [...root.querySelectorAll('.screen[data-screen]')].filter(t => !t.querySelector('#summaryGrid'));
+    const ultima = telas[telas.length - 1];
+    const grade = ultima?.querySelector(':scope > .field-group') || ultima;
+    if (!grade) return;
+    const secao = document.createElement('section');
+    secao.className = 'visat-sequencia';
+    secao.dataset.visatResponsavel = '';
+    secao.innerHTML = '<h3 class="visat-sequencia-titulo">Responsável pela notificação</h3><div class="field-group"></div>';
+    const campos = secao.querySelector('.field-group');
+    const origens = new Set();
+    const linha = document.createElement('div');
+    linha.className = 'draft-row draft-cols-3';
+    [nome, root.querySelector('[data-key="funcaoProfissional"], [data-key="funcao"], [data-key="funcaoInvestigador"]'),
+      root.querySelector('[data-key="emailProfissional"]')].forEach(el => {
+      const c = caixa(el);
+      if (!c) return;
+      origens.add(c.parentElement);
+      linha.append(c);
+    });
+    campos.append(linha);
+    const data = root.querySelector('[data-key="dataFechamento"]');
+    if (data && caixa(data)) {
+      const c = caixa(data);
+      origens.add(c.parentElement);
+      const rotulo = c.querySelector('.field-label');
+      if (rotulo && rotulo.textContent.trim() === 'Data') rotulo.textContent = 'Data do preenchimento';
+      const linhaData = document.createElement('div');
+      linhaData.className = 'draft-row draft-cols-3';
+      linhaData.append(c);
+      campos.append(linhaData);
+    }
+    grade.append(secao);
+    origens.forEach(o => {
+      if (o && o !== linha && o.matches('.pair-row, .draft-row, .visat-linha-campos') && !o.querySelector('input, select, textarea, [data-chips]')) o.remove();
+    });
+  })();
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).

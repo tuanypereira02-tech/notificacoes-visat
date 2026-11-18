@@ -51,7 +51,7 @@ function aplicarAjustesVisat(root, options) {
       caixa.remove();
     } else if (!root.querySelector('[data-chips="tipoAplicativo"]')) {
       caixa.querySelector('.field-label').textContent = 'Trabalha por aplicativo?';
-      const tipo = novoBloco(`<div data-show-when="plataformaDigital=Sim" hidden>
+      const tipo = novoBloco(`<div data-show-when="plataformaDigital=Sim" data-visat-peso="4" hidden>
         <span class="field-label">Tipo de aplicativo</span>
         <div class="chip-grid" data-chips="tipoAplicativo" data-multi="true" data-summary="Tipo de aplicativo">
           <button type="button" class="chip" data-value="Transporte de passageiros">Transporte de passageiros</button>
@@ -237,7 +237,7 @@ function aplicarAjustesVisat(root, options) {
           if (quarto === '9') nota = ' · local não especificado, a conferir';
         }
         sugestao = codigo3 + '.' + quarto;
-        texto = 'Sugerido: ' + sugestao + ' – ' + linha[3] + nota + '. Pode ser corrigido.';
+        texto = 'Código sugerido pela forma, pelo detalhe e pelo local' + nota + '. Pode ser corrigido.';
       }
       ajudaCausa.textContent = texto;
       // Só substitui o CID quando ele está vazio ou ainda é a sugestão anterior (correção manual é mantida).
