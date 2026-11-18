@@ -194,3 +194,28 @@
 @media (max-width: 760px) {
   .acidente-inline.visat-modelo-final { padding-inline: 12px !important; }
 }
+
+/* ===== Visualização no quadro do Google Sites (tela de notebook, ~768 px de altura) =====
+   Menos margem lateral (o Sites já tem a sua), campos um pouco mais baixos e índice de etapas fixo no topo. */
+html.visat-em-quadro .acidente-inline.visat-modelo-final {
+  --r-alt: 40px;
+  --r-gap-y: 14px;
+  max-width: none;
+  padding-inline: 12px !important;
+}
+html.visat-em-quadro .acidente-inline.visat-modelo-final .visat-indice-ficha {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: rgba(243, 247, 251, .97) !important;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 8px rgba(17, 44, 69, .08);
+}
+html.visat-em-quadro .acidente-inline.visat-modelo-final .visat-indice-ficha .btn[aria-current="step"] {
+  background: #112C45 !important;
+  color: #fff !important;
+}
+html.visat-em-quadro .acidente-inline.visat-modelo-final .screen h1,
+html.visat-em-quadro .acidente-inline.visat-modelo-final #btnContinuar { scroll-margin-top: 72px; }
+html.visat-em-quadro .acidente-inline.visat-modelo-final [data-visat-homologacao] { padding: 8px 12px !important; margin-block: 6px !important; }
+html.visat-em-quadro .acidente-inline.visat-modelo-final .screen-title { font-size: 18px !important; }

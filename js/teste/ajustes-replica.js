@@ -491,6 +491,22 @@
       if (!visiveis.length && !l.querySelector('[data-show-when],[data-show-in],[data-show-includes],[data-show-contains]')) l.style.setProperty('display', 'none', 'important');
     });
     root.dataset.visatLayoutReplica = '1';
+    // Índice de etapas: destaca a etapa que está na tela (útil no quadro do Sites, onde a ficha rola por dentro).
+    const indice = root.querySelector('.visat-indice-ficha');
+    if (indice && 'IntersectionObserver' in window && !indice.dataset.visatEtapaAtual) {
+      indice.dataset.visatEtapaAtual = '1';
+      const botoes = [...indice.querySelectorAll('.btn')];
+      const telas = [...root.querySelectorAll('.screen[data-screen]')].filter(t => !t.querySelector('#summaryGrid'));
+      const marcar = i => botoes.forEach((b, k) => { if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+      const visiveis = new Map();
+      const obs = new IntersectionObserver(entradas => {
+        entradas.forEach(e => visiveis.set(e.target, e.isIntersecting ? e.intersectionRatio : 0));
+        let melhor = -1, maior = 0;
+        telas.forEach((t, i) => { const r = visiveis.get(t) || 0; if (r > maior) { maior = r; melhor = i; } });
+        if (melhor >= 0) marcar(melhor);
+      }, { threshold: [0, .15, .35, .6, .9] });
+      telas.forEach(t => obs.observe(t));
+    }
     // Primeiro bloco de cada etapa sem linha separadora nem espaço vazio no topo.
     root.querySelectorAll('.screen').forEach(tela => {
       const primeiro = tela.querySelector('[data-visat-secao-complementar], .visat-sequencia');
