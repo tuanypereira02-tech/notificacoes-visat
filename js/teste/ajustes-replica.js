@@ -251,6 +251,48 @@
         m.addedNodes?.forEach(n => { if (n.nodeType === 1 && n.matches('.visat-estado-codigo')) avisarESair(n); });
       });
     }).observe(root, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-estado'] });
+    // Opção repetida no mesmo grupo (ex.: "Ignorado" duas vezes em Agente, ficha 1b) aparece uma vez só.
+    root.querySelectorAll('[data-chips]').forEach(g => {
+      const vistos = new Set();
+      g.querySelectorAll('.chip').forEach(c => { if (vistos.has(c.dataset.value)) c.remove(); else vistos.add(c.dataset.value); });
+    });
+    // Telefone no padrão (DD) 99999-9999 ou (DD) 9999-9999: só números, DDD de 2 dígitos sem o zero,
+    // no máximo 11 dígitos. Incompleto: aviso ao sair do campo.
+    const formatarTelefone = v => {
+      let d = String(v || '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
+      if (!d) return '';
+      if (d.length <= 2) return '(' + d;
+      const ddd = d.slice(0, 2), n = d.slice(2);
+      if (n.length <= 4) return '(' + ddd + ') ' + n;
+      const corte = n.length === 9 ? 5 : 4;
+      return '(' + ddd + ') ' + n.slice(0, corte) + '-' + n.slice(corte);
+    };
+    root.querySelectorAll('#sinan-tel, input[type="tel"], [data-key="telEmp"], [data-key="telefone"], [data-key="telefoneRes"]').forEach(tel => {
+      if (tel.dataset.visatMascaraTel || tel.tagName !== 'INPUT') return;
+      tel.dataset.visatMascaraTel = '1';
+      tel.setAttribute('inputmode', 'tel');
+      tel.maxLength = 15;
+      tel.placeholder = '(48) 99999-9999';
+      const aviso = document.createElement('small');
+      aviso.className = 'field-help';
+      aviso.style.color = '#B3261E';
+      aviso.hidden = true;
+      (caixa(tel) || tel.parentElement).append(aviso);
+      const aplicar = () => {
+        const f = formatarTelefone(tel.value);
+        if (f !== tel.value) tel.value = f;
+      };
+      tel.addEventListener('input', aplicar);
+      tel.addEventListener('blur', () => {
+        aplicar();
+        const n = tel.value.replace(/\D/g, '').length;
+        const ruim = n > 0 && n < 10;
+        aviso.textContent = ruim ? 'Telefone incompleto: informe DDD + número, ex.: (48) 99142-6513.' : '';
+        aviso.hidden = !ruim;
+        tel.toggleAttribute('aria-invalid', ruim);
+      });
+      aplicar();
+    });
     // 3. Situação cadastral e matriz/filial: aviso curto embaixo do CNPJ (só na tela).
     const situacao = campo(root, 'situacaoCadastral'), matriz = campo(root, 'matrizFilial'), cnpj = campo(root, 'cnpj');
     if (situacao && matriz && cnpj) {
@@ -293,24 +335,28 @@
 
   // ---------- Layout da ficha 1a: grade de 4 colunas, caixas do mesmo tamanho ----------
   // Cada linha: [chave, colunas]. Campos condicionais ficam na mesma linha e só ocupam espaço quando aparecem.
-  const LAYOUT_ACIDENTE = [
-    [['dataNotificacao', 1], ['dataAcidente', 1], ['munNotif', 2]],
-    [['unidNotif', 4]],
-    [['cid', 4]],
-    [['nome', 2], ['nascimento', 1], ['idade', 1]],
-    [['sexo', 1], ['gestante', 1], ['raca', 1], ['escolaridade', 1]],
-    [['cpf', 1], ['cartaoSus', 1], ['nomeMae', 2]],
-    [['residencia', 1], ['paisExterior', 3], ['munRes', 3]],
-    [['cep', 1], ['logRes', 2], ['numRes', 1]],
-    [['bairroRes', 1], ['telefoneRes', 1], ['zona', 2]],
+  // Blocos comuns a todas as fichas (mesma posição e tamanho em todas).
+  const LAYOUT_COMUM = [
+    [['#sinan-data-notif', 1], ['[data-visat-data-referencia]', 1], ['#sinan-mun-notif', 2]],
+    [['#sinan-unid', 4]],
+    [['cid|cid10|cidCod|cidDiag', 4]],
+    [['#sinan-nome', 2], ['#sinan-nasc', 1], ['#sinan-idade', 1]],
+    [['sexo', 1], ['gestante', 1], ['raca', 1], ['#sinan-esc', 1]],
+    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2]],
+    [['#sinan-residencia-pais', 1], ['#sinan-pais', 3], ['#sinan-mun-res', 3]],
+    [['#sinan-cep', 1], ['#sinan-logr', 2], ['#sinan-num', 1]],
+    [['#sinan-bairro', 1], ['#sinan-tel', 1], ['zona', 2]],
     [['ocupacao', 2], ['situacao', 2]],
-    [['tempoNum', 1], ['plataformaDigital', 1], ['qualAplicativo', 2]],
+    [['tempoNum|tempoValor|tempoOcupacao|tempoOcup', 1], ['plataformaDigital', 1], ['qualAplicativo', 2]],
     [['ocupacaoAnterior', 2], ['localAtuacao', 2]],
-    [['cnpj', 2], ['empresa', 2]],
+    [['cnpj', 2], ['empresa|empresaNome|razao', 2]],
     [['cnae', 2], ['munEmp', 2]],
-    [['cepEmp', 1], ['endEmp', 2], ['numEmp', 1]],
-    [['bairroEmp', 1], ['telEmp', 1], ['terceirizada', 2]],
-    [['cnpjPrincipal', 2], ['empresaPrincipal', 2]],
+    [['cepEmp', 1], ['endEmp|endereco', 2], ['numEmp|numero', 1]],
+    [['bairroEmp|bairro', 1], ['telEmp|telefone', 1], ['terceirizada', 2]],
+    [['cnpjPrincipal|cnpjPrinc', 2], ['empresaPrincipal|razaoPrincipal|razaoPrinc', 2]],
+    [['cnaePrincipal|cnaePrinc', 2]]
+  ];
+  const LAYOUT_ACIDENTE = [
     [['horaAcidente', 1], ['tipoAcidente', 1], ['munOcorrencia', 2]],
     [['outrosAtingidos', 2], ['atendimentoMedico', 2]],
     [['outrosAtingidosQuantidade', 1]],
@@ -322,8 +368,59 @@
     [['cat', 4]],
     [['atividade', 4]]
   ];
+  // Demais campos (dados do agravo das doenças, 1b, 1e, 1j): grade de 4 colunas na ordem da ficha,
+  // com largura padronizada pelo tipo de campo.
+  function larguraPadrao(c) {
+    if (c.querySelector('textarea') || c.matches('.highlight-box, [data-visat-aviso-cat]')) return 4;
+    const chips = [...c.querySelectorAll('[data-chips]:not([style*="display: none"]) .chip')];
+    if (chips.length) {
+      const texto = chips.reduce((t, x) => t + x.textContent.trim().length, 0);
+      if (chips.length > 6 || texto > 70) return 4;
+      if (chips.length <= 3 && texto <= 26) return 1;
+      return 2;
+    }
+    const sel = c.querySelector('select');
+    if (sel && !c.querySelector('.unit-row')) {
+      const maior = Math.max(0, ...[...sel.options].map(o => o.text.trim().length));
+      if (maior > 34) return 4;
+      return maior > 18 ? 2 : 1;
+    }
+    if (c.querySelector('.unit-row, input[type="date"], input[type="time"], input[type="number"]')) return 1;
+    const rotulo = c.querySelector('.field-label')?.textContent.trim() || '';
+    const chave = c.querySelector('[data-key]')?.dataset.key || '';
+    if (/nome|endere|logr|empresa|ocupa|mun|unid|estabelec|descr|especif|outr|qual|cid|agente|vínculo|vinculo/i.test(chave + ' ' + rotulo) || rotulo.length > 30) return 2;
+    return 1;
+  }
+  function gradeAutomatica(root) {
+    const ESTRUTURA = 'section, details, .field-group, .draft-detalhes, .visat-sequencia, [data-visat-secao-complementar], .visat-painel-causa';
+    const ehCampo = el => el.nodeType === 1 && !el.matches(ESTRUTURA + ', .visat-titulo-agravo, h1, h2, h3, p, .screen-title, .screen-sub')
+      && !el.querySelector(ESTRUTURA) && !!el.querySelector('.field-label, [data-chips]');
+    const ehLinha = el => el.matches('.draft-row, .visat-linha-campos, .pair-row');
+    root.querySelectorAll('.screen .field-group').forEach(grupo => {
+      if (grupo.closest('section.visat-r, .visat-painel-causa')) return;
+      let secao = null;
+      [...grupo.children].forEach(filho => {
+        const caixas = ehLinha(filho) ? [...filho.children].filter(ehCampo) : (ehCampo(filho) ? [filho] : []);
+        if (!caixas.length) { if (!filho.matches('section.visat-r')) secao = null; return; }
+        if (!secao) {
+          secao = document.createElement('section');
+          secao.className = 'visat-r';
+          secao.style.setProperty('grid-column', '1 / -1', 'important');
+          filho.before(secao);
+        }
+        caixas.forEach(c => {
+          c.style.setProperty('grid-column', 'span ' + larguraPadrao(c), 'important');
+          c.removeAttribute('data-visat-span');
+          secao.append(c);
+        });
+        if (ehLinha(filho) && !filho.querySelector('[data-key], [data-chips]')) filho.remove();
+      });
+    });
+  }
+
   function caixaLayout(root, chave) {
-    const el = campo(root, chave);
+    const el = /^[#\[]/.test(chave) ? root.querySelector(chave)
+      : chave.split('|').map(k => campo(root, k)).find(Boolean);
     if (!el) return null;
     const combo = el.closest('[data-visat-combo]');
     if (combo) return combo;
@@ -336,12 +433,17 @@
     linhas.forEach(linha => {
       const itens = linha.map(([k, n]) => [caixaLayout(root, k), n]).filter(([c]) => c && !c.closest('section.visat-r'));
       if (!itens.length) return;
-      const secao = document.createElement('section'); // <section>: o balanceador de linhas não mexe nela
-      secao.className = 'visat-r';
-      secao.style.setProperty('grid-column', '1 / -1', 'important');
-      // Mantém a ordem do layout: linha seguinte no mesmo bloco vem logo depois da anterior.
-      if (anterior && grupoDe(anterior) && grupoDe(anterior) === grupoDe(itens[0][0])) anterior.after(secao);
-      else itens[0][0].before(secao);
+      let ref = itens[0][0];
+      while (ref.parentElement && ref.parentElement.matches('.draft-row, .visat-linha-campos, .pair-row')) ref = ref.parentElement;
+      // Linhas do mesmo bloco ficam numa só grade: campo oculto não deixa buraco, os seguintes sobem.
+      let secao;
+      if (anterior && grupoDe(anterior) && grupoDe(anterior) === grupoDe(ref)) secao = anterior;
+      else {
+        secao = document.createElement('section'); // <section>: o balanceador de linhas não mexe nela
+        secao.className = 'visat-r';
+        secao.style.setProperty('grid-column', '1 / -1', 'important');
+        ref.before(secao);
+      }
       anterior = secao;
       itens.forEach(([c, n]) => {
         const pai = c.parentElement;
@@ -363,6 +465,15 @@
       if (!visiveis.length && !l.querySelector('[data-show-when],[data-show-in],[data-show-includes],[data-show-contains]')) l.style.setProperty('display', 'none', 'important');
     });
     root.dataset.visatLayoutReplica = '1';
+    // Primeiro bloco de cada etapa sem linha separadora nem espaço vazio no topo.
+    root.querySelectorAll('.screen').forEach(tela => {
+      const primeiro = tela.querySelector('[data-visat-secao-complementar], .visat-sequencia');
+      if (!primeiro) return;
+      const antes = [...tela.querySelectorAll('section.visat-r, .visat-titulo-agravo')].some(el =>
+        (el.compareDocumentPosition(primeiro) & Node.DOCUMENT_POSITION_FOLLOWING) && !primeiro.contains(el));
+      if (antes) return;
+      ['border-top', 'margin-top', 'padding-top'].forEach(p => primeiro.style.setProperty(p, p === 'border-top' ? '0' : '0', 'important'));
+    });
     setTimeout(() => window.visatBalancearLinhas?.(), 0);
   }
 
@@ -411,7 +522,10 @@
         if (d) d.placeholder = 'História ocupacional e clínica, exposição, relação com o trabalho e outras informações.';
       }
       reducoesComuns(root, options);
-      if (options && options.templateId === 'form-acidente-template' && !options.obito) aplicarLayout(root, LAYOUT_ACIDENTE);
+      // Layout em grade de 4 colunas: blocos comuns, 1a e, nos demais campos, largura padronizada.
+      aplicarLayout(root, LAYOUT_COMUM);
+      if (options && options.templateId === 'form-acidente-template') aplicarLayout(root, LAYOUT_ACIDENTE);
+      gradeAutomatica(root);
     } catch (erro) {
       console.warn('[VISAT réplica] ajuste não aplicado:', erro);
     }

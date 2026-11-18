@@ -179,3 +179,19 @@
 
 /* Grupos de botões trocados por lista suspensa continuam ocultos */
 .acidente-inline [data-chips][style*="display: none"] { display: none !important; }
+
+/* ===== Margens no quadro do Google Sites (a ficha abre dentro da página, sem página nova) ===== */
+.acidente-inline {
+  box-sizing: border-box;
+  max-width: 1120px;
+  margin-inline: auto !important;
+  padding-inline: 28px !important;
+  padding-bottom: 28px !important;
+}
+.acidente-inline .screen { margin-bottom: 20px !important; }
+.acidente-inline .screen > .field-group,
+.acidente-inline .screen > .visat-grade,
+.acidente-inline .screen .screen-head { padding-inline: 4px; }
+@media (max-width: 760px) {
+  .acidente-inline { padding-inline: 12px !important; }
+}
