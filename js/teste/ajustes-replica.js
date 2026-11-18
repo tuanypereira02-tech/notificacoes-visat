@@ -282,7 +282,7 @@
       aplicar();
     });
     // Unidades de tempo conforme o número: 1 → Hora, Dia, Mês, Ano; demais → Horas, Dias, Meses, Anos.
-    // O valor gravado continua o mesmo. Tempo na ocupação: só Meses e Anos (todas as fichas).
+    // O valor gravado continua o mesmo.
     const UNIDADES = {
       hora: ['Hora', 'Horas'], horas: ['Hora', 'Horas'], dia: ['Dia', 'Dias'], dias: ['Dia', 'Dias'],
       'mês': ['Mês', 'Meses'], mes: ['Mês', 'Meses'], meses: ['Mês', 'Meses'], ano: ['Ano', 'Anos'], anos: ['Ano', 'Anos']
@@ -296,8 +296,12 @@
         if (!o.hasAttribute('value')) o.value = o.text.trim();
         o.dataset.visatFormas = formas.join('|');
       });
-      if (/^tempoOcup|^tempoUnidade$/.test(sel.dataset.key || '')) {
-        opcoes.filter(o => /^(Hora|Dia)/.test(o.dataset.visatFormas)).forEach(o => {
+      // Tempo na ocupação: Meses e Anos. Tempo de exposição ao agente: Dias, Meses e Anos.
+      const chave = sel.dataset.key || '';
+      const tirar = /^tempoOcup|^tempoUnidade$/.test(chave) ? /^(Hora|Dia)/
+        : /^(tempoExposicao|tempoExp|exp|agente)Un/.test(chave) ? /^Hora/ : null;
+      if (tirar) {
+        opcoes.filter(o => tirar.test(o.dataset.visatFormas)).forEach(o => {
           if (o.selected) { const ano = opcoes.find(x => /^Ano/.test(x.dataset.visatFormas)); if (ano) ano.selected = true; }
           o.remove();
         });
