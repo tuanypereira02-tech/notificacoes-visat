@@ -1578,7 +1578,8 @@ html.visat-em-quadro body.modo-formulario-acidente #principal.visat-fim-congelad
 .acidente-inline .visat-painel-causa-resultado [data-visat-causa-sugerida]:empty { display: none; }
 
 /* Tipo de aplicativo: linha inteira, opções com largura confortável. */
+.acidente-inline .field-group > [data-visat-peso="4"]:has(> [data-chips="tipoAplicativo"]) { grid-column: 1 / -1 !important; }
 .acidente-inline .chip-grid[data-chips="tipoAplicativo"] {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 8px;
+  display: grid !important; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)) !important; gap: 8px;
 }
 .acidente-inline [data-chips="tipoAplicativo"] .chip { white-space: normal; min-height: 44px; }
