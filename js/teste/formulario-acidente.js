@@ -61,7 +61,7 @@ function aplicarAjustesVisat(root, options) {
         </div>
         <p class="field-help">Tipos usados pelo IBGE. Pode marcar mais de um.</p>
       </div>`);
-      const qual = novoBloco(`<div data-show-when="plataformaDigital=Sim" hidden data-visat-opcional>
+      const qual = novoBloco(`<div data-show-when="plataformaDigital=Sim" data-visat-peso="2" hidden data-visat-opcional>
         <label class="field-label" for="visat-qualAplicativo">Qual aplicativo?</label>
         <input class="input input-lg" id="visat-qualAplicativo" type="text" data-key="qualAplicativo" placeholder="Ex.: Uber, 99, iFood, Rappi, Keeta, Lalamove, Loggi">
       </div>`);
