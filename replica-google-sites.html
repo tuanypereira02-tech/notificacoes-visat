@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RÉPLICA PARA TESTES · VISAT · Como notificar</title>
+<style>
+  :root { --m: #112C45; --l: #CC6A00; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Roboto, Arial, sans-serif; background: #f6f4ef; color: #1d2a3a; }
+  .faixa { position: sticky; top: 0; z-index: 3; background: #fff3e0; border-bottom: 2px solid var(--l); padding: 8px 16px; font-size: 13px; }
+  .site { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  nav { background: #1b3048; color: #fff; padding: 40px 0 24px; position: sticky; top: 37px; height: calc(100vh - 37px); overflow: auto; }
+  nav .marca { font-size: 26px; padding: 0 28px 40px; }
+  nav a { display: block; color: #fff; text-decoration: none; padding: 7px 28px; font-size: 17px; border-left: 4px solid transparent; }
+  nav a.atual { font-weight: 700; border-left-color: var(--l); }
+  nav a.sub { padding-left: 44px; font-size: 15px; opacity: .9; }
+  main { padding: 16px 24px 0; min-width: 0; }
+  .titulo { background: var(--m); color: #fff; border-radius: 12px 12px 0 0; padding: 20px 24px; font-size: 26px; font-weight: 700; }
+  iframe { display: block; width: 100%; height: 1560px; border: 0; background: #fff; }
+  .rodape { margin: 32px 0 0; background: linear-gradient(90deg, #0d1b2a, #24364c 60%, #8a4a1c); color: #fff; border-top: 4px solid var(--l); padding: 32px; }
+  .rodape b { font-size: 22px; display: block; margin-bottom: 6px; }
+  .rodape a { color: #fff; }
+  @media (max-width: 760px) { .site { grid-template-columns: 1fr; } nav { position: static; height: auto; } }
+</style>
+</head>
+<body>
+  <div class="faixa"><strong>RÉPLICA PARA TESTES</strong> da página “Como notificar” do Google Sites VISAT, com a versão qualificada das fichas. Quadro com a mesma altura do Sites (1.560 px). Use somente dados fictícios.</div>
+  <div class="site">
+    <nav aria-label="Menu do portal (simulação)">
+      <div class="marca">VISAT</div>
+      <a href="#">Início</a>
+      <a href="#" class="atual" aria-current="page">Como notificar</a>
+      <a href="#">Acidentes de trabalho</a>
+      <a href="#" class="sub">Material biológico</a>
+      <a href="#">Doenças do trabalho</a>
+      <a href="#">Denúncias</a>
+      <a href="#">Inspeções</a>
+      <a href="#">Legislação</a>
+      <a href="#">Materiais e cursos</a>
+      <a href="#">Contatos</a>
+      <a href="#">Dados e indicadores</a>
+      <a href="#">Conheça a VISAT</a>
+    </nav>
+    <main>
+      <div class="titulo">Como notificar</div>
+      <iframe src="replica-como-notificar.html?escopo=visat&amp;homologacao=1" title="Fichas de notificação (réplica para testes)" scrolling="no"></iframe>
+      <footer class="rodape">
+        <b>VISAT</b>
+        Vigilância em Saúde do Trabalhador<br>
+        Secretaria Municipal de Saúde · Prefeitura de Florianópolis<br><br>
+        <a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a> · (48) 3239-1589
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

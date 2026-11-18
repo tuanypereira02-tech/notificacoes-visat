@@ -845,8 +845,12 @@ aplicarCondicoes();
 function limparBlocoOculto(bloco) {
   let mudou = false;
   bloco.querySelectorAll('[data-key]').forEach(el => {
-    if (el.value !== '') { el.value = ''; mudou = true; }
-    if (state.values[el.dataset.key] !== undefined && state.values[el.dataset.key] !== '') { state.values[el.dataset.key] = ''; mudou = true; }
+    // Lista de unidade (Anos, Meses…) volta à opção padrão, não fica em branco.
+    const padrao = el.tagName === 'SELECT' ? ([...el.options].find(o => o.defaultSelected)?.value ?? '') : '';
+    const unidade = el.tagName === 'SELECT' && el.closest('.unit-row');
+    const alvo = unidade ? padrao : '';
+    if (el.value !== alvo) { el.value = alvo; mudou = true; }
+    if (state.values[el.dataset.key] !== undefined && state.values[el.dataset.key] !== alvo) { state.values[el.dataset.key] = alvo; mudou = true; }
   });
   bloco.querySelectorAll('[data-chips]').forEach(grupo => {
     grupo.querySelectorAll('.chip.selected').forEach(chip => {
