@@ -748,6 +748,21 @@
       if (notaFluxoVe) notaFluxoVe.hidden = !escopoVisat;
       estado.direcionamentos = direcionamentos && typeof direcionamentos === 'object' ? direcionamentos : {};
       renderizarListaAgravos();
+      // Ficha em página própria do Google Sites (rolagem única): ?ficha=1a abre direto o formulário,
+      // sem a consulta e sem rolagem dentro do quadro (o quadro do Sites tem a altura da ficha).
+      const fichaPedida = new URLSearchParams(window.location.search).get('ficha');
+      const codigos = Object.keys(FORMULARIOS_INLINE);
+      const idFicha = fichaPedida && (FORMULARIOS_INLINE[fichaPedida] ? fichaPedida
+        : codigos.find((id) => id.startsWith(fichaPedida.replace(/^1([a-j])$/, '1-$1-'))));
+      if (idFicha && estado.agravos.some((a) => a.id === idFicha)) {
+        document.documentElement.classList.add('visat-pagina-ficha');
+        await carregarFormulariosInline();
+        estado.agravoId = idFicha;
+        estado.perfilId = 'nao_municipal';
+        const radio = document.getElementById('perfil-nao_municipal');
+        if (radio) radio.checked = true;
+        formularioAcidenteAberto = true;
+      }
       renderizarResultado();
       const totalSelecionavel = catalogo.filter((a) => a.selecionavel !== false).length;
       if (totalSelecionavel !== TOTAL_AUDITADO) {

@@ -226,3 +226,17 @@ html.visat-em-quadro .acidente-inline.visat-modelo-final .screen h1,
 html.visat-em-quadro .acidente-inline.visat-modelo-final #btnContinuar { scroll-margin-top: 72px; }
 html.visat-em-quadro .acidente-inline.visat-modelo-final [data-visat-homologacao] { padding: 8px 12px !important; margin-block: 6px !important; }
 html.visat-em-quadro .acidente-inline.visat-modelo-final .screen-title { font-size: 18px !important; }
+
+/* ===== Ficha em página própria do Google Sites (?ficha=1a): uma rolagem só, a da página =====
+   O quadro do Sites recebe a altura da ficha; nada rola dentro dele. */
+html.visat-pagina-ficha,
+html.visat-pagina-ficha body { height: auto !important; overflow: visible !important; }
+html.visat-pagina-ficha body.modo-formulario-acidente #principal {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-top: 8px !important;
+}
+html.visat-pagina-ficha [data-voltar-consulta],
+html.visat-pagina-ficha .aviso[role="note"] { display: none !important; }
+html.visat-pagina-ficha .acidente-inline.visat-modelo-final .visat-indice-ficha { position: static; box-shadow: none; }
