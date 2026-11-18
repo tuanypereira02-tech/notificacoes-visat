@@ -281,6 +281,16 @@
       cep.addEventListener('change', aplicar);
       aplicar();
     });
+    // Unidades de tempo no plural (Horas, Dias, Meses, Anos); o valor gravado continua o mesmo.
+    const PLURAL = { 'hora': 'Horas', 'dia': 'Dias', 'mês': 'Meses', 'mes': 'Meses', 'ano': 'Anos' };
+    root.querySelectorAll('.unit-row select, select[data-key$="Unidade"], select[data-key$="Un"], select[data-key$="Unid"]').forEach(sel => {
+      [...sel.options].forEach(o => {
+        const plural = PLURAL[o.text.trim().toLowerCase()];
+        if (!plural) return;
+        if (!o.hasAttribute('value')) o.value = o.text.trim();
+        o.text = plural;
+      });
+    });
     // Telefone no padrão (DD) 99999-9999 ou (DD) 9999-9999: só números, DDD de 2 dígitos sem o zero,
     // no máximo 11 dígitos. Incompleto: aviso ao sair do campo.
     const formatarTelefone = v => {
