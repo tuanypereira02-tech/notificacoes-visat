@@ -81,22 +81,29 @@
     nota.dataset.visatCodigoTexto = '';
     let posicionar = () => {};
     if (dentro) {
-      // Código dentro do quadro do campo, à direita (ex.: "CNES 0019658").
+      // Texto dentro do quadro, logo depois do que foi digitado (ex.: "Florianópolis – SC · 420540").
       caixaAncora.style.position = 'relative';
+      const cs = getComputedStyle(ancora);
       Object.assign(nota.style, {
         position: 'absolute', transform: 'translateY(-50%)', pointerEvents: 'none', whiteSpace: 'nowrap',
-        fontSize: '12px', fontWeight: '600', color: '#41526a', background: '#eef3f8', border: '1px solid #d5dee8',
-        borderRadius: '999px', padding: '2px 8px', lineHeight: '1.3'
+        font: cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily, color: '#5b6b80', overflow: 'hidden', textOverflow: 'ellipsis'
       });
       nota.setAttribute('aria-hidden', 'true');
-      const padraoPadding = getComputedStyle(ancora).paddingRight;
+      const medidor = document.createElement('canvas').getContext('2d');
+      const padraoPadding = cs.paddingRight;
       posicionar = () => {
-        if (nota.hidden) { ancora.style.paddingRight = padraoPadding; return; }
+        if (nota.hidden || !ancora.value) { nota.hidden = true; ancora.style.paddingRight = padraoPadding; return; }
+        const st = getComputedStyle(ancora);
+        medidor.font = st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
+        const esquerda = ancora.offsetLeft + parseFloat(st.paddingLeft) + parseFloat(st.borderLeftWidth) + medidor.measureText(ancora.value).width + 4;
+        const limite = ancora.offsetLeft + ancora.offsetWidth - 10;
         nota.style.top = (ancora.offsetTop + ancora.offsetHeight / 2) + 'px';
-        nota.style.right = (caixaAncora.clientWidth - ancora.offsetLeft - ancora.offsetWidth + 10) + 'px';
-        ancora.style.paddingRight = (nota.offsetWidth + 20) + 'px';
+        nota.style.left = esquerda + 'px';
+        nota.style.maxWidth = Math.max(0, limite - esquerda) + 'px';
+        ancora.style.paddingRight = Math.min(nota.offsetWidth + 14, ancora.offsetWidth / 2) + 'px';
       };
       if ('ResizeObserver' in window) new ResizeObserver(() => posicionar()).observe(ancora);
+      ancora.addEventListener('input', () => posicionar());
     } else {
       nota.className = 'field-help';
     }
@@ -141,8 +148,9 @@
       const rot = caixa(mun)?.querySelector('.field-label');
       if (rot && !/UF/.test(rot.textContent)) rot.textContent = rot.textContent.replace(/^Município/, 'Município / UF');
       textoDoCodigo([uf, ibge, mun], mun, () => {
-        const partes = [String(uf.value || '').trim(), ibge && String(ibge.value || '').trim() ? 'IBGE ' + ibge.value.trim() : ''];
-        return String(mun.value || '').trim() ? partes.filter(Boolean).join(' · ') : '';
+        const u = String(uf.value || '').trim(), c = ibge ? String(ibge.value || '').trim() : '';
+        if (!String(mun.value || '').trim() || (!u && !c)) return '';
+        return (u ? '– ' + u : '') + (c ? ' · ' + c : '');
       }, true);
       const reserva = () => {
         const mostrar = !!String(mun.value || '').trim() && !String(uf.value || '').trim();
@@ -157,7 +165,7 @@
       .forEach(([u, m, c]) => juntar(campo(root, u), campo(root, m), campo(root, c)));
     [['sinan-cod-unid', 'sinan-unid', true], ['cnesAtendimento', 'unidAtendimento', false]].forEach(([cod, uni, id]) => {
       const c = id ? porId(cod) : campo(root, cod), u = id ? porId(uni) : campo(root, uni);
-      if (c && u && soNoPdf(c)) textoDoCodigo(c, u, 'CNES', true);
+      if (c && u && soNoPdf(c)) textoDoCodigo(c, u, () => (String(c.value || '').trim() ? '· CNES ' + c.value.trim() : ''), true);
     });
     // Dados gerais (grade de 12 colunas): linha vazia some; a coluna que sobrou vai para o campo mais largo.
     root.querySelectorAll('.draft-grid-12').forEach(linha => {
@@ -214,6 +222,8 @@
     combinar(porId('sinan-num'), porId('sinan-comp'), 'Número e complemento', '32%');
     // Aplicativo: sem "Tipo de aplicativo"; fica só "Qual aplicativo?" (texto), quando a resposta é Sim.
     remover(root, 'tipoAplicativo');
+    // Sem "CNAE secundário" (decisão da usuária em 17/11/2026): o CNAE pode ser corrigido no próprio campo.
+    remover(root, 'cnaeSecundario');
     // Link do CADSUS com texto curto.
     root.querySelectorAll('a[href*="cadastro.saude.gov.br"]').forEach(a => {
       a.textContent = 'Consultar CADSUS';
