@@ -9,10 +9,7 @@ s = s.replace('<a class="pular" href="#principal">Pular para o conteúdo</a>',
   '<a class="pular" href="#principal">Pular para o conteúdo</a>\n'
   '  <div class="aviso" role="note" style="background:#fff3e0;border-bottom:2px solid #CC6A00">\n'
   '    <div class="wrap"><strong>RÉPLICA PARA TESTES.</strong> Versão qualificada das fichas (17/11/2026). Use somente dados fictícios. '
-  'O PDF e o e-mail saem marcados como HOMOLOGAÇÃO. A página oficial do Google Sites não muda.</div>\n  </div>', 1)
-s = re.sub(r'(<script src="js/teste/formulario-acidente\.js[^"]*" defer></script>)',
-           r'\1\n  <script src="js/teste/ajustes-replica.js?v=20261118-empresa" defer></script>', s, count=1)
-s = re.sub(r'(<link rel="stylesheet" href="css/teste/ficha\.css[^"]*">)', r'\1\n  <link rel="stylesheet" href="css/teste/replica.css?v=20261118-sem-traco">', s, count=1)
-assert 'ajustes-replica.js' in s and 'replica.css' in s
+  'O PDF e o e-mail saem marcados como HOMOLOGAÇÃO. Na página oficial do Google Sites, este modelo vale por enquanto só para a ficha 1a (Acidente de trabalho).</div>\n  </div>', 1)
+assert 'ajustes-replica.js' in s and 'modelo-final.css' in s and 'replica-parametros.js' in s
 (raiz / 'replica-como-notificar.html').write_text(s, encoding='utf-8')
 print('ok')

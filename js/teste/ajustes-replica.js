@@ -1,6 +1,7 @@
 /*
- * ajustes-replica.js — Réplica para testes da página "Como notificar" (VISAT Florianópolis).
- * Carregado só por replica-como-notificar.html. A página usada no Google Sites (notificacao.html) não muda.
+ * ajustes-replica.js — Modelo final das fichas da página "Como notificar" (VISAT Florianópolis).
+ * Página oficial do Google Sites (notificacao.html): aplicado só à ficha 1a (Acidente de trabalho, Y96), desde 18/11/2026.
+ * Réplica para testes (replica-como-notificar.html): aplicado às 10 fichas.
  * Aplica os ajustes da "versão qualificada" das 10 fichas (17/11/2026), depois de cada ficha ser montada:
  *  - 1b: subtítulo da etapa; retira distrito, unidade investigadora e Anti-HBs do paciente-fonte (ficha oficial);
  *        vírus da conversão e data do óbito só quando cabem.
@@ -537,7 +538,13 @@
 
   window.montarFormulario = function montarFormularioReplica(container, onVoltar, options) {
     const resultado = original.apply(this, arguments);
+    // Página oficial (Google Sites): por enquanto só a ficha 1a (Acidente de trabalho, Y96).
+    // Réplica para testes (replica-parametros.js): todas as fichas.
+    const naPagina = window.VISAT_MODELO_FINAL_TODAS === true ||
+      (options && options.templateId === 'form-acidente-template' && !options.obito);
+    if (!naPagina) return resultado;
     const root = container.querySelector('.acidente-inline') || container;
+    root.classList.add('visat-modelo-final');
     const ajuste = AJUSTES[options && options.templateId];
     try {
       if (ajuste) ajuste(root);
@@ -556,5 +563,5 @@
     }
     return resultado;
   };
-  window.VISAT_REPLICA = true;
+  window.VISAT_REPLICA = window.VISAT_MODELO_FINAL_TODAS === true;
 })();

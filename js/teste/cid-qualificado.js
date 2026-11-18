@@ -237,7 +237,7 @@
       el.setAttribute('aria-expanded', 'true');
     }
     function sugerir() {
-      if (window.VISAT_REPLICA && escopo === 'lesao' && /^\s{2,}$/.test(el.value)) { mostrarGrupos(); return; }
+      if (el.closest('.visat-modelo-final') && escopo === 'lesao' && /^\s{2,}$/.test(el.value)) { mostrarGrupos(); return; }
       delete lista.dataset.visatSemJanela;
       var atual = ++solicitacao;
       var termo = norm(el.value.trim());
