@@ -26,7 +26,6 @@
 /* Blocos internos de uma etapa (O acidente, Atendimento médico, A lesão…): separador fino, sem moldura */
 .acidente-inline .screen [data-visat-secao-complementar] {
   border: 0 !important;
-  border-top: 1px solid #eef2f6 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   background: transparent !important;
@@ -47,7 +46,7 @@
   margin: 6px 0 2px !important;
   line-height: 1.3;
 }
-.acidente-inline .visat-sequencia { border-top: 1px solid #eef2f6 !important; padding-top: 18px !important; margin-top: 6px !important; }
+.acidente-inline .visat-sequencia { border-top: 0 !important; padding-top: 14px !important; margin-top: 10px !important; }
 .acidente-inline .visat-sequencia:first-child { border-top: 0 !important; padding-top: 0 !important; margin-top: 0 !important; }
 
 /* Linhas da réplica: grade única de 4 colunas, caixas do mesmo tamanho */

@@ -256,6 +256,30 @@
       const vistos = new Set();
       g.querySelectorAll('.chip').forEach(c => { if (vistos.has(c.dataset.value)) c.remove(); else vistos.add(c.dataset.value); });
     });
+    // Empresa e endereço da empresa num bloco só, sem subtítulo nem traço entre eles (dados da mesma empresa).
+    const seqEmpresa = campo(root, 'cnpj')?.closest('.visat-sequencia');
+    const seqEndereco = campo(root, 'cepEmp')?.closest('.visat-sequencia') || campo(root, 'endEmp')?.closest('.visat-sequencia');
+    if (seqEmpresa && seqEndereco && seqEmpresa !== seqEndereco) {
+      const destino = seqEmpresa.querySelector(':scope > .field-group') || seqEmpresa;
+      const origem = seqEndereco.querySelector(':scope > .field-group');
+      if (origem) [...origem.children].forEach(filho => destino.append(filho));
+      if (!seqEndereco.querySelector('[data-key], [data-chips]')) seqEndereco.remove();
+    }
+    // CEP no padrão 00000-000.
+    root.querySelectorAll('#sinan-cep, [data-key="cepEmp"]').forEach(cep => {
+      if (cep.dataset.visatMascaraCep) return;
+      cep.dataset.visatMascaraCep = '1';
+      cep.setAttribute('inputmode', 'numeric');
+      cep.maxLength = 9;
+      const aplicar = () => {
+        const d = cep.value.replace(/\D/g, '').slice(0, 8);
+        const f = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+        if (f !== cep.value) cep.value = f;
+      };
+      cep.addEventListener('input', aplicar);
+      cep.addEventListener('change', aplicar);
+      aplicar();
+    });
     // Telefone no padrão (DD) 99999-9999 ou (DD) 9999-9999: só números, DDD de 2 dígitos sem o zero,
     // no máximo 11 dígitos. Incompleto: aviso ao sair do campo.
     const formatarTelefone = v => {
@@ -283,6 +307,7 @@
         if (f !== tel.value) tel.value = f;
       };
       tel.addEventListener('input', aplicar);
+      tel.addEventListener('change', aplicar);
       tel.addEventListener('blur', () => {
         aplicar();
         const n = tel.value.replace(/\D/g, '').length;
@@ -350,9 +375,9 @@
     [['tempoNum|tempoValor|tempoOcupacao|tempoOcup', 1], ['plataformaDigital', 1], ['qualAplicativo', 2]],
     [['ocupacaoAnterior', 2], ['localAtuacao', 2]],
     [['cnpj', 2], ['empresa|empresaNome|razao', 2]],
-    [['cnae', 2], ['munEmp', 2]],
-    [['cepEmp', 1], ['endEmp|endereco', 2], ['numEmp|numero', 1]],
-    [['bairroEmp|bairro', 1], ['telEmp|telefone', 1], ['terceirizada', 2]],
+    [['cnae', 2], ['telEmp|telefone', 1], ['terceirizada', 1]],
+    [['cepEmp', 1], ['munEmp', 2], ['bairroEmp|bairro', 1]],
+    [['endEmp|endereco', 3], ['numEmp|numero', 1]],
     [['cnpjPrincipal|cnpjPrinc', 2], ['empresaPrincipal|razaoPrincipal|razaoPrinc', 2]],
     [['cnaePrincipal|cnaePrinc', 2]]
   ];
