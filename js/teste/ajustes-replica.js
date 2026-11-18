@@ -230,6 +230,27 @@
       a.textContent = 'Consultar CADSUS';
       a.title = 'Acesso restrito a operadores autorizados';
     });
+    // Confirmações ("Unidade identificada.", "Município identificado.") aparecem e somem depois de 2,5 s.
+    const temporizadores = new WeakMap();
+    const avisarESair = el => {
+      clearTimeout(temporizadores.get(el));
+      el.style.removeProperty('display');
+      el.style.opacity = '1';
+      el.style.transition = 'opacity .4s';
+      if (el.dataset.estado !== 'validado' || !el.textContent.trim()) return;
+      temporizadores.set(el, setTimeout(() => {
+        el.style.opacity = '0';
+        temporizadores.set(el, setTimeout(() => el.style.setProperty('display', 'none'), 420));
+      }, 2500));
+    };
+    new MutationObserver(mudancas => {
+      const vistos = new Set();
+      mudancas.forEach(m => {
+        const alvo = (m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest?.('.visat-estado-codigo');
+        if (alvo && !vistos.has(alvo)) { vistos.add(alvo); avisarESair(alvo); }
+        m.addedNodes?.forEach(n => { if (n.nodeType === 1 && n.matches('.visat-estado-codigo')) avisarESair(n); });
+      });
+    }).observe(root, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-estado'] });
     // 3. Situação cadastral e matriz/filial: aviso curto embaixo do CNPJ (só na tela).
     const situacao = campo(root, 'situacaoCadastral'), matriz = campo(root, 'matrizFilial'), cnpj = campo(root, 'cnpj');
     if (situacao && matriz && cnpj) {
@@ -267,6 +288,82 @@
     const acidente = options && options.templateId === 'form-acidente-template';
     if (acidente) rotulo(root, 'atividade', 'Descrição sumária do acidente e observações');
     else rotulo(root, 'descricaoRascunho', 'Descrição do caso e observações');
+  }
+
+
+  // ---------- Layout da ficha 1a: grade de 4 colunas, caixas do mesmo tamanho ----------
+  // Cada linha: [chave, colunas]. Campos condicionais ficam na mesma linha e só ocupam espaço quando aparecem.
+  const LAYOUT_ACIDENTE = [
+    [['dataNotificacao', 1], ['dataAcidente', 1], ['munNotif', 2]],
+    [['unidNotif', 4]],
+    [['cid', 4]],
+    [['nome', 2], ['nascimento', 1], ['idade', 1]],
+    [['sexo', 1], ['gestante', 1], ['raca', 1], ['escolaridade', 1]],
+    [['cpf', 1], ['cartaoSus', 1], ['nomeMae', 2]],
+    [['residencia', 1], ['paisExterior', 3], ['munRes', 3]],
+    [['cep', 1], ['logRes', 2], ['numRes', 1]],
+    [['bairroRes', 1], ['telefoneRes', 1], ['zona', 2]],
+    [['ocupacao', 2], ['situacao', 2]],
+    [['tempoNum', 1], ['plataformaDigital', 1], ['qualAplicativo', 2]],
+    [['ocupacaoAnterior', 2], ['localAtuacao', 2]],
+    [['cnpj', 2], ['empresa', 2]],
+    [['cnae', 2], ['munEmp', 2]],
+    [['cepEmp', 1], ['endEmp', 2], ['numEmp', 1]],
+    [['bairroEmp', 1], ['telEmp', 1], ['terceirizada', 2]],
+    [['cnpjPrincipal', 2], ['empresaPrincipal', 2]],
+    [['horaAcidente', 1], ['tipoAcidente', 1], ['munOcorrencia', 2]],
+    [['outrosAtingidos', 2], ['atendimentoMedico', 2]],
+    [['outrosAtingidosQuantidade', 1]],
+    [['dataAtendimento', 1], ['munAtendimento', 1], ['unidAtendimento', 2]],
+    [['parteCorpo', 4]],
+    [['parteCorpoOutra', 2], ['regime', 2]],
+    [['fatores', 4]],
+    [['evolucao', 4]],
+    [['cat', 4]],
+    [['atividade', 4]]
+  ];
+  function caixaLayout(root, chave) {
+    const el = campo(root, chave);
+    if (!el) return null;
+    const combo = el.closest('[data-visat-combo]');
+    if (combo) return combo;
+    return caixa(el);
+  }
+  function aplicarLayout(root, linhas) {
+    const antigas = new Set();
+    let anterior = null;
+    const grupoDe = el => el.closest('.field-group');
+    linhas.forEach(linha => {
+      const itens = linha.map(([k, n]) => [caixaLayout(root, k), n]).filter(([c]) => c && !c.closest('section.visat-r'));
+      if (!itens.length) return;
+      const secao = document.createElement('section'); // <section>: o balanceador de linhas não mexe nela
+      secao.className = 'visat-r';
+      secao.style.setProperty('grid-column', '1 / -1', 'important');
+      // Mantém a ordem do layout: linha seguinte no mesmo bloco vem logo depois da anterior.
+      if (anterior && grupoDe(anterior) && grupoDe(anterior) === grupoDe(itens[0][0])) anterior.after(secao);
+      else itens[0][0].before(secao);
+      anterior = secao;
+      itens.forEach(([c, n]) => {
+        const pai = c.parentElement;
+        if (pai && pai.matches('.draft-row, .visat-linha-campos, .pair-row')) antigas.add(pai);
+        c.style.setProperty('grid-column', 'span ' + n, 'important');
+        c.removeAttribute('data-visat-span');
+        c.style.removeProperty('--visat-span');
+        secao.append(c);
+      });
+    });
+    // Linhas antigas que ficaram só com campos fora da tela (UF, códigos) não ocupam espaço.
+    antigas.forEach(l => {
+      const restam = [...l.children].some(c => !c.hidden && c.style.display !== 'none');
+      if (!restam) l.style.setProperty('display', 'none', 'important');
+    });
+    root.querySelectorAll('.draft-row, .visat-linha-campos, .pair-row').forEach(l => {
+      if (l.closest('section.visat-r')) return;
+      const visiveis = [...l.children].filter(c => !c.hidden && c.style.display !== 'none' && !c.hasAttribute('data-visat-so-pdf'));
+      if (!visiveis.length && !l.querySelector('[data-show-when],[data-show-in],[data-show-includes],[data-show-contains]')) l.style.setProperty('display', 'none', 'important');
+    });
+    root.dataset.visatLayoutReplica = '1';
+    setTimeout(() => window.visatBalancearLinhas?.(), 0);
   }
 
   const AJUSTES = {
@@ -314,6 +411,7 @@
         if (d) d.placeholder = 'História ocupacional e clínica, exposição, relação com o trabalho e outras informações.';
       }
       reducoesComuns(root, options);
+      if (options && options.templateId === 'form-acidente-template' && !options.obito) aplicarLayout(root, LAYOUT_ACIDENTE);
     } catch (erro) {
       console.warn('[VISAT réplica] ajuste não aplicado:', erro);
     }

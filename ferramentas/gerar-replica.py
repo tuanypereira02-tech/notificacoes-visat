@@ -11,7 +11,8 @@ s = s.replace('<a class="pular" href="#principal">Pular para o conteúdo</a>',
   '    <div class="wrap"><strong>RÉPLICA PARA TESTES.</strong> Versão qualificada das fichas (17/11/2026). Use somente dados fictícios. '
   'O PDF e o e-mail saem marcados como HOMOLOGAÇÃO. A página oficial do Google Sites não muda.</div>\n  </div>', 1)
 s = re.sub(r'(<script src="js/teste/formulario-acidente\.js[^"]*" defer></script>)',
-           r'\1\n  <script src="js/teste/ajustes-replica.js?v=20261117-sem-responsavel" defer></script>', s, count=1)
-assert 'ajustes-replica.js' in s
+           r'\1\n  <script src="js/teste/ajustes-replica.js?v=20261117-layout3" defer></script>', s, count=1)
+s = re.sub(r'(<link rel="stylesheet" href="css/teste/ficha\.css[^"]*">)', r'\1\n  <link rel="stylesheet" href="css/teste/replica.css?v=20261117-layout2">', s, count=1)
+assert 'ajustes-replica.js' in s and 'replica.css' in s
 (raiz / 'replica-como-notificar.html').write_text(s, encoding='utf-8')
 print('ok')
