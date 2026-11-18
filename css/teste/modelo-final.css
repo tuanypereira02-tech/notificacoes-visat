@@ -114,8 +114,15 @@
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
   gap: 8px !important;
 }
-.acidente-inline.visat-modelo-final section.visat-r .chip-row,
-.acidente-inline.visat-modelo-final section.visat-r .chip-grid { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important; }
+.acidente-inline.visat-modelo-final section.visat-r .chip-row:not([data-visat-opcoes]),
+.acidente-inline.visat-modelo-final section.visat-r .chip-grid:not([data-visat-opcoes]) { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important; }
+/* Colunas calculadas pelo balanceador (js/teste/balanceador-linhas.js) conforme a largura do campo:
+   em campo estreito, as opções passam para duas linhas em vez de espremer o texto. */
+.acidente-inline.visat-modelo-final section.visat-r .chip-row[data-visat-opcoes],
+.acidente-inline.visat-modelo-final section.visat-r .chip-grid[data-visat-opcoes],
+.acidente-inline.visat-modelo-final .chip-row[data-visat-opcoes],
+.acidente-inline.visat-modelo-final .chip-grid[data-visat-opcoes] { grid-template-columns: repeat(var(--visat-opcoes), minmax(0, 1fr)) !important; }
+.acidente-inline.visat-modelo-final [data-visat-opcoes] > .chip { line-height: 1.25 !important; overflow-wrap: normal; }
 .acidente-inline.visat-modelo-final .chip {
   min-height: var(--r-alt) !important;
   border: 1px solid var(--r-campo) !important;
