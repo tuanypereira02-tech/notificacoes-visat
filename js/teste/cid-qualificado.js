@@ -152,14 +152,14 @@
         var det = document.createElement('details');
         det.className = 'visat-cid-agentes';
         var s = document.createElement('summary');
-        s.textContent = 'Consta da LDRT · agentes (' + ags.length + ')';
+        s.textContent = 'Consta na Lista de Doenças Relacionadas ao Trabalho (LDRT) · ' + (ags.length === 1 ? 'ver agente relacionado' : 'ver ' + ags.length + ' agentes relacionados');
         s.title = fonte;
         var ul = document.createElement('ul');
         ags.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.append(li); });
         det.append(s, ul);
         caixa.append(det);
       } else {
-        linha('Consta da LDRT', 'visat-cid-ldrt').title = fonte;
+        linha('Consta na Lista de Doenças Relacionadas ao Trabalho (LDRT)', 'visat-cid-ldrt').title = fonte;
       }
     }
     avisos.forEach(function (t) { linha(t, 'visat-cid-aviso'); });
