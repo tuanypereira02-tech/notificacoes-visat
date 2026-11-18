@@ -195,7 +195,50 @@
       el.setAttribute('aria-expanded', 'false');
       el.removeAttribute('aria-activedescendant');
     }
+    // Réplica para testes: dois espaços no CID da lesão abrem os grupos da CID-10 (região do corpo e tipo de lesão).
+    var GRUPOS_LESAO = [['S00', 'S09', 'Cabeça'], ['S10', 'S19', 'Pescoço'], ['S20', 'S29', 'Tórax'],
+      ['S30', 'S39', 'Abdome, dorso, coluna lombar e pelve'], ['S40', 'S49', 'Ombro e braço'], ['S50', 'S59', 'Cotovelo e antebraço'],
+      ['S60', 'S69', 'Punho e mão'], ['S70', 'S79', 'Quadril e coxa'], ['S80', 'S89', 'Joelho e perna'], ['S90', 'S99', 'Tornozelo e pé'],
+      ['T00', 'T07', 'Várias regiões do corpo'], ['T08', 'T14', 'Parte do corpo não especificada'], ['T15', 'T19', 'Corpo estranho por orifício natural'],
+      ['T20', 'T32', 'Queimaduras e corrosões'], ['T33', 'T35', 'Geladuras'], ['T36', 'T50', 'Intoxicação por medicamentos e substâncias biológicas'],
+      ['T51', 'T65', 'Efeitos tóxicos de outras substâncias'], ['T66', 'T78', 'Outros efeitos de causas externas'],
+      ['T79', 'T79', 'Complicações precoces de traumatismo'], ['T80', 'T88', 'Complicações de cuidados médicos e cirúrgicos'], ['T90', 'T98', 'Sequelas']];
+    function botaoLista(texto, aoEscolher) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn';
+      b.dataset.variant = 'outline';
+      b.textContent = texto;
+      b.addEventListener('click', aoEscolher);
+      li.append(b);
+      lista.append(li);
+    }
+    function mostrarGrupos() {
+      solicitacao++;
+      lista.replaceChildren();
+      lista.dataset.visatSemJanela = '1';
+      GRUPOS_LESAO.forEach(function (g) {
+        botaoLista(g[0] + (g[1] !== g[0] ? '–' + g[1] : '') + ' · ' + g[2], function () {
+          carregar(qual).then(function (t) {
+            lista.replaceChildren();
+            itensDoEscopo(t).filter(function (e) { return e.c.length === 3 && e.c >= g[0] && e.c <= g[1]; }).forEach(function (e) {
+              botaoLista(e.c + ' · ' + (window.visatTitulo?.(e.d) ?? e.d), function () {
+                el.value = e.c;
+                el.focus();
+                sugerir();
+              });
+            });
+            lista.hidden = false;
+          }).catch(function () {});
+        });
+      });
+      lista.hidden = false;
+      el.setAttribute('aria-expanded', 'true');
+    }
     function sugerir() {
+      if (window.VISAT_REPLICA && escopo === 'lesao' && /^\s{2,}$/.test(el.value)) { mostrarGrupos(); return; }
+      delete lista.dataset.visatSemJanela;
       var atual = ++solicitacao;
       var termo = norm(el.value.trim());
       // Campo vazio: nas doenças, mostra os CIDs da LDRT da ficha; nos campos do acidente, espera a primeira letra.

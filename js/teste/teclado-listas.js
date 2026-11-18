@@ -24,6 +24,10 @@
   }
   function ajustarJanela(lista, itens, indice) {
     if (lista.id === 'lista-agravos' || !itens.length) return;
+    if (lista.dataset.visatSemJanela) { // lista curta de grupos: todas as opções à vista
+      itens.forEach(function (botao) { caixaDaOpcao(lista, botao).removeAttribute('data-visat-fora-da-janela'); });
+      return;
+    }
     var estado = janelas.get(lista);
     if (!estado || estado.primeiro !== itens[0] || estado.total !== itens.length) {
       estado = { primeiro: itens[0], total: itens.length, inicio: 0 };

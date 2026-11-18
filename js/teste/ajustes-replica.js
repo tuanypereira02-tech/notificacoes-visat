@@ -9,11 +9,12 @@
  *  - 1b a 1i: texto final "Descrição do caso".
  * Reduções aprovadas pela usuária em 17/11/2026 (todas as fichas):
  *  - Tipo de notificação, agravo e CID-10 do agravo viram uma linha de título (continuam no PDF).
- *  - Códigos IBGE e CNES viram texto pequeno embaixo do município e da unidade (continuam no PDF).
+ *  - Município e UF no mesmo quadro, com o código IBGE dentro; CNES dentro do quadro da unidade (continuam no PDF).
  *  - Situação cadastral e matriz/filial viram um aviso curto embaixo do CNPJ (só na tela).
  *  - Local de atuação do servidor sem CEP e endereço.
  *  - Sem "Data do preenchimento" (repete a data da notificação).
  *  - "Descrição do caso" e "Outras informações" num campo só.
+ *  - Gestante só com sexo feminino; dois espaços no CID da lesão abrem os grupos da CID-10 (cid-qualificado.js).
  *  - 1a e 1j: sem "Horas após o início da jornada"; "Fatores que contribuíram" mantido.
  *  - 1e: sinais e sintomas com orientação; sem texto livre repetido no meio da ficha.
  *  - 1h: agravos associados sem "Nenhum" (ficha oficial); resultado da prova funcional só com "Sim".
@@ -69,22 +70,49 @@
     c.style.setProperty('display', 'none', 'important');
     return c;
   }
-  function textoDoCodigo(codigo, ancora, prefixo) {
+  // codigo: campo (ou lista de campos) que alimenta o texto; prefixo: texto fixo ou função que monta o texto.
+  function textoDoCodigo(codigo, ancora, prefixo, dentro) {
     if (!codigo || !ancora) return;
-    const nota = document.createElement('small');
-    nota.className = 'field-help';
+    const fontes = Array.isArray(codigo) ? codigo.filter(Boolean) : [codigo];
+    const montar = typeof prefixo === 'function' ? prefixo
+      : () => { const v = String(fontes[0].value || '').trim(); return v ? prefixo + ' ' + v : ''; };
+    const caixaAncora = caixa(ancora) || ancora.parentElement;
+    const nota = document.createElement(dentro ? 'span' : 'small');
     nota.dataset.visatCodigoTexto = '';
+    let posicionar = () => {};
+    if (dentro) {
+      // Código dentro do quadro do campo, à direita (ex.: "CNES 0019658").
+      caixaAncora.style.position = 'relative';
+      Object.assign(nota.style, {
+        position: 'absolute', transform: 'translateY(-50%)', pointerEvents: 'none', whiteSpace: 'nowrap',
+        fontSize: '12px', fontWeight: '600', color: '#41526a', background: '#eef3f8', border: '1px solid #d5dee8',
+        borderRadius: '999px', padding: '2px 8px', lineHeight: '1.3'
+      });
+      nota.setAttribute('aria-hidden', 'true');
+      const padraoPadding = getComputedStyle(ancora).paddingRight;
+      posicionar = () => {
+        if (nota.hidden) { ancora.style.paddingRight = padraoPadding; return; }
+        nota.style.top = (ancora.offsetTop + ancora.offsetHeight / 2) + 'px';
+        nota.style.right = (caixaAncora.clientWidth - ancora.offsetLeft - ancora.offsetWidth + 10) + 'px';
+        ancora.style.paddingRight = (nota.offsetWidth + 20) + 'px';
+      };
+      if ('ResizeObserver' in window) new ResizeObserver(() => posicionar()).observe(ancora);
+    } else {
+      nota.className = 'field-help';
+    }
     const atualizar = () => {
-      const v = String(codigo.value || '').trim();
-      nota.textContent = v ? prefixo + ' ' + v : '';
-      nota.hidden = !v;
+      const t = montar();
+      nota.textContent = t;
+      nota.hidden = !t;
+      if (dentro) ancora.setAttribute('aria-description', t);
+      posicionar();
     };
-    ['input', 'change'].forEach(t => codigo.addEventListener(t, atualizar));
+    fontes.forEach(f => ['input', 'change'].forEach(t => f.addEventListener(t, atualizar)));
     // O preenchimento automático pode gravar o código sem disparar evento: confere também ao sair do campo.
     ancora.addEventListener('blur', () => setTimeout(atualizar, 300));
     ancora.addEventListener('change', () => setTimeout(atualizar, 300));
-    const caixaAncora = caixa(ancora);
-    (caixaAncora || ancora.parentElement).append(nota);
+    ancora.addEventListener('input', () => setTimeout(atualizar, 300));
+    caixaAncora.append(nota);
     atualizar();
   }
   function reducoesComuns(root, options) {
@@ -104,18 +132,32 @@
       (grade || gerais).before(linha);
     }
     [tipo, agravo, cid].forEach(soNoPdf);
-    // 2. Códigos IBGE e CNES como texto embaixo do município e da unidade.
-    [['sinan-ibge-notif', 'sinan-mun-notif'], ['sinan-ibge-res', 'sinan-mun-res']].forEach(([cod, mun]) => {
-      const c = porId(cod), m = porId(mun);
-      if (c && m && soNoPdf(c)) textoDoCodigo(c, m, 'Código IBGE');
-    });
-    [['ibgeEmp', 'munEmp'], ['ibgeOcorrencia', 'munOcorrencia'], ['ibgeAtendimento', 'munAtendimento']].forEach(([cod, mun]) => {
-      const c = campo(root, cod), m = campo(root, mun);
-      if (c && m && soNoPdf(c)) textoDoCodigo(c, m, 'Código IBGE');
-    });
+    // 2. Município e UF no mesmo quadro, com o código IBGE dentro (UF e código continuam no PDF).
+    //    A UF aparece separada só se ficar vazia com o município preenchido (digitado sem escolher na lista).
+    const juntar = (uf, mun, ibge) => {
+      if (!uf || !mun) return;
+      const caixaUf = soNoPdf(uf);
+      if (ibge) soNoPdf(ibge);
+      const rot = caixa(mun)?.querySelector('.field-label');
+      if (rot && !/UF/.test(rot.textContent)) rot.textContent = rot.textContent.replace(/^Município/, 'Município / UF');
+      textoDoCodigo([uf, ibge, mun], mun, () => {
+        const partes = [String(uf.value || '').trim(), ibge && String(ibge.value || '').trim() ? 'IBGE ' + ibge.value.trim() : ''];
+        return String(mun.value || '').trim() ? partes.filter(Boolean).join(' · ') : '';
+      }, true);
+      const reserva = () => {
+        const mostrar = !!String(mun.value || '').trim() && !String(uf.value || '').trim();
+        if (caixaUf) caixaUf.style.setProperty('display', mostrar ? '' : 'none', mostrar ? '' : 'important');
+        window.visatBalancearLinhas?.();
+      };
+      ['input', 'change', 'blur'].forEach(t => { mun.addEventListener(t, () => setTimeout(reserva, 350)); uf.addEventListener(t, reserva); });
+    };
+    juntar(porId('sinan-uf-notif'), porId('sinan-mun-notif'), porId('sinan-ibge-notif'));
+    juntar(porId('sinan-uf-res'), porId('sinan-mun-res'), porId('sinan-ibge-res'));
+    [['ufEmp', 'munEmp', 'ibgeEmp'], ['ufOcorrencia', 'munOcorrencia', 'ibgeOcorrencia'], ['ufAtendimento', 'munAtendimento', 'ibgeAtendimento']]
+      .forEach(([u, m, c]) => juntar(campo(root, u), campo(root, m), campo(root, c)));
     [['sinan-cod-unid', 'sinan-unid', true], ['cnesAtendimento', 'unidAtendimento', false]].forEach(([cod, uni, id]) => {
       const c = id ? porId(cod) : campo(root, cod), u = id ? porId(uni) : campo(root, uni);
-      if (c && u && soNoPdf(c)) textoDoCodigo(c, u, 'CNES');
+      if (c && u && soNoPdf(c)) textoDoCodigo(c, u, 'CNES', true);
     });
     // Dados gerais (grade de 12 colunas): linha vazia some; a coluna que sobrou vai para o campo mais largo.
     root.querySelectorAll('.draft-grid-12').forEach(linha => {
@@ -128,6 +170,54 @@
       const atual = span(maior);
       maior.classList.remove('draft-span-' + atual);
       maior.classList.add('draft-span-' + (atual + sobra));
+    });
+    // Gestante só aparece com sexo feminino (masculino segue "Não se aplica" no registro, fora da tela).
+    const gestante = root.querySelector('[data-chips="gestante"]');
+    const caixaGestante = gestante && caixa(gestante);
+    if (caixaGestante) {
+      const sexo = root.querySelector('[data-chips="sexo"]');
+      const aplicar = () => {
+        const fem = sexo?.querySelector('.chip.selected')?.dataset.value === 'Feminino';
+        if (caixaGestante.hidden === !fem) return;
+        caixaGestante.hidden = !fem;
+        window.visatBalancearLinhas?.();
+      };
+      aplicar();
+      if (sexo) new MutationObserver(aplicar).observe(sexo, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    }
+    // Número e complemento no mesmo quadro (cada valor continua em seu campo no PDF).
+    const combinar = (a, b, titulo, larguraA) => {
+      const ca = caixa(a), cb = caixa(b);
+      if (!ca || !cb || ca.closest('[data-visat-combo]')) return;
+      const combo = document.createElement('div');
+      combo.dataset.visatCombo = '';
+      const rot = document.createElement('label');
+      rot.className = 'field-label';
+      rot.htmlFor = a.id;
+      rot.dataset.visatSomenteTela = '';
+      rot.textContent = titulo;
+      const linha = document.createElement('div');
+      linha.style.display = 'flex';
+      ca.before(combo);
+      combo.append(rot, linha);
+      linha.append(ca, cb);
+      [ca, cb].forEach(c => { const l = c.querySelector('.field-label'); if (l) l.style.setProperty('display', 'none', 'important'); });
+      ca.style.flex = '0 0 ' + larguraA;
+      cb.style.flex = '1 1 auto';
+      cb.style.minWidth = '0';
+      Object.assign(a.style, { borderTopRightRadius: '0', borderBottomRightRadius: '0' });
+      Object.assign(b.style, { borderTopLeftRadius: '0', borderBottomLeftRadius: '0', marginLeft: '-1px' });
+      if (!a.placeholder) a.placeholder = 'Nº';
+      if (!b.placeholder) b.placeholder = 'Complemento (apto., bloco…)';
+      setTimeout(() => window.visatBalancearLinhas?.(), 0);
+    };
+    combinar(porId('sinan-num'), porId('sinan-comp'), 'Número e complemento', '32%');
+    // Aplicativo: sem "Tipo de aplicativo"; fica só "Qual aplicativo?" (texto), quando a resposta é Sim.
+    remover(root, 'tipoAplicativo');
+    // Link do CADSUS com texto curto.
+    root.querySelectorAll('a[href*="cadastro.saude.gov.br"]').forEach(a => {
+      a.textContent = 'Consultar CADSUS';
+      a.title = 'Acesso restrito a operadores autorizados';
     });
     // 3. Situação cadastral e matriz/filial: aviso curto embaixo do CNPJ (só na tela).
     const situacao = campo(root, 'situacaoCadastral'), matriz = campo(root, 'matrizFilial'), cnpj = campo(root, 'cnpj');
@@ -154,6 +244,7 @@
       const el = campo(root, k);
       if (el && el.type === 'date') remover(root, k);
     });
+    setTimeout(() => window.visatBalancearLinhas?.(), 0);
     // 7. Sem "Horas após o início da jornada" (decisão da usuária em 17/11/2026; campo 51 da ficha do Sinan).
     remover(root, 'tempoJornada');
     // 6. Descrição e outras informações num campo só.
