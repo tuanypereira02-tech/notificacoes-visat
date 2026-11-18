@@ -1,6 +1,6 @@
 /*
  * ajustes-replica.js — Modelo final das fichas da página "Como notificar" (VISAT Florianópolis).
- * Página oficial do Google Sites (notificacao.html): itens comuns em todas as fichas; ajustes específicos só na 1a (18/11/2026).
+ * Página oficial do Google Sites (notificacao.html): itens comuns e ajustes específicos em todas as fichas (18/11/2026).
  * Réplica para testes (replica-como-notificar.html): aplicado às 10 fichas.
  * Aplica os ajustes da "versão qualificada" das 10 fichas (17/11/2026), depois de cada ficha ser montada:
  *  - 1b: subtítulo da etapa; retira distrito, unidade investigadora e Anti-HBs do paciente-fonte (ficha oficial);
@@ -594,9 +594,8 @@
     const resultado = original.apply(this, arguments);
     // Itens comuns (dados gerais, pessoa, residência, trabalho, empresa, máscaras, unidades de tempo, grade e margens):
     // todas as fichas, na página oficial e na réplica, desde 18/11/2026 — padrão da ficha 1a.
-    // Ajustes específicos de cada agravo (AJUSTES): página oficial só na 1a; réplica (replica-parametros.js) em todas.
-    const especificos = window.VISAT_MODELO_FINAL_TODAS === true ||
-      (options && options.templateId === 'form-acidente-template' && !options.obito);
+    // Ajustes específicos de cada agravo (AJUSTES): todas as fichas, na página oficial e na réplica (18/11/2026).
+    const especificos = true;
     const root = container.querySelector('.acidente-inline') || container;
     root.classList.add('visat-modelo-final');
     const ajuste = especificos ? AJUSTES[options && options.templateId] : null;
