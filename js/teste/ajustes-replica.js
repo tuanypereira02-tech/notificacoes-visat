@@ -15,6 +15,7 @@
  *  - Sem "Data do preenchimento" (repete a data da notificação).
  *  - "Descrição do caso" e "Outras informações" num campo só.
  *  - Gestante só com sexo feminino; dois espaços no CID da lesão abrem os grupos da CID-10 (cid-qualificado.js).
+ *  - Sem o bloco "Responsável pela notificação" (nome, função e e-mail).
  *  - 1a e 1j: sem "Horas após o início da jornada"; "Fatores que contribuíram" mantido.
  *  - 1e: sinais e sintomas com orientação; sem texto livre repetido no meio da ficha.
  *  - 1h: agravos associados sem "Nenhum" (ficha oficial); resultado da prova funcional só com "Sim".
@@ -255,6 +256,10 @@
       if (el && el.type === 'date') remover(root, k);
     });
     setTimeout(() => window.visatBalancearLinhas?.(), 0);
+    // 8. Sem o bloco "Responsável pela notificação" (decisão da usuária em 17/11/2026):
+    //    quem notifica fica identificado pelo "Seu e-mail" da janela de envio e pela assinatura no PDF.
+    root.querySelectorAll('[data-visat-responsavel]').forEach(secao => secao.remove());
+    ['profissional', 'investigador', 'funcao', 'funcaoProfissional', 'funcaoInvestigador', 'emailProfissional'].forEach(k => remover(root, k));
     // 7. Sem "Horas após o início da jornada" (decisão da usuária em 17/11/2026; campo 51 da ficha do Sinan).
     remover(root, 'tempoJornada');
     // 6. Descrição e outras informações num campo só.
