@@ -45,7 +45,20 @@
       campo.addEventListener('input', function () {
         if (document.activeElement === campo) { campo.setCustomValidity(''); aviso(campo, ''); } else conferir(campo);
       });
-      campo.addEventListener('blur', function () { conferir(campo); });
+      campo.addEventListener('blur', function () { completo = false; conferir(campo); });
+      // Ano com 4 dígitos digitado: números a mais são ignorados (o navegador recomeçaria o ano, ex.: 2026 -> 0002).
+      var completo = false, digitou = false;
+      campo.addEventListener('keydown', function (e) {
+        if (/^\d$/.test(e.key)) {
+          if (completo) { e.preventDefault(); return; }
+          digitou = true;
+        } else if (!e.ctrlKey && !e.metaKey) { completo = false; digitou = false; }
+      });
+      campo.addEventListener('input', function () {
+        completo = digitou && /^\d{4}-\d{2}-\d{2}$/.test(campo.value) && +campo.value.slice(0, 4) >= 1000;
+        digitou = false;
+      });
+      ['mousedown', 'focus'].forEach(function (ev) { campo.addEventListener(ev, function () { completo = false; digitou = false; }); });
       if (campo.value) conferir(campo);
     });
   }
