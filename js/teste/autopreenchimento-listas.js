@@ -161,20 +161,36 @@
       fecharListaRapida();
       var atual = abertura;
       var termo = norm(input.value);
-      if (termo.length < 3) return;
-      carregar(tipo).then(function (lista) {
+      // CNAE: os outros dados da empresa (nome, CNPJ, município, CEP, bairro, rua) restringem a lista (localizador-empregador.js).
+      var restricao = tipo === 'cnae' && window.visatCnaesCompativeis ? window.visatCnaesCompativeis(input) : null;
+      if (termo.length < 3 && !restricao) return;
+      Promise.all([carregar(tipo), restricao]).then(function (res) {
+        var lista = res[0], compat = res[1];
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
+        if (termo.length < 3 && !(compat && compat.total)) return;
         var palavras = termo.split(' ').filter(Boolean);
         var itens = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
           var alvo = norm(item.c + ' ' + item.d);
           return palavras.every(function (p) { return alvo.includes(p); });
-        }).slice(0, 12);
+        });
+        // CNAE pela palavra do dia a dia (ex.: "panificadora" -> produtos de padaria).
+        if (tipo === 'cnae' && !itens.length && termo.length >= 4 && window.visatAtividadeCombina) {
+          itens = lista.filter(function (item) { return window.visatAtividadeCombina(termo, item.d); });
+        }
+        var filtradoPorEmpresa = false;
+        if (compat && compat.total) {
+          var restritos = itens.filter(function (item) { return compat.contagem[item.c]; })
+            .sort(function (a, b) { return compat.contagem[b.c] - compat.contagem[a.c]; });
+          if (restritos.length) { itens = restritos; filtradoPorEmpresa = true; }
+        }
+        itens = itens.slice(0, 12);
         listaRapida = document.createElement('div');
         listaRapida.className = 'visat-lista-apoio';
         var aviso = document.createElement('p');
         aviso.setAttribute('role', 'status');
-        aviso.textContent = itens.length ? 'Lista de apoio. Digite no campo para filtrar.' :
-          'Nenhuma opção disponível para esta busca.';
+        aviso.textContent = !itens.length ? 'Nenhuma opção disponível para esta busca.' : filtradoPorEmpresa ?
+          'Atividades das empresas compatíveis com os dados já preenchidos (' + compat.rotulo + ').' :
+          'Lista de apoio. Digite no campo para filtrar.';
         listaRapida.append(aviso);
         var opcoes = document.createElement('ul');
         itens.forEach(function (item) {
@@ -183,7 +199,7 @@
           botao.type = 'button';
           botao.className = 'btn';
           botao.dataset.variant = 'outline';
-          botao.textContent = item.d + ' · ' + item.c;
+          botao.textContent = item.d + ' · ' + item.c + (filtradoPorEmpresa ? ' · ' + compat.contagem[item.c] + (compat.contagem[item.c] === 1 ? ' empresa' : ' empresas') : '');
           botao.addEventListener('pointerdown',function(e){e.preventDefault();});
           botao.addEventListener('click', function () {
             fecharListaRapida();
@@ -297,7 +313,7 @@
       });
     }
 
-    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value).length>=3) abrirListaRapida(); });
+    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value).length>=3 || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
     input.addEventListener('input', function (evento) {
       delete input.dataset.visatConfirmado;
       atualizar();

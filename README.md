@@ -125,19 +125,13 @@ Decisões da comparação entre VISAT via Link, site de Notificações da VE, Go
 
 ### Localizador cruzado da empresa (19/11/2026, em teste na réplica)
 
-Bloco "Empresa ou empregador": qualquer dado conhecido, em qualquer ordem, reduz as opções dos demais —
-CNPJ completo ou raiz (8 dígitos, lista matriz e filiais), nome, CNAE (código da TB_CNAE do Sinan, ex.: 92614),
-município, CEP (5 dígitos ou mais), bairro, endereço e número.
+Lógica conjunta de preenchimento no bloco "Empresa ou empregador": qualquer dado, em qualquer ordem, reduz as opções dos demais —
+CNPJ completo ou raiz (8 dígitos), nome, CNAE (código do Sinan ou texto, ex.: "padaria"), município, CEP, bairro, endereço e número.
 
-- `js/teste/localizador-empregador.js` e `css/teste/localizador-empregador.css` (carregados só na réplica, por `ferramentas/gerar-replica.py`).
-- Painel "Localizar empresa" acima do CNPJ: filtros ativos (clique remove), total compatível, sugestões de CNAE e bairro
-  entre os resultados, até 12 empresas por vez com selos de qualificação (situação cadastral, matriz/filial,
-  CNAE secundário, CNPJ a conferir).
-- Sem resultado com todos os dados: mostra quantas empresas aparecem sem cada dado (dado divergente do cadastro);
-  a lista online do nome (cadastro online) e a consulta automática do CNPJ continuam como reserva.
-- A escolha preenche nome, CNAE (quando a correspondência com o Sinan é única), CEP, endereço, número, complemento, bairro,
-  município/UF/IBGE e, por último, o CNPJ, cuja consulta online confere e completa telefone e situação.
-- Base: `data/empresas-locais/{ibge}.json`, gerada por `scripts/gerar-base-empresas.py` a partir dos dados abertos do CNPJ
-  da Receita Federal (CC-BY), pelo fluxo `.github/workflows/base-empresas.yml` (todo dia 20 e sob demanda).
-  Recorte: Florianópolis, São José, Palhoça, Biguaçu, Santo Amaro da Imperatriz e Governador Celso Ramos; situação ativa,
-  suspensa ou inapta. Sem telefone e sem e-mail; CPF ao final da razão social (MEI) é retirado.
+- `js/teste/localizador-empregador.js` e `css/teste/localizador-empregador.css` (só na réplica, via `ferramentas/gerar-replica.py`).
+- Base: empresas já cadastradas pela VISAT (`data/empresas-visat.json`); sem resultado, valem a lista online do nome e a consulta do CNPJ.
+- Nome com palavra de atividade (ex.: "panificadora") encontra também as empresas pela atividade (selo "Pela atividade");
+  a lista do CNAE mostra só as atividades das empresas compatíveis com os dados já preenchidos, com o total de empresas
+  (gancho `window.visatCnaesCompativeis` em `js/teste/autopreenchimento-listas.js`, inerte fora da réplica).
+- Painel "Localizar empresa": filtros ativos (clique remove), total, sugestões de CNAE e bairro, até 12 empresas por vez;
+  sem resultado, mostra quantas aparecem sem cada dado. A escolha preenche o bloco e, por último, o CNPJ (consulta online confere e completa).

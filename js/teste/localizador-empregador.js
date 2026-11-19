@@ -3,8 +3,7 @@
  *
  * Qualquer dado já conhecido, em qualquer ordem, filtra os demais:
  *   CNPJ (completo ou raiz) · nome · CNAE (código da TB_CNAE do Sinan) · município · CEP · bairro · endereço · número.
- * Base: data/empresas-locais/{ibge}.json, gerada dos dados abertos do CNPJ (Receita Federal) por
- * scripts/gerar-base-empresas.py. Sem resultado na base local, a busca online do nome (cadastro online)
+ * Base: empresas já cadastradas pela VISAT (data/empresas-visat.json). Sem resultado nessa lista, a busca online do nome (cadastro online)
  * e a consulta do CNPJ (BrasilAPI/CNPJ.ws) continuam como reserva.
  * A escolha preenche o bloco e dispara a consulta do CNPJ, que confere e completa os dados (telefone, situação).
  */
@@ -12,13 +11,12 @@
   'use strict';
 
   var MAX_LISTA = 12;
-  var PADRAO_IBGE = '420540'; // Florianópolis
-  var ALIAS = {
+    var ALIAS = {
     cnpj: ['cnpj'], nome: ['empresa', 'empresaNome', 'razao'], cnae: ['cnae'],
     mun: ['munEmp'], ibge: ['ibgeEmp'], uf: ['ufEmp'], cep: ['cepEmp'],
     bairro: ['bairroEmp', 'bairro'], end: ['endEmp', 'endereco'], num: ['numEmp', 'numero'], comp: ['compEmp']
   };
-  var ROTULO = { cnpj: 'CNPJ', nome: 'Nome', cnae: 'CNAE', cep: 'CEP', bairro: 'Bairro', end: 'Endereço', num: 'Número' };
+  var ROTULO = { mun: 'Município', cnpj: 'CNPJ', nome: 'Nome', cnae: 'CNAE', cep: 'CEP', bairro: 'Bairro', end: 'Endereço', num: 'Número' };
   var TIPOS_LOG = /^(RUA|R|AVENIDA|AV|RODOVIA|ROD|SERVIDAO|SERV|TRAVESSA|TV|ESTRADA|EST|ALAMEDA|AL|PRACA|PC|VIA|BECO|LARGO|CAMINHO|GENERAL|DOUTOR|DR|PROFESSOR|PROF)$/;
 
   /* ---------- utilidades ---------- */
@@ -62,35 +60,72 @@
     disparar(c);
   }
 
-  /* ---------- bases ---------- */
-  var indice = null;
-  function carregarIndice() {
-    if (!indice) {
-      indice = fetch('data/empresas-locais/indice.json', { cache: 'no-cache' })
-        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-        .catch(function () { indice = null; return { municipios: [] }; });
-    }
-    return indice;
+  /* ---------- atividade: palavras do dia a dia -> descrição da TB_CNAE ---------- */
+  var SINONIMOS = {
+    PANIF: ['PADARIA'], PADAR: ['PADARIA'], CONFEI: ['CONFEITARIA'], ACADEM: ['CONDICIONAMENTO FISICO', 'DESPORTIV', 'GINASTICA'],
+    GINAS: ['DESPORTIV', 'CONDICIONAMENTO FISICO'], SUPERM: ['SUPERMERCADO', 'MERCADORIAS EM GERAL'], MERCAD: ['MERCADORIAS EM GERAL', 'MINIMERCADO', 'SUPERMERCADO'],
+    CONSTRU: ['CONSTRUCAO', 'EDIFICACOES', 'OBRAS'], OBRA: ['OBRAS', 'EDIFICACOES'], HOSPIT: ['HOSPITALAR'], CLINIC: ['AMBULATORIAL', 'CLINICA'],
+    RESTAU: ['RESTAURANTE'], LANCHO: ['LANCHONETE'], FARMAC: ['FARMACEUTIC'], DROGAR: ['FARMACEUTIC'], OFICIN: ['MANUTENCAO E REPARACAO'],
+    MECANI: ['MANUTENCAO E REPARACAO'], POSTO: ['COMBUSTIVE'], COMBUS: ['COMBUSTIVE'], ESCOLA: ['ENSINO', 'EDUCACAO'], COLEGI: ['ENSINO'],
+    CRECHE: ['CRECHE', 'EDUCACAO INFANTIL'], CONDOM: ['CONDOMINIO'], TRANSP: ['TRANSPORTE'], LIMPEZ: ['LIMPEZA'], FAXIN: ['LIMPEZA'],
+    SEGURA: ['VIGILANCIA', 'SEGURANCA'], VIGIL: ['VIGILANCIA'], ACOUG: ['CARNES'], SALAO: ['CABELEIREIRO'], CABELE: ['CABELEIREIRO'],
+    HOTEL: ['HOTEIS', 'ALOJAMENTO'], POUSAD: ['ALOJAMENTO', 'HOTEIS'], BANCO: ['BANCOS', 'BANCARI'], LABORA: ['LABORATORI'],
+    PREFEI: ['ADMINISTRACAO PUBLICA'], ODONT: ['ODONTOLOG'], DENTIS: ['ODONTOLOG'], FRIGOR: ['ABATE', 'FRIGORIFIC'], PESCA: ['PESCA'],
+    ELETRIC: ['ELETRIC'], CALL: ['TELEATENDIMENTO'], TELEMA: ['TELEATENDIMENTO'], LAVAND: ['LAVANDERIA'], GRAFIC: ['IMPRESSAO', 'GRAFIC']
+  };
+  var VAZIAS = { DE: 1, DA: 1, DO: 1, DAS: 1, DOS: 1, E: 1, LTDA: 1, ME: 1, EPP: 1, SA: 1, EIRELI: 1 };
+  function alternativas(p) {
+    var r = p.length >= 6 ? p.slice(0, 5) : p;
+    var alt = [r];
+    Object.keys(SINONIMOS).forEach(function (k) { if (p.indexOf(k) === 0 || (k.length >= 5 && k.indexOf(p) === 0 && p.length >= 4)) alt = alt.concat(SINONIMOS[k]); });
+    return alt;
   }
-  var bases = {};
-  function carregarBase(ibge) {
-    if (!bases[ibge]) {
-      bases[ibge] = carregarIndice().then(function (ind) {
-        var info = (ind.municipios || []).find(function (m) { return m.ibge === ibge; });
-        if (!info) return null;
-        return fetch('data/empresas-locais/' + ibge + '.json?ref=' + encodeURIComponent(ind.referencia || ''))
-          .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-          .then(preparar);
-      }).catch(function () { delete bases[ibge]; return null; });
-    }
-    return bases[ibge];
+  // Texto livre (ex.: "panificadora") combina com a descrição da atividade (ex.: "...PRODUTOS DE PADARIA...").
+  function atividadeCombina(texto, descricao) {
+    var palavras = norm(texto).split(' ').filter(function (p) { return p.length >= 3 && !VAZIAS[p]; });
+    if (!palavras.length) return false;
+    descricao = norm(descricao);
+    return palavras.every(function (p) { return alternativas(p).some(function (a) { return descricao.indexOf(a) >= 0; }); });
   }
-  function preparar(d) {
-    var regs = d.registros;
-    d.nomes = new Array(regs.length);
-    for (var i = 0; i < regs.length; i++) d.nomes[i] = norm(regs[i][1] + ' ' + regs[i][2]);
+  window.visatAtividadeCombina = atividadeCombina;
+  function classesPorTexto(texto) {
+    if (!tabelaCnae) return null;
+    var cods = {};
+    var n = 0;
+    tabelaCnae.classes.forEach(function (x) { if (atividadeCombina(texto, x[2])) { cods[x[0]] = 1; n++; } });
+    return n && n <= 40 ? cods : null;
+  }
+
+  /* ---------- base: empresas já cadastradas pela VISAT (data/empresas-visat.json) ---------- */
+  var baseUnica = null;
+  function carregarBase() {
+    if (!baseUnica) {
+      baseUnica = Promise.all([
+        fetch('data/empresas-visat.json?v=20261116').then(function (r) { if (!r.ok) throw new Error(); return r.json(); }),
+        fetch('data/cnae-correspondencias.json?v=20261117-ibge').then(function (r) { return r.ok ? r.json() : { subclasses: {} }; })
+          .catch(function () { return { subclasses: {} }; })
+      ]).then(function (res) { return preparar(res[0], res[1].subclasses || {}); })
+        .catch(function () { baseUnica = null; return null; });
+    }
+    return baseUnica;
+  }
+  // Registro de origem: [cnpj, fantasia, razão, -, município, UF, Matriz/Filial, CNAE, logradouro, número, complemento, bairro, CEP, divergente]
+  function preparar(lista, corr) {
+    // Map preserva a ordem de inserção (objeto ordenaria chaves numéricas, como os códigos CNAE).
+    var cnaes = new Map(), bairros = new Map(), logs = new Map(), muns = new Map();
+    function idx(d, v) { if (!d.has(v)) d.set(v, d.size); return d.get(v); }
+    var regs = lista.map(function (x) {
+      return [String(x[0]), x[1] && x[1] !== x[2] ? x[1] : '', x[2] || x[1] || '', idx(cnaes, String(x[7] || '')), [],
+        digitos(x[12]), idx(bairros, x[11] || ''), idx(logs, x[8] || ''), x[9] || '', x[10] || '',
+        /filial/i.test(x[6]) ? 2 : 1, '', idx(muns, (x[4] || '') + '|' + (x[5] || ''))];
+    });
+    var d = { registros: regs, cnaes: Array.from(cnaes.keys()), bairros: Array.from(bairros.keys()), logradouros: Array.from(logs.keys()),
+      municipios: Array.from(muns.keys()).map(function (m) { return m.split('|'); }), situacoes: {} };
+    d.cnaeSinan = d.cnaes.map(function (sub) { return ((corr[sub.padStart(7, '0')] || {}).codigos) || []; });
+    d.nomes = regs.map(function (r) { return norm(r[1] + ' ' + r[2]); });
     d.bairrosN = d.bairros.map(norm);
     d.logsN = d.logradouros.map(norm);
+    d.munsN = d.municipios.map(function (m) { return norm(m[0]); });
     return d;
   }
   var tabelaCnae = null;
@@ -109,6 +144,7 @@
     if (nome.replace(/ /g, '').length >= 3) f.nome = nome.split(' ');
     var cnae = String(c.cnae && c.cnae.value || '').match(/^\s*(\d{2})\.?(\d{2})-?(\d)(\d{2})?/);
     if (cnae) f.cnae = cnae[4] ? cnae.slice(1, 5).join('') : cnae.slice(1, 4).join('');
+    else if (norm(c.cnae && c.cnae.value).replace(/[^A-Z]/g, '').length >= 4) f.cnae = 'T:' + (c.cnae.value || '');
     var cep = digitos(c.cep && c.cep.value);
     if (cep.length >= 5) f.cep = cep;
     var bairro = norm(c.bairro && c.bairro.value);
@@ -117,11 +153,13 @@
     if (end.join('').length >= 3) f.end = end;
     var num = norm(c.num && c.num.value);
     if (num) f.num = num;
+    var mun = norm(String(c.mun && c.mun.value || '').split('/')[0]);
+    if (mun.length >= 3) f.mun = mun;
     return f;
   }
   function resumoFiltro(k, c) {
     var v = (c[k] && c[k].value || '').trim();
-    if (k === 'cnae') v = v.split(/\s+[–-]\s+/)[0];
+    if (k === 'cnae' && /^\s*\d/.test(v)) v = v.split(/\s+[–-]\s+/)[0];
     return ROTULO[k] + ': ' + (v.length > 28 ? v.slice(0, 27) + '…' : v);
   }
 
@@ -132,14 +170,25 @@
     if (usa('bairro')) bairros = d.bairrosN.map(function (b) { return b.indexOf(f.bairro) >= 0; });
     if (usa('end')) logs = d.logsN.map(function (l) { return f.end.every(function (p) { return l.indexOf(p) >= 0; }); });
     if (usa('cnae')) {
-      cnaesOk = d.cnaes.map(function (sub, i) {
+      var porTexto = f.cnae.indexOf('T:') === 0 ? classesPorTexto(f.cnae.slice(2)) : null;
+      if (f.cnae.indexOf('T:') === 0 && !porTexto) cnaesOk = null; // texto ainda sem atividade reconhecida
+      else cnaesOk = d.cnaes.map(function (sub, i) {
+        if (porTexto) return (d.cnaeSinan[i] || []).some(function (s2) { return porTexto[s2]; });
         return f.cnae.length === 7 ? sub === f.cnae : (d.cnaeSinan[i] || []).indexOf(f.cnae) >= 0;
       });
     }
-    var soNumero = usa('num') && Object.keys(f).filter(function (k) { return k !== 'num' && k !== ignorar; }).length === 0;
-    if (soNumero) return [];
+    // Nome com palavra de atividade (ex.: "panificadora") também encontra empresas por essa atividade.
+    var nomeAtiv = null;
+    if (usa('nome')) {
+      var cl = classesPorTexto(f.nome.join(' '));
+      if (cl) nomeAtiv = d.cnaes.map(function (sub, i) { return (d.cnaeSinan[i] || []).some(function (s2) { return cl[s2]; }); });
+    }
+    // Município e número sozinhos não bastam para listar empresas.
+    if (!Object.keys(f).some(function (k) { return k !== 'num' && k !== 'mun' && k !== ignorar; })) return [];
+    var munsOk = usa('mun') ? d.munsN.map(function (m) { return m === f.mun || f.mun.indexOf(m) === 0; }) : null;
     for (var i = 0; i < regs.length; i++) {
       var r = regs[i];
+      if (munsOk && !munsOk[r[12]]) continue;
       if (usa('cnpj') && r[0].indexOf(f.cnpj) !== 0) continue;
       if (usa('cep') && r[5].indexOf(f.cep) !== 0) continue;
       if (bairros && !bairros[r[6]]) continue;
@@ -153,13 +202,15 @@
       var pont = 1;
       if (usa('nome')) {
         var n = d.nomes[i];
-        if (!f.nome.every(function (p) { return n.indexOf(p) >= 0; })) continue;
         var alvo = f.nome.join(' ');
-        pont = (norm(r[1]) === alvo || norm(r[2]) === alvo) ? 4 : (norm(r[1]).indexOf(alvo) === 0 || norm(r[2]).indexOf(alvo) === 0) ? 3 : 2;
+        if (f.nome.every(function (p) { return n.indexOf(p) >= 0; })) {
+          pont = (norm(r[1]) === alvo || norm(r[2]) === alvo) ? 4 : (norm(r[1]).indexOf(alvo) === 0 || norm(r[2]).indexOf(alvo) === 0) ? 3 : 2;
+        } else if (nomeAtiv && (nomeAtiv[r[3]] || r[4].some(function (s2) { return nomeAtiv[s2]; }))) {
+          pont = 1; // encontrada pela atividade
+        } else continue;
       }
-      if (r[11] === 'A') pont += 0.5;
       if (sec) pont -= 0.25;
-      out.push({ i: i, p: pont, sec: sec });
+      out.push({ i: i, p: pont, sec: sec, ativ: pont === 1 && usa('nome') });
     }
     out.sort(function (a, b) { return b.p - a.p; });
     return out;
@@ -180,7 +231,7 @@
     box.setAttribute('aria-label', 'Localizar empresa');
     var topo = el('div', 'visat-loc-topo');
     var tit = el('strong', 'visat-loc-titulo', 'Localizar empresa');
-    var dica = el('span', 'visat-loc-dica', 'Preencha qualquer dado que tiver (CNPJ, nome, CNAE, CEP, bairro ou rua), em qualquer ordem: cada campo reduz as opções dos outros.');
+    var dica = el('span', 'visat-loc-dica', 'Preencha qualquer dado que tiver (CNPJ, nome, CNAE, município, CEP, bairro ou rua), em qualquer ordem: os campos se completam e reduzem as opções uns dos outros.');
     topo.append(tit, dica);
     var status = el('p', 'visat-loc-status');
     status.setAttribute('role', 'status');
@@ -197,35 +248,16 @@
     painel.append(box);
     caixaCnpj.before(painel);
 
-    var base = null, ibgeAtual = null, escolhido = null, limite = MAX_LISTA, espera = null, aplicando = false;
-
-    function ibgeDoCampo() {
-      var cod = digitos(c.ibge && c.ibge.value).slice(0, 6);
-      if (cod.length === 6) return cod;
-      var nome = norm((c.mun.value || '').split('/')[0]);
-      if (!nome) return PADRAO_IBGE;
-      return carregarIndice().then(function (ind) {
-        var m = (ind.municipios || []).find(function (x) { return norm(x.municipio) === nome || nome.indexOf(norm(x.municipio)) === 0; });
-        return m ? m.ibge : null;
-      });
-    }
+    var base = null, escolhido = null, limite = MAX_LISTA, espera = null, aplicando = false;
 
     function garantirBase() {
-      return Promise.resolve(ibgeDoCampo()).then(function (ibge) {
-        if (ibge === ibgeAtual && (base || !ibge)) return base;
-        ibgeAtual = ibge;
-        base = null;
-        if (!ibge) return null;
-        status.textContent = 'Carregando a base de empresas do município…';
-        var carga = window.visatCarregarCnae ? window.visatCarregarCnae().then(function (t) { tabelaCnae = t; }).catch(function () {}) : Promise.resolve();
-        return Promise.all([carregarBase(ibge), carga]).then(function (res) {
-          if (ibgeAtual !== ibge) return base;
-          base = res[0];
-          fonte.textContent = base ? 'Base local: ' + base.registros.length.toLocaleString('pt-BR') + ' estabelecimentos de ' +
-            base.municipio + '/' + base.uf + ' (ativos, suspensos e inaptos) · ' + base.fonte + ', referência ' + base.referencia +
-            '. Confira sempre o CNPJ do local de trabalho.' : '';
-          return base;
-        });
+      if (base) return Promise.resolve(base);
+      var carga = window.visatCarregarCnae ? window.visatCarregarCnae().then(function (t) { tabelaCnae = t; }).catch(function () {}) : Promise.resolve();
+      return Promise.all([carregarBase(), carga]).then(function (res) {
+        base = res[0];
+        fonte.textContent = base ? 'Empresas já cadastradas pela VISAT (' + base.registros.length.toLocaleString('pt-BR') +
+          '). Sem resultado aqui, valem a lista online do nome e a consulta automática do CNPJ.' : '';
+        return base;
       });
     }
 
@@ -261,7 +293,7 @@
         });
         if (!d) {
           marcarAntigaLista(false);
-          status.textContent = 'Sem base local para este município. Use o CNPJ (consulta automática) ou o nome (cadastro online).';
+          status.textContent = 'Lista de empresas indisponível agora. Use o CNPJ (consulta automática) ou o nome (cadastro online).';
           return;
         }
         var res = filtrar(d, f);
@@ -275,7 +307,7 @@
     }
 
     function semResultado(d, f, chaves) {
-      var txt = 'Nenhuma empresa da base local com todos esses dados.' +
+      var txt = 'Nenhuma empresa cadastrada com todos esses dados.' +
         (f.nome ? ' Sugestões do cadastro online aparecem abaixo do nome.' : ' Com o CNPJ completo, a consulta online é automática.');
       if (chaves.length > 1) {
         var alternativas = chaves.map(function (k) { return [k, filtrar(d, f, k).length]; }).filter(function (x) { return x[1] > 0; });
@@ -310,7 +342,7 @@
         });
         facetas.append(g);
       }
-      if (!f.cnae) {
+      if (!f.cnae || f.cnae.indexOf('T:') === 0) {
         var cn = {};
         res.forEach(function (x) { (d.cnaeSinan[d.registros[x.i][3]] || []).forEach(function (s) { cn[s] = (cn[s] || 0) + 1; }); });
         grupo('Atividade (CNAE):', cn, {
@@ -327,9 +359,10 @@
 
     function selos(d, r, x) {
       var s = [];
-      s.push([d.situacoes[r[11]] || r[11], r[11] === 'A' ? 'ok' : 'alerta']);
+      if (r[11]) s.push([d.situacoes[r[11]] || r[11], r[11] === 'A' ? 'ok' : 'alerta']);
       s.push([r[10] === 1 ? 'Matriz' : 'Filial', '']);
       if (x.sec) s.push(['CNAE secundário', 'alerta']);
+      if (x.ativ) s.push(['Pela atividade', '']);
       if (!cnpjValido(r[0])) s.push(['CNPJ a conferir', 'alerta']);
       return s;
     }
@@ -370,9 +403,12 @@
         escrever(c.end, titulo(d.logradouros[r[7]]));
         escrever(c.num, r[8]);
         if (c.comp) escrever(c.comp, titulo(r[9]));
-        if (c.uf) escrever(c.uf, d.uf);
-        if (c.mun && !c.mun.value.trim()) escrever(c.mun, d.municipio);
-        if (c.ibge) escrever(c.ibge, d.ibge);
+        var m = d.municipios[r[12]] || [];
+        if (m[0]) {
+          if (c.ibge) escrever(c.ibge, '');
+          if (c.uf) escrever(c.uf, m[1]);
+          if (c.mun) escrever(c.mun, titulo(m[0]));
+        }
         escolhido = r[0];
         // Por último o CNPJ: a consulta online confere e completa (telefone, situação, CNAE no código do Sinan).
         escrever(c.cnpj, fmtCnpj(r[0]));
@@ -390,7 +426,7 @@
       marcarAntigaLista(true);
       if (!r) { status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
       var avisos = [];
-      if (r[11] !== 'A') avisos.push('situação cadastral ' + (d.situacoes[r[11]] || r[11]).toLowerCase() + ' na Receita');
+      if (r[11] && r[11] !== 'A') avisos.push('situação cadastral ' + (d.situacoes[r[11]] || r[11]).toLowerCase() + ' na Receita');
       if (r[10] === 2) avisos.push('filial: confirme se é o estabelecimento onde a pessoa trabalha');
       if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('o CNAE tem mais de uma correspondência no Sinan: escolha a atividade');
       status.textContent = 'Selecionada: ' + titulo(r[1] || r[2]) + ' (' + fmtCnpj(r[0]) + '). ' +
@@ -406,6 +442,23 @@
       facetas.append(trocar);
     }
 
+    // Lista do CNAE restrita pelos demais dados (lógica conjunta de preenchimento).
+    if (c.cnae) contextos.set(c.cnae, function () {
+      var f = lerFiltros(c);
+      delete f.cnae;
+      if (!Object.keys(f).some(function (k) { return k !== 'num' && k !== 'mun'; })) return null;
+      return garantirBase().then(function (d) {
+        if (!d) return null;
+        var contagem = {}, total = 0;
+        filtrar(d, f).forEach(function (x) {
+          total++;
+          var r = d.registros[x.i];
+          [r[3]].concat(r[4]).forEach(function (ci) { (d.cnaeSinan[ci] || []).forEach(function (s) { contagem[s] = (contagem[s] || 0) + 1; }); });
+        });
+        return { total: total, contagem: contagem, rotulo: Object.keys(f).map(function (k) { return ROTULO[k].toLowerCase(); }).join(', ') };
+      });
+    });
+
     mais.addEventListener('click', function () { limite += MAX_LISTA; executar(); });
     ['cnpj', 'nome', 'cnae', 'mun', 'cep', 'bairro', 'end', 'num'].forEach(function (k) {
       if (!c[k]) return;
@@ -419,6 +472,12 @@
     });
     ['nome', 'cnae', 'cep', 'bairro', 'end'].forEach(function (k) { if (c[k]) c[k].addEventListener('input', function () { limite = MAX_LISTA; }); });
   }
+
+  var contextos = new WeakMap();
+  window.visatCnaesCompativeis = function (input) {
+    var fn = contextos.get(input);
+    return fn ? fn() : null;
+  };
 
   /* ---------- montagem ---------- */
   var agendado = null;
