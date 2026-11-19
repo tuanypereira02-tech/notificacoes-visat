@@ -2,7 +2,7 @@
  * datas-limite.js — Limites das datas das fichas (VISAT/SMS Florianópolis)
  * Todas as datas das fichas são de fatos já ocorridos (nascimento, acidente, sintomas, diagnóstico, notificação,
  * óbito, encerramento): mínimo 01/01/1900 e máximo hoje. Com min e max de 4 dígitos, o navegador deixa digitar
- * só 4 dígitos no ano (antes aceitava 6, ex.: 198743).
+ * só 4 dígitos no ano (antes aceitava 6, ex.: 198743). O aviso aparece ao sair do campo, não durante a digitação.
  */
 (function () {
   'use strict';
@@ -31,7 +31,7 @@
     campo.max = max;
     var texto = '';
     if (v && (v < MIN || v > max || !/^\d{4}-\d{2}-\d{2}$/.test(v))) {
-      texto = 'Data inválida: use uma data entre 01/01/1900 e hoje, com ano de 4 dígitos.';
+      texto = 'Data inválida (de 01/01/1900 até hoje).';
     }
     campo.setCustomValidity(texto);
     aviso(campo, texto);
@@ -41,7 +41,11 @@
       campo.dataset.visatLimite = '1';
       campo.min = MIN;
       campo.max = hoje();
-      ['input', 'change', 'blur'].forEach(function (ev) { campo.addEventListener(ev, function () { conferir(campo); }); });
+      // Enquanto digita, o ano passa por 0002, 0020, 0202...: não avisa; confere ao sair do campo.
+      campo.addEventListener('input', function () {
+        if (document.activeElement === campo) { campo.setCustomValidity(''); aviso(campo, ''); } else conferir(campo);
+      });
+      campo.addEventListener('blur', function () { conferir(campo); });
       if (campo.value) conferir(campo);
     });
   }
