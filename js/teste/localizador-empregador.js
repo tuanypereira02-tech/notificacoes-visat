@@ -62,8 +62,8 @@
 
   /* ---------- atividade: palavras do dia a dia -> descrição da TB_CNAE ---------- */
   var SINONIMOS = {
-    PANIF: ['PADARIA'], PADAR: ['PADARIA'], CONFEI: ['CONFEITARIA'], ACADEM: ['CONDICIONAMENTO FISICO', 'DESPORTIV', 'GINASTICA'],
-    GINAS: ['DESPORTIV', 'CONDICIONAMENTO FISICO'], SUPERM: ['SUPERMERCADO', 'MERCADORIAS EM GERAL'], MERCAD: ['MERCADORIAS EM GERAL', 'MINIMERCADO', 'SUPERMERCADO'],
+    PANIF: ['PADARIA'], PADAR: ['PADARIA'], CONFEI: ['CONFEITARIA'], ACADEM: ['CONDICIONAMENTO FISICO', 'FISICO CORPORAL', 'DESPORTIV', 'GINASTICA'],
+    GINAS: ['DESPORTIV', 'CONDICIONAMENTO FISICO', 'FISICO CORPORAL'], SUPERM: ['SUPERMERCADO', 'MERCADORIAS EM GERAL'], MERCAD: ['MERCADORIAS EM GERAL', 'MINIMERCADO', 'SUPERMERCADO'],
     CONSTRU: ['CONSTRUCAO', 'EDIFICACOES', 'OBRAS'], OBRA: ['OBRAS', 'EDIFICACOES'], HOSPIT: ['HOSPITALAR'], CLINIC: ['AMBULATORIAL', 'CLINICA'],
     RESTAU: ['RESTAURANTE'], LANCHO: ['LANCHONETE'], FARMAC: ['FARMACEUTIC'], DROGAR: ['FARMACEUTIC'], OFICIN: ['MANUTENCAO E REPARACAO'],
     MECANI: ['MANUTENCAO E REPARACAO'], POSTO: ['COMBUSTIVE'], COMBUS: ['COMBUSTIVE'], ESCOLA: ['ENSINO', 'EDUCACAO'], COLEGI: ['ENSINO'],
@@ -228,7 +228,7 @@
     return ROTULO[k] + ': ' + (v.length > 28 ? v.slice(0, 27) + '…' : v);
   }
 
-  function filtrar(d, f, ignorar) {
+  function filtrar(d, f, ignorar, livre) {
     var regs = d.registros, out = [];
     var usa = function (k) { return f[k] && k !== ignorar; };
     var bairros = null, logs = null, cnaesOk = null;
@@ -249,7 +249,7 @@
       if (cl) nomeAtiv = d.cnaes.map(function (sub, i) { return (d.cnaeSinan[i] || []).some(function (s2) { return cl[s2]; }); });
     }
     // Município e número sozinhos não bastam para listar empresas.
-    if (!Object.keys(f).some(function (k) { return k !== 'num' && k !== 'mun' && k !== ignorar; })) return [];
+    if (!livre && !Object.keys(f).some(function (k) { return k !== 'num' && k !== 'mun' && k !== ignorar; })) return [];
     var munsOk = usa('mun') ? d.munsN.map(function (m) { return m === f.mun || f.mun.indexOf(m) === 0; }) : null;
     for (var i = 0; i < regs.length; i++) {
       var r = regs[i];
@@ -586,6 +586,59 @@
         return { total: total, contagem: contagem, rotulo: Object.keys(f).map(function (k) { return ROTULO[k].toLowerCase(); }).join(', ') };
       });
     });
+
+    // Bairro: lista ao digitar as primeiras letras, só com bairros que têm empresas compatíveis com os outros dados.
+    if (c.bairro) (function () {
+      var listaB = null, esperaB = null;
+      function fechar() { if (listaB) listaB.remove(); listaB = null; }
+      function abrir() {
+        var termo = norm(c.bairro.value);
+        if (termo.length < 2) { fechar(); return; }
+        garantirBase().then(function (d) {
+          if (!d || norm(c.bairro.value) !== termo) return;
+          var f = lerFiltros(c);
+          delete f.bairro;
+          var cont = {};
+          filtrar(d, f, null, true).forEach(function (x) {
+            var bi = d.registros[x.i][6], b = d.bairros[bi];
+            if (!b) return;
+            var n = d.bairrosN[bi];
+            if (n.indexOf(termo) === 0 || n.indexOf(' ' + termo) >= 0) cont[b] = (cont[b] || 0) + 1;
+          });
+          var itens = Object.keys(cont).sort(function (a, b) {
+            var pa = norm(a).indexOf(termo) === 0 ? 0 : 1, pb = norm(b).indexOf(termo) === 0 ? 0 : 1;
+            return pa - pb || cont[b] - cont[a];
+          }).slice(0, 12);
+          fechar();
+          if (!itens.length) return;
+          listaB = el('div', 'visat-lista-apoio');
+          var p = el('p', null, 'Bairros com empresas compatíveis' + (f.mun ? ' em ' + titulo(String(c.mun.value).split(/[\/–-]/)[0].trim()) : '') + '.');
+          p.setAttribute('role', 'status');
+          var ul = el('ul');
+          itens.forEach(function (b) {
+            var li = el('li');
+            var bt = el('button', 'btn', titulo(b) + ' · ' + cont[b] + (cont[b] === 1 ? ' empresa' : ' empresas'));
+            bt.type = 'button';
+            bt.dataset.variant = 'outline';
+            bt.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+            bt.addEventListener('click', function () { fechar(); escrever(c.bairro, titulo(b)); c.bairro.focus(); });
+            li.append(bt);
+            ul.append(li);
+          });
+          listaB.append(p, ul);
+          listaB.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); fechar(); c.bairro.focus(); } });
+          c.bairro.after(listaB);
+        });
+      }
+      c.bairro.setAttribute('autocomplete', 'visat-sem-preenchimento');
+      c.bairro.addEventListener('input', function (e) { if (!e.isTrusted) return; clearTimeout(esperaB); esperaB = setTimeout(abrir, 150); });
+      c.bairro.addEventListener('focus', function () { if (norm(c.bairro.value).length >= 2 && !escolhido) abrir(); });
+      c.bairro.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') fechar();
+        if (e.key === 'ArrowDown' && listaB) { e.preventDefault(); var b = listaB.querySelector('button'); if (b) b.focus(); }
+      });
+      c.bairro.parentElement.addEventListener('focusout', function (e) { if (!c.bairro.parentElement.contains(e.relatedTarget)) fechar(); });
+    })();
 
     mais.addEventListener('click', function () { limite += MAX_LISTA; executar(); });
     ['cnpj', 'nome', 'cnae', 'mun', 'cep', 'bairro', 'end', 'num'].forEach(function (k) {
