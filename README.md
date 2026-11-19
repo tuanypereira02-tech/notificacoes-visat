@@ -122,3 +122,22 @@ Decisões da comparação entre VISAT via Link, site de Notificações da VE, Go
 - **Distúrbio de voz:** "CAT emitida?" antes das informações complementares, com a mesma orientação quando a resposta é Não.
 - **CID no formato da ficha oficial:** código digitado sem descrição é ajustado para letra, dois números, ponto e 4º caractere (ex.: "m545" → "M54.5") antes da busca na tabela.
 - **Faixas de CID por ficha:** segue a ficha oficial do Sinan onde ela define a faixa — LER/DORT passa a aceitar também G90–G99; Transtornos mentais, também Y90–Y91, R40–R46, Z55–Z65, Y96 e X60–X84 (títulos da CID-10 DATASUS 2008, fora da LDRT entram com aviso). Onde a ficha não define faixa (câncer, dermatoses, PAIR, pneumoconioses), mantém a base LDRT.
+
+### Localizador cruzado da empresa (19/11/2026, em teste na réplica)
+
+Bloco "Empresa ou empregador": qualquer dado conhecido, em qualquer ordem, reduz as opções dos demais —
+CNPJ completo ou raiz (8 dígitos, lista matriz e filiais), nome, CNAE (código da TB_CNAE do Sinan, ex.: 92614),
+município, CEP (5 dígitos ou mais), bairro, endereço e número.
+
+- `js/teste/localizador-empregador.js` e `css/teste/localizador-empregador.css` (carregados só na réplica, por `ferramentas/gerar-replica.py`).
+- Painel "Localizar empresa" acima do CNPJ: filtros ativos (clique remove), total compatível, sugestões de CNAE e bairro
+  entre os resultados, até 12 empresas por vez com selos de qualificação (situação cadastral, matriz/filial,
+  CNAE secundário, CNPJ a conferir).
+- Sem resultado com todos os dados: mostra quantas empresas aparecem sem cada dado (dado divergente do cadastro);
+  a lista online do nome (cadastro online) e a consulta automática do CNPJ continuam como reserva.
+- A escolha preenche nome, CNAE (quando a correspondência com o Sinan é única), CEP, endereço, número, complemento, bairro,
+  município/UF/IBGE e, por último, o CNPJ, cuja consulta online confere e completa telefone e situação.
+- Base: `data/empresas-locais/{ibge}.json`, gerada por `scripts/gerar-base-empresas.py` a partir dos dados abertos do CNPJ
+  da Receita Federal (CC-BY), pelo fluxo `.github/workflows/base-empresas.yml` (todo dia 20 e sob demanda).
+  Recorte: Florianópolis, São José, Palhoça, Biguaçu, Santo Amaro da Imperatriz e Governador Celso Ramos; situação ativa,
+  suspensa ou inapta. Sem telefone e sem e-mail; CPF ao final da razão social (MEI) é retirado.
