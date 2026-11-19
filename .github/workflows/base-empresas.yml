@@ -37,4 +37,5 @@ jobs:
           git add data/empresas-locais
           if git diff --cached --quiet; then echo "Sem alterações"; exit 0; fi
           git commit -m "Base local de empresas: $(python -c "import json;print(json.load(open('data/empresas-locais/indice.json'))['referencia'])")"
-          git push
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
