@@ -120,14 +120,79 @@
         /filial/i.test(x[6]) ? 2 : 1, '', idx(muns, (x[4] || '') + '|' + (x[5] || ''))];
     });
     var d = { registros: regs, cnaes: Array.from(cnaes.keys()), bairros: Array.from(bairros.keys()), logradouros: Array.from(logs.keys()),
-      municipios: Array.from(muns.keys()).map(function (m) { return m.split('|'); }), situacoes: {} };
+      municipios: Array.from(muns.keys()).map(function (m) { return m.split('|'); }),
+      situacoes: { A: 'Ativa', S: 'Suspensa', I: 'Inapta', B: 'Baixada', N: 'Nula' } };
     d.cnaeSinan = d.cnaes.map(function (sub) { return ((corr[sub.padStart(7, '0')] || {}).codigos) || []; });
+    d.mapas = { cnaes: cnaes, bairros: bairros, logs: logs, muns: muns, idx: idx, corr: corr };
+    d.porCnpj = new Map(regs.map(function (r, i) { return [r[0], i]; }));
     d.nomes = regs.map(function (r) { return norm(r[1] + ' ' + r[2]); });
     d.bairrosN = d.bairros.map(norm);
     d.logsN = d.logradouros.map(norm);
     d.munsN = d.municipios.map(function (m) { return norm(m[0]); });
     return d;
   }
+  /* ---------- cadastro online: estabelecimentos (matriz e filiais) que não estão na base VISAT ---------- */
+  function indiceEm(d, mapa, lista, listaN, v) {
+    var m = d.mapas[mapa];
+    if (!m.has(v)) { m.set(v, m.size); d[lista].push(v); if (listaN) d[listaN].push(norm(v)); }
+    return m.get(v);
+  }
+  function indiceCnae(d, sub) {
+    sub = String(sub || '');
+    if (!d.mapas.cnaes.has(sub)) {
+      d.mapas.cnaes.set(sub, d.mapas.cnaes.size);
+      d.cnaes.push(sub);
+      d.cnaeSinan.push(((d.mapas.corr[sub.padStart(7, '0')] || {}).codigos) || []);
+    }
+    return d.mapas.cnaes.get(sub);
+  }
+  function indiceMun(d, mun, uf) {
+    var k = norm(mun) + '|' + String(uf || '').toUpperCase();
+    if (!d.mapas.muns.has(k)) { d.mapas.muns.set(k, d.mapas.muns.size); d.municipios.push([norm(mun), String(uf || '').toUpperCase()]); d.munsN.push(norm(mun)); }
+    return d.mapas.muns.get(k);
+  }
+  function adicionarOnline(d, item) {
+    var n = digitos(item.cnpj);
+    if (n.length !== 14 || d.porCnpj.has(n)) return null;
+    var r = [n, norm(item.nome_fantasia || ''), norm(item.razao_social || item.nome_fantasia || ''), indiceCnae(d, ''), [], '',
+      indiceEm(d, 'bairros', 'bairros', 'bairrosN', ''), indiceEm(d, 'logs', 'logradouros', 'logsN', ''), '', '', 0, '',
+      indiceMun(d, item.municipio || '', item.uf || ''), 'online'];
+    if (r[1] === r[2]) r[1] = '';
+    d.registros.push(r);
+    d.nomes.push(norm(r[1] + ' ' + r[2]));
+    d.porCnpj.set(n, d.registros.length - 1);
+    return r;
+  }
+  var detalhes = {};
+  function detalharCnpj(n) {
+    if (!detalhes[n]) {
+      detalhes[n] = fetch('https://brasilapi.com.br/api/cnpj/v1/' + n, { credentials: 'omit', referrerPolicy: 'no-referrer' })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .catch(function () { delete detalhes[n]; return null; });
+    }
+    return detalhes[n];
+  }
+  var SIT_ONLINE = { ATIVA: 'A', SUSPENSA: 'S', INAPTA: 'I', BAIXADA: 'B', NULA: 'N' };
+  function aplicarDetalhe(d, r, x) {
+    if (!x) return;
+    r[1] = norm(x.nome_fantasia || '');
+    r[2] = norm(x.razao_social || r[2]);
+    if (r[1] === r[2]) r[1] = '';
+    r[3] = indiceCnae(d, x.cnae_fiscal);
+    r[4] = (x.cnaes_secundarios || []).filter(function (s) { return s && s.codigo; }).map(function (s) { return indiceCnae(d, s.codigo); });
+    r[5] = digitos(x.cep);
+    r[6] = indiceEm(d, 'bairros', 'bairros', 'bairrosN', norm(x.bairro || ''));
+    var log = norm([x.descricao_tipo_de_logradouro, x.logradouro].filter(Boolean).join(' '));
+    r[7] = indiceEm(d, 'logs', 'logradouros', 'logsN', log);
+    r[8] = x.numero || '';
+    r[9] = norm(x.complemento || '');
+    r[10] = x.identificador_matriz_filial === 2 ? 2 : 1;
+    r[11] = SIT_ONLINE[norm(x.descricao_situacao_cadastral)] || '';
+    r[12] = indiceMun(d, x.municipio || '', x.uf || '');
+    r[13] = 'online-ok';
+    d.nomes[d.porCnpj.get(r[0])] = norm(r[1] + ' ' + r[2]);
+  }
+
   var tabelaCnae = null;
   function descricaoCnae(cod) {
     if (!tabelaCnae) return '';
@@ -231,7 +296,7 @@
     box.setAttribute('aria-label', 'Localizar empresa');
     var topo = el('div', 'visat-loc-topo');
     var tit = el('strong', 'visat-loc-titulo', 'Localizar empresa');
-    var dica = el('span', 'visat-loc-dica', 'Preencha qualquer dado que tiver (CNPJ, nome, CNAE, município, CEP, bairro ou rua), em qualquer ordem: os campos se completam e reduzem as opções uns dos outros.');
+    var dica = el('span', 'visat-loc-dica', 'Preencha o que souber, em qualquer ordem (nome, município do local de trabalho, bairro, CNAE, CEP, rua ou CNPJ): os campos se completam e reduzem as opções uns dos outros. O CNPJ deve ser o da unidade onde a pessoa trabalha.');
     topo.append(tit, dica);
     var status = el('p', 'visat-loc-status');
     status.setAttribute('role', 'status');
@@ -244,7 +309,9 @@
     mais.type = 'button';
     mais.hidden = true;
     var fonte = el('p', 'visat-loc-fonte');
-    box.append(topo, filtrosEl, status, facetas, lista, mais, fonte);
+    var online = el('p', 'visat-loc-fonte');
+    online.setAttribute('aria-live', 'polite');
+    box.append(topo, filtrosEl, status, facetas, lista, mais, online, fonte);
     painel.append(box);
     caixaCnpj.before(painel);
 
@@ -303,7 +370,53 @@
           res.length.toLocaleString('pt-BR') + ' empresas compatíveis. Acrescente outro dado ou escolha uma opção.';
         if (res.length > 1) montarFacetas(d, res, f);
         desenhar(d, res, f);
-      });
+      }).then(function () { buscarOnline(lerFiltros(c)); });
+    }
+
+    // Nome digitado: busca também no cadastro online (matriz e filiais), no município do local de trabalho quando informado,
+    // e detalha os primeiros CNPJs (bairro, endereço, CNAE, situação) para que os demais filtros valham para eles.
+    var ultimaOnline = '', esperaOnline = null, rodada = 0;
+    function buscarOnline(f) {
+      if (!base || !f.nome) return;
+      var termo = (c.nome.value || '').trim();
+      var munTxt = String(c.mun && c.mun.value || '').split('/')[0].trim();
+      var uf = String(c.uf && c.uf.value || '').trim();
+      var chave = norm(termo) + '|' + norm(munTxt) + '|' + uf;
+      if (chave === ultimaOnline) return;
+      clearTimeout(esperaOnline);
+      esperaOnline = setTimeout(function () {
+        ultimaOnline = chave;
+        var minha = ++rodada;
+        var cidade = munTxt ? munTxt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
+        var url = 'https://fichario.app/api/v1/busca?q=' + encodeURIComponent(termo) +
+          (uf ? '&uf=' + encodeURIComponent(uf.toUpperCase()) : '') + (cidade ? '&cidade=' + encodeURIComponent(cidade) : '');
+        online.textContent = 'Buscando também no cadastro online…';
+        fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' })
+          .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+          .then(function (dados) {
+            if (minha !== rodada) return;
+            var novos = [];
+            (Array.isArray(dados.resultados) ? dados.resultados : []).forEach(function (item) {
+              var n = digitos(item.cnpj);
+              var r = adicionarOnline(base, item);
+              if (r) novos.push(r);
+              else if (base.porCnpj.has(n)) { var ex = base.registros[base.porCnpj.get(n)]; if (ex[13] === 'online') novos.push(ex); }
+            });
+            online.textContent = novos.length ? 'Cadastro online: ' + novos.length + ' estabelecimento(s) acrescentado(s); conferindo endereço e atividade…' :
+              'Cadastro online consultado.';
+            executar();
+            var fila = novos.slice(0, 10);
+            (function proximo() {
+              if (minha !== rodada || !fila.length) {
+                if (minha === rodada) { online.textContent = novos.length ? 'Cadastro online incluído (selo "Cadastro online").' : ''; executar(); }
+                return;
+              }
+              var r = fila.shift();
+              detalharCnpj(r[0]).then(function (x) { aplicarDetalhe(base, r, x); if (minha === rodada) executar(); proximo(); });
+            })();
+          })
+          .catch(function () { if (minha === rodada) { ultimaOnline = ''; online.textContent = 'Cadastro online indisponível agora; a base VISAT continua valendo.'; } });
+      }, 500);
     }
 
     function semResultado(d, f, chaves) {
@@ -350,6 +463,14 @@
           usar: function (k) { var ds = descricaoCnae(k); escrever(c.cnae, ds ? k + ' – ' + ds : k); }
         });
       }
+      if (!f.mun && c.mun) {
+        var mu = {};
+        res.forEach(function (x) { var m = d.municipios[d.registros[x.i][12]]; if (m && m[0]) { var k = m[0] + '|' + m[1]; mu[k] = (mu[k] || 0) + 1; } });
+        grupo('Município do local de trabalho:', mu, {
+          rotulo: function (k) { var p = k.split('|'); return titulo(p[0]) + '/' + p[1]; },
+          usar: function (k) { var p = k.split('|'); if (c.ibge) escrever(c.ibge, ''); if (c.uf) escrever(c.uf, p[1]); escrever(c.mun, titulo(p[0])); }
+        });
+      }
       if (!f.bairro && c.bairro) {
         var ba = {};
         res.forEach(function (x) { var b = d.bairros[d.registros[x.i][6]]; if (b) ba[b] = (ba[b] || 0) + 1; });
@@ -360,9 +481,10 @@
     function selos(d, r, x) {
       var s = [];
       if (r[11]) s.push([d.situacoes[r[11]] || r[11], r[11] === 'A' ? 'ok' : 'alerta']);
-      s.push([r[10] === 1 ? 'Matriz' : 'Filial', '']);
+      if (r[10]) s.push([r[10] === 1 ? 'Matriz' : 'Filial', '']);
       if (x.sec) s.push(['CNAE secundário', 'alerta']);
       if (x.ativ) s.push(['Pela atividade', '']);
+      if (r[13]) s.push(['Cadastro online', '']);
       if (!cnpjValido(r[0])) s.push(['CNPJ a conferir', 'alerta']);
       return s;
     }
@@ -376,9 +498,11 @@
         var nome = el('span', 'visat-loc-nome', titulo(r[1] || r[2]));
         var linha2 = el('span', 'visat-loc-linha', [r[1] && r[2] ? titulo(r[2]) : '', fmtCnpj(r[0])].filter(Boolean).join(' · '));
         var subs = d.cnaeSinan[r[3]] || [];
-        var cnaeTxt = subs.length === 1 ? subs[0] + ' – ' + titulo(descricaoCnae(subs[0])) : 'CNAE ' + d.cnaes[r[3]];
-        var end = [titulo(d.logradouros[r[7]]), r[8], r[9] && titulo(r[9]), titulo(d.bairros[r[6]]), fmtCep(r[5])].filter(Boolean).join(', ');
-        var linha3 = el('span', 'visat-loc-linha', cnaeTxt + ' · ' + end);
+        var cnaeTxt = subs.length === 1 ? subs[0] + ' – ' + titulo(descricaoCnae(subs[0])) : d.cnaes[r[3]] ? 'CNAE ' + d.cnaes[r[3]] : '';
+        var m = d.municipios[r[12]] || [];
+        var end = [titulo(d.logradouros[r[7]]), r[8], r[9] && titulo(r[9]), titulo(d.bairros[r[6]]),
+          m[0] ? titulo(m[0]) + '/' + m[1] : '', fmtCep(r[5])].filter(Boolean).join(', ');
+        var linha3 = el('span', 'visat-loc-linha', [cnaeTxt, end || (r[13] === 'online' ? 'conferindo endereço…' : '')].filter(Boolean).join(' · '));
         var sel = el('span', 'visat-loc-selos');
         selos(d, r, x).forEach(function (s) { sel.append(el('span', 'visat-loc-selo ' + s[1], s[0])); });
         b.append(nome, sel, linha2, linha3);
@@ -404,7 +528,7 @@
         escrever(c.num, r[8]);
         if (c.comp) escrever(c.comp, titulo(r[9]));
         var m = d.municipios[r[12]] || [];
-        if (m[0]) {
+        if (m[0] && !(c.mun && c.mun.value.trim())) {
           if (c.ibge) escrever(c.ibge, '');
           if (c.uf) escrever(c.uf, m[1]);
           if (c.mun) escrever(c.mun, titulo(m[0]));
@@ -427,6 +551,10 @@
       if (!r) { status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
       var avisos = [];
       if (r[11] && r[11] !== 'A') avisos.push('situação cadastral ' + (d.situacoes[r[11]] || r[11]).toLowerCase() + ' na Receita');
+      var mr = d.municipios[r[12]] || [];
+      var munInf = norm(String(c.mun && c.mun.value || '').split('/')[0]);
+      if (mr[0] && munInf && munInf.indexOf(norm(mr[0])) !== 0)
+        avisos.push('este CNPJ é de ' + titulo(mr[0]) + '/' + mr[1] + ', diferente do município do local de trabalho; escolha a unidade (filial) onde a pessoa trabalha');
       if (r[10] === 2) avisos.push('filial: confirme se é o estabelecimento onde a pessoa trabalha');
       if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('o CNAE tem mais de uma correspondência no Sinan: escolha a atividade');
       status.textContent = 'Selecionada: ' + titulo(r[1] || r[2]) + ' (' + fmtCnpj(r[0]) + '). ' +
