@@ -571,18 +571,29 @@
       painel.appendChild(criarLinha('p', `Direcionamento para ${rotuloAgravo(agravo)}`, 'resultado-painel-titulo'));
       const instrucao = document.createElement('p');
       instrucao.className = 'resultado-painel-texto';
-      instrucao.append(document.createTextNode('Para registrar a notificação, preencha o formulário abaixo. Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail '));
+      instrucao.append(document.createTextNode('Para registrar a notificação, abra e preencha o formulário. Ao concluir, baixe o arquivo em PDF e encaminhe-o para o e-mail '));
       const email = document.createElement('a');
       email.href = 'mailto:saudetrab.sms.pmf@floripa.sc.gov.br';
       email.textContent = 'saudetrab.sms.pmf@floripa.sc.gov.br';
       instrucao.append(email, document.createTextNode('.'));
       painel.appendChild(instrucao);
       if (formularioInline) {
-        const botaoFormulario = document.createElement('button');
-        botaoFormulario.type = 'button';
+        const emQuadro = window.self !== window.top;
+        const botaoFormulario = document.createElement(emQuadro ? 'a' : 'button');
         botaoFormulario.className = 'botao-celk';
-        botaoFormulario.dataset.formAcidente = 'abrir';
         botaoFormulario.textContent = 'Abrir formulário';
+        if (emQuadro) {
+          const destino = new URL(window.location.href);
+          destino.searchParams.set('ficha', agravo.id);
+          destino.hash = '';
+          botaoFormulario.href = destino.href;
+          botaoFormulario.target = '_blank';
+          botaoFormulario.rel = 'noopener noreferrer';
+          botaoFormulario.setAttribute('aria-label', 'Abrir formulário em nova aba');
+        } else {
+          botaoFormulario.type = 'button';
+          botaoFormulario.dataset.formAcidente = 'abrir';
+        }
         painel.appendChild(botaoFormulario);
         if (agravo.id === '1-a-acidente-de-trabalho') {
           painel.appendChild(criarLinha('p', 'Se você estiver em Hospital com Núcleo de Vigilância Hospitalar, comunique-o imediatamente:\nHospital Florianópolis – (48) 3380-8700\nHospital Governador Celso Ramos – (48) 3664-3600\nHospital Infantil Joana de Gusmão – (48) 3664-3200\nHospital Nereu Ramos – (48) 3665-9401\nHospital Universitário – (48) 3721-2067', 'resultado-painel-texto'));
