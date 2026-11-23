@@ -117,15 +117,6 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  function sugerirUnidades(lista, termo) {
-    return lista.filter(function (item) {
-      return norm(item.v).startsWith(termo) || String(item.c).startsWith(termo);
-    }).sort(function (a, b) {
-      return a.v.localeCompare(b.v, 'pt-BR', { sensitivity: 'base' }) ||
-        String(a.c).localeCompare(String(b.c));
-    });
-  }
-
   function sugerirEstabelecimentos(lista, termo) {
     var termos = termo.split(' ');
     return lista.map(function (item) {
@@ -166,10 +157,9 @@
   }
 
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
-  function anexarLista(input, tipo, aoEscolher, codigoDerivado, buscarUnidades) {
+  function anexarLista(input, tipo, aoEscolher, codigoDerivado) {
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
     input.dataset.visatLista = tipo;
-    buscarUnidades = buscarUnidades || sugerirUnidades;
     var dl = document.createElement('datalist');
     dl.id = 'visat-lista-' + tipo + '-' + Math.random().toString(36).slice(2, 8);
     input.insertAdjacentElement('afterend', dl);
@@ -198,7 +188,7 @@
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         if (termo.length < 3 && !(compat && compat.total)) return;
         var palavras = termo.split(' ').filter(Boolean);
-        var itens = tipo === 'cnes' ? buscarUnidades(lista, termo) :
+        var itens = tipo === 'cnes' ? sugerirEstabelecimentos(lista, termo) :
           tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
           var alvo = norm(item.c + ' ' + item.d);
           return palavras.every(function (p) { return alvo.includes(p); });
@@ -299,7 +289,7 @@
           if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
         }
         if (tipo === 'mun') achados = sugerirMunicipios(lista, termo, ufVinculada(input), 30);
-        if (tipo === 'cnes') achados = buscarUnidades(lista, termo);
+        if (tipo === 'cnes') achados = sugerirEstabelecimentos(lista, termo);
         // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
         function nota(x) {
           var v = norm(x.v), d = norm(x.d);
@@ -515,7 +505,7 @@
     }
     var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
       vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
-    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento, null, sugerirEstabelecimentos);
+    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento);
     anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento);
 
     var investigadora = campo(raiz, ['munInvestigadora']);

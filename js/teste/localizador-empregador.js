@@ -222,12 +222,6 @@
     if (mun.length >= 3) f.mun = mun;
     return f;
   }
-  function resumoFiltro(k, c) {
-    var v = (c[k] && c[k].value || '').trim();
-    if (k === 'cnae' && /^\s*\d/.test(v)) v = v.split(/\s+[–-]\s+/)[0];
-    return ROTULO[k] + ': ' + (v.length > 28 ? v.slice(0, 27) + '…' : v);
-  }
-
   function filtrar(d, f, ignorar, livre) {
     var regs = d.registros, out = [];
     var usa = function (k) { return f[k] && k !== ignorar; };
@@ -288,35 +282,15 @@
     if (!c.cnpj || !c.mun || c.cnpj.dataset.visatLocalizador) return;
     c.cnpj.dataset.visatLocalizador = '1';
 
-    var caixaCnpj = c.cnpj.closest('section.visat-r > *') || c.cnpj.parentElement;
-    var painel = el('div', 'visat-loc-host');
-    painel.style.setProperty('grid-column', '1 / -1', 'important');
-    var box = el('div', 'visat-loc');
-    box.setAttribute('role', 'region');
-    box.setAttribute('aria-label', 'Localizar empresa');
-    var topo = el('div', 'visat-loc-topo');
-    var tit = el('strong', 'visat-loc-titulo', 'Localizar empresa');
-    topo.append(tit);
-    var status = el('p', 'visat-loc-status');
-    status.setAttribute('role', 'status');
-    status.setAttribute('aria-live', 'polite');
-    var filtrosEl = el('div', 'visat-loc-filtros');
-    var facetas = el('div', 'visat-loc-facetas');
     var lista = el('ul', 'visat-loc-lista');
     lista.setAttribute('aria-label', 'Empresas encontradas');
     var mais = el('button', 'visat-loc-mais', 'Mostrar mais');
     mais.type = 'button';
     mais.hidden = true;
-    var fonte = el('p', 'visat-loc-fonte');
-    var online = el('p', 'visat-loc-fonte');
-    online.setAttribute('aria-live', 'polite');
     var sugestoes = el('div', 'visat-lista-apoio visat-loc-sugestoes');
     sugestoes.dataset.visatSemJanela = '1';
     sugestoes.hidden = true;
     sugestoes.append(lista, mais);
-    box.append(topo, filtrosEl, status, facetas, online, fonte);
-    painel.append(box);
-    caixaCnpj.before(painel);
     var avisoMunicipio = el('small', 'visat-loc-aviso-municipio');
     avisoMunicipio.setAttribute('role', 'status');
     c.cnpj.after(avisoMunicipio);
@@ -340,13 +314,11 @@
       var carga = window.visatCarregarCnae ? window.visatCarregarCnae().then(function (t) { tabelaCnae = t; }).catch(function () {}) : Promise.resolve();
       return Promise.all([carregarBase(), carga]).then(function (res) {
         base = res[0];
-        fonte.textContent = base ? 'Empresas já cadastradas pela VISAT (' + base.registros.length.toLocaleString('pt-BR') +
-          '). Sem resultado aqui, valem a lista online do nome e a consulta automática do CNPJ.' : '';
         return base;
       });
     }
 
-    function limparLista() { sugestoes.hidden = true; lista.replaceChildren(); facetas.replaceChildren(); filtrosEl.replaceChildren(); mais.hidden = true; }
+    function limparLista() { sugestoes.hidden = true; lista.replaceChildren(); mais.hidden = true; }
 
     function marcarAntigaLista(temLocal) {
       // Com resultado na base local, a lista antiga do nome fica oculta; sem resultado, ela mostra o cadastro online.
@@ -368,32 +340,19 @@
       if (escolhido && digitos(c.cnpj.value) === escolhido) { mostrarEscolhido(); return; }
       escolhido = null;
       avisoMunicipio.textContent = '';
-      if (!chaves.length) { limparLista(); status.textContent = ''; marcarAntigaLista(false); box.classList.remove('ativo'); return; }
-      box.classList.add('ativo');
-      garantirBase().then(function (d) {
-        if (consulta !== revisao || !painel.isConnected) return;
+      if (!chaves.length) {
         limparLista();
-        chaves.forEach(function (k) {
-          var chip = el('button', 'visat-loc-chip', resumoFiltro(k, c));
-          chip.type = 'button';
-          chip.title = 'Remover este filtro';
-          chip.setAttribute('aria-label', 'Remover filtro ' + ROTULO[k]);
-          chip.addEventListener('click', function () { escrever(c[k], ''); c[k].focus(); });
-          filtrosEl.append(chip);
-        });
-        if (!d) {
-          marcarAntigaLista(false);
-          status.textContent = 'Lista de empresas indisponível agora. Use o CNPJ (consulta automática) ou o nome (cadastro online).';
-          return;
-        }
-        var res = filtrar(d, f);
+        marcarAntigaLista(false);
+        return;
+      }
+      garantirBase().then(function (d) {
+        if (consulta !== revisao || !c.cnpj.isConnected) return;
+        limparLista();
+        var res = d ? filtrar(d, f) : [];
         marcarAntigaLista(res.length > 0);
-        if (!res.length) { semResultado(d, f, chaves); return; }
-        status.textContent = res.length === 1 ? '1 empresa encontrada. Confira e selecione.' :
-          res.length.toLocaleString('pt-BR') + ' empresas compatíveis. Acrescente outro dado ou escolha uma opção.';
-        if (res.length > 1) montarFacetas(d, res, f);
-        desenhar(d, res, f);
-      }).then(function () { if (consulta === revisao && painel.isConnected) buscarOnline(lerFiltros(c)); });
+        if (res.length) desenhar(d, res);
+        buscarOnline(f);
+      });
     }
 
     // Nome digitado: busca também no cadastro online (matriz e filiais), no município do local de trabalho quando informado,
@@ -413,7 +372,6 @@
         var cidade = munTxt ? munTxt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
         var url = 'https://fichario.app/api/v1/busca?q=' + encodeURIComponent(termo) +
           (uf ? '&uf=' + encodeURIComponent(uf.toUpperCase()) : '') + (cidade ? '&cidade=' + encodeURIComponent(cidade) : '');
-        online.textContent = 'Buscando também no cadastro online…';
         fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' })
           .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
           .then(function (dados) {
@@ -425,80 +383,19 @@
               if (r) novos.push(r);
               else if (base.porCnpj.has(n)) { var ex = base.registros[base.porCnpj.get(n)]; if (ex[13] === 'online') novos.push(ex); }
             });
-            online.textContent = novos.length ? 'Cadastro online: ' + novos.length + ' estabelecimento(s) acrescentado(s); conferindo endereço e atividade…' :
-              'Cadastro online consultado.';
             executar();
             var fila = novos.slice(0, 10);
             (function proximo() {
               if (minha !== rodada || !fila.length) {
-                if (minha === rodada) { online.textContent = novos.length ? 'Cadastro online incluído (selo "Cadastro online").' : ''; executar(); }
+                if (minha === rodada) executar();
                 return;
               }
               var r = fila.shift();
               detalharCnpj(r[0]).then(function (x) { aplicarDetalhe(base, r, x); if (minha === rodada) executar(); proximo(); });
             })();
           })
-          .catch(function () { if (minha === rodada) { ultimaOnline = ''; online.textContent = 'Cadastro online indisponível agora; a base VISAT continua valendo.'; } });
+          .catch(function () { if (minha === rodada) ultimaOnline = ''; });
       }, 500);
-    }
-
-    function semResultado(d, f, chaves) {
-      var txt = 'Nenhuma empresa cadastrada com todos esses dados.' +
-        (f.nome ? ' Sugestões do cadastro online aparecem abaixo do nome.' : ' Com o CNPJ completo, a consulta online é automática.');
-      if (chaves.length > 1) {
-        var alternativas = chaves.map(function (k) { return [k, filtrar(d, f, k).length]; }).filter(function (x) { return x[1] > 0; });
-        if (alternativas.length) {
-          txt += ' Algum dado pode estar diferente no cadastro; veja quantas aparecem sem ele:';
-          alternativas.forEach(function (x) {
-            var b = el('button', 'visat-loc-faceta', 'Sem ' + ROTULO[x[0]].toLowerCase() + ': ' + x[1].toLocaleString('pt-BR'));
-            b.type = 'button';
-            b.addEventListener('click', function () { escrever(c[x[0]], ''); });
-            facetas.append(b);
-          });
-        }
-      }
-      status.textContent = txt;
-    }
-
-    function montarFacetas(d, res, f) {
-      function grupo(rotulo, contagem, aplicar) {
-        var itens = Object.keys(contagem).map(function (k) { return [k, contagem[k]]; })
-          .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 6);
-        if (itens.length < 2) return;
-        var g = el('div', 'visat-loc-grupo');
-        g.append(el('span', 'visat-loc-grupo-rotulo', rotulo));
-        itens.forEach(function (it) {
-          var b = el('button', 'visat-loc-faceta');
-          b.type = 'button';
-          var t = aplicar.rotulo(it[0]);
-          b.textContent = (t.length > 46 ? t.slice(0, 45) + '…' : t) + ' (' + it[1].toLocaleString('pt-BR') + ')';
-          b.title = t;
-          b.addEventListener('click', function () { aplicar.usar(it[0]); });
-          g.append(b);
-        });
-        facetas.append(g);
-      }
-      if (!f.cnae || f.cnae.indexOf('T:') === 0) {
-        var cn = {};
-        res.forEach(function (x) { (d.cnaeSinan[d.registros[x.i][3]] || []).forEach(function (s) { cn[s] = (cn[s] || 0) + 1; }); });
-        grupo('Atividade (CNAE):', cn, {
-          rotulo: function (k) { var ds = descricaoCnae(k); return k + (ds ? ' – ' + titulo(ds) : ''); },
-          usar: function (k) { var ds = descricaoCnae(k); escrever(c.cnae, ds ? k + ' – ' + ds : k); }
-        });
-      }
-      if (!f.mun && c.mun) {
-        var mu = {};
-        res.forEach(function (x) { var m = d.municipios[d.registros[x.i][12]]; if (m && m[0]) { var k = m[0] + '|' + m[1]; mu[k] = (mu[k] || 0) + 1; } });
-        grupo('Município do local de trabalho:', mu, {
-          rotulo: function (k) { var p = k.split('|'); return titulo(p[0]) + '/' + p[1]; },
-          usar: function (k) { var p = k.split('|'); if (c.ibge) escrever(c.ibge, ''); if (c.uf) escrever(c.uf, p[1]); escrever(c.mun, titulo(p[0])); }
-        });
-      }
-      if (!f.bairro && c.bairro) {
-        var ba = {};
-        res.forEach(function (x) { var b = d.bairros[d.registros[x.i][6]]; if (b) ba[b] = (ba[b] || 0) + 1; });
-        grupo('Bairro:', ba, { rotulo: function (k) { return titulo(k); }, usar: function (k) { escrever(c.bairro, titulo(k)); } });
-      }
     }
 
     function selos(d, r, x) {
@@ -575,28 +472,17 @@
       fecharSugestoes();
       limparLista();
       marcarAntigaLista(true);
-      if (!r) { avisoMunicipio.textContent = ''; status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
+      if (!r) { avisoMunicipio.textContent = ''; return; }
       var avisos = [];
-      if (r[11] && r[11] !== 'A') avisos.push('situação cadastral ' + (d.situacoes[r[11]] || r[11]).toLowerCase() + ' na Receita');
       var mr = d.municipios[r[12]] || [];
       var munInf = norm(String(c.mun && c.mun.value || '').split('/')[0]);
       var ufInf = norm(c.uf && c.uf.value);
-      var diverge = mr[0] && ((munInf && munInf !== norm(mr[0])) || (ufInf && ufInf !== norm(mr[1])));
-      avisoMunicipio.textContent = diverge
-        ? 'CNPJ de ' + titulo(mr[0]) + '/' + mr[1] + '. Confira o município do local de trabalho.'
-        : '';
-      if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('o CNAE tem mais de uma correspondência no Sinan: escolha a atividade');
-      status.textContent = 'Selecionada: ' + titulo(r[1] || r[2]) + ' (' + fmtCnpj(r[0]) + '). ' +
-        (avisos.length ? 'Atenção: ' + avisos.join('; ') + '. ' : '') + 'A consulta do CNPJ completa telefone e confere os dados.';
-      var trocar = el('button', 'visat-loc-faceta', 'Escolher outra empresa');
-      trocar.type = 'button';
-      trocar.addEventListener('click', function () {
-        escolhido = null;
-        ['cnpj', 'nome', 'cep', 'bairro', 'end', 'num', 'comp'].forEach(function (k) { if (c[k]) escrever(c[k], ''); });
-        c.cnpj.dispatchEvent(new Event('visat:trocar-empresa'));
-        c.nome.focus();
-      });
-      facetas.append(trocar);
+      if (mr[0] && ((munInf && munInf !== norm(mr[0])) || (ufInf && ufInf !== norm(mr[1])))) {
+        avisos.push('CNPJ de ' + titulo(mr[0]) + '/' + mr[1] + '. Confira o município do local de trabalho.');
+      }
+      if (r[11] && r[11] !== 'A') avisos.push('Confira a situação cadastral do CNPJ.');
+      if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('Escolha o CNAE da atividade.');
+      avisoMunicipio.textContent = avisos.join(' ');
     }
 
     // Lista do CNAE restrita pelos demais dados (lógica conjunta de preenchimento).
@@ -687,10 +573,8 @@
       });
     });
     // Carrega a base ao primeiro foco no bloco, antes da digitação.
-    painel.parentElement.addEventListener('focusin', function primeiro() {
-      painel.parentElement.removeEventListener('focusin', primeiro);
-      garantirBase();
-    });
+    c.cnpj.addEventListener('focus', garantirBase, { once: true });
+    if (c.nome) c.nome.addEventListener('focus', garantirBase, { once: true });
     ['nome', 'cnae', 'cep', 'bairro', 'end'].forEach(function (k) { if (c[k]) c[k].addEventListener('input', function () { limite = MAX_LISTA; }); });
   }
 
