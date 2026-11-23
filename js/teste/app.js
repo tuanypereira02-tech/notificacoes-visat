@@ -781,7 +781,7 @@
     const rodape = document.querySelector('footer.rodape');
     if (!lista || !rodape || !window.ResizeObserver) return;
     const BASE = parseFloat(getComputedStyle(lista).maxHeight) || 340;
-    const emQuadro = document.documentElement.classList.contains('visat-em-quadro');
+    if (!document.documentElement.classList.contains('visat-em-quadro')) return;
     const cartao = document.querySelector('#principal > section[aria-labelledby="h-resultado"]');
     let ajustando = false;
     function ajustar() {
@@ -795,7 +795,7 @@
         let folga = Math.floor(window.innerHeight - fimRodape());
         // Conteúdo maior que o quadro: a lista de agravos encolhe (até um mínimo) para nada ficar cortado
         // e não haver rolagem da página dentro do quadro; só a página do Sites rola.
-        if (folga < 0 && emQuadro) {
+        if (folga < 0) {
           const MINIMO = 200;
           const atual = Math.min(BASE, lista.scrollHeight + 2);
           lista.style.maxHeight = Math.max(MINIMO, atual + folga) + 'px';

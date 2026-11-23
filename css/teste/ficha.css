@@ -1584,3 +1584,14 @@ html.visat-em-quadro body.modo-formulario-acidente #principal.visat-fim-congelad
 }
 .acidente-inline [data-chips="tipoAplicativo"] .chip { white-space: normal; min-height: 44px; }
 .acidente-inline .visat-cid-info .visat-cid-ldrt { color: #0b315d; font-size: 12px; font-weight: 500; margin: 2px 0 0; }
+
+/* Na página hospedada, consulta, ficha e listas acompanham a rolagem do documento. */
+html:not(.visat-em-quadro) :is(.lista-agravos, .visat-lista-apoio, .empresa-resultados, .visat-cid-lista, .visat-ruas-resultados) {
+  max-height: none;
+  overflow: visible;
+}
+html:not(.visat-em-quadro) body.modo-formulario-acidente :is(#principal, #resultado, .form-app, .step-area) {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
