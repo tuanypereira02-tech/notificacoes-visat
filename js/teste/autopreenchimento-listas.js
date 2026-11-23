@@ -397,14 +397,6 @@
     }[estado];
   }
 
-  function atualizarDicaCnpj(raiz) {
-    raiz.querySelectorAll('.field-help, .hint, .ajuda').forEach(function (el) {
-      if (/Preencha o documento e os dados da empresa manualmente/i.test(el.textContent)) {
-        el.textContent = 'O CNPJ preenche os dados da empresa.';
-      }
-    });
-  }
-
   window.visatConferirTabelas = async function (raiz) {
     var avisos = [];
     var localizacoes = [
@@ -474,8 +466,6 @@
   /* ---------- configuração por formulário ---------- */
 
   function configurar(raiz) {
-    atualizarDicaCnpj(raiz);
-
     var nomeUnidade = campo(raiz, ['unidNotif', 'unidade', 'unidadeNotificadora']);
     var cnes = campo(raiz, ['codUnidNotif']);
     var municipioNotif = campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio']);

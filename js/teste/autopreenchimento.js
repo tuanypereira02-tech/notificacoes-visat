@@ -802,9 +802,6 @@
     if (!nome || !cnpj || nome.dataset.visatBuscaEmpresa) return;
     nome.dataset.visatBuscaEmpresa = '1';
     // Ordem do SINAN: CNPJ (35) antes do nome da empresa (36). A busca funciona pelos dois campos.
-    var ajuda = document.createElement('p');
-    ajuda.className = 'field-help';
-    ajuda.textContent = 'Digite o nome e escolha na lista.';
     var retorno = document.createElement('p');
     retorno.className = 'field-help';
     retorno.setAttribute('role', 'status');
@@ -812,7 +809,7 @@
     resultados.className = 'empresa-resultados';
     resultados.setAttribute('aria-label', 'Empresas encontradas');
     resultados.hidden = true;
-    nome.after(ajuda, retorno, resultados);
+    nome.after(retorno, resultados);
     var enderecoEmpresa = {
       ufEmp: campo(raiz, ['ufEmp']), munEmp: campo(raiz, ['munEmp']), endEmp: campo(raiz, ['endEmp', 'endereco']),
       numEmp: campo(raiz, ['numEmp', 'numero']), bairroEmp: campo(raiz, ['bairroEmp', 'bairro']),

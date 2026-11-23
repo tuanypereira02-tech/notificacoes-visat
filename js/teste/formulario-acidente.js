@@ -59,7 +59,6 @@ function aplicarAjustesVisat(root, options) {
           <button type="button" class="chip" data-value="Entrega de comida ou produtos">Entrega de comida ou produtos</button>
           <button type="button" class="chip" data-value="Serviços gerais ou profissionais">Serviços gerais ou profissionais</button>
         </div>
-        <p class="field-help">Tipos usados pelo IBGE. Pode marcar mais de um.</p>
       </div>`);
       const qual = novoBloco(`<div data-show-when="plataformaDigital=Sim" data-visat-peso="2" hidden data-visat-opcional>
         <label class="field-label" for="visat-qualAplicativo">Qual aplicativo?</label>
@@ -76,7 +75,6 @@ function aplicarAjustesVisat(root, options) {
       novoBloco(`<div data-show-in="${servidor}" hidden data-visat-opcional>
         <label class="field-label" for="visat-localAtuacao">Local de atuação (unidade, setor ou órgão)</label>
         <input class="input input-lg" id="visat-localAtuacao" type="text" data-key="localAtuacao" placeholder="Ex.: CS Tapera – sala de vacina">
-        <p class="field-help">CNPJ e endereço da empresa são os do órgão empregador.</p>
       </div>`),
       novoBloco(`<div data-show-in="${servidor}" hidden data-visat-opcional>
         <label class="field-label" for="visat-cepAtuacao">CEP do local de atuação</label>
@@ -306,19 +304,13 @@ function montarEmpregador(area) {
   const opcoes = ['Sim', 'Não', 'Não se aplica', 'Ignorado'];
 
   // Três blocos: trabalho da pessoa, empresa ou empregador e endereço da empresa.
-  function bloco(titulo, ajuda) {
+  function bloco(titulo) {
     const secao = document.createElement('section');
     secao.className = 'visat-sequencia';
     const cabecalho = document.createElement('h3');
     cabecalho.className = 'visat-sequencia-titulo';
     cabecalho.textContent = titulo;
     secao.append(cabecalho);
-    if (ajuda) {
-      const texto = document.createElement('p');
-      texto.className = 'field-help';
-      texto.textContent = ajuda;
-      secao.append(texto);
-    }
     const campos = document.createElement('div');
     campos.className = 'field-group';
     secao.append(campos);
@@ -353,21 +345,12 @@ function montarEmpregador(area) {
   // Ficha oficial do Sinan, "Dados da empresa contratante": 34 CNPJ/CPF, 35 nome, 36 CNAE, 37 UF, 38 município (IBGE),
   // 40 bairro, 41 endereço, 42 número, 44 telefone, 45 terceirizada. O endereço é o da empresa (decisão VISAT 17/11/2026),
   // preenchido pelo CNPJ; não há valor inicial (Florianópolis não vem marcado).
-  const empregador = bloco('Empresa ou empregador',
-    'Busque pelo CNPJ/CPF ou pelo nome. O endereço da empresa vem do CNPJ e pode ser corrigido.');
+  const empregador = bloco('Empresa ou empregador');
   [
     [['empresa', 'empresaNome', 'razao'], 'Empresa ou empregador (nome)'],
     [['cnpj'], 'CNPJ ou CPF do empregador'],
     [['cnae'], 'Atividade econômica (CNAE)']
   ].forEach(item => incluir(empregador, item));
-  const caixaCnpj = empregador.querySelector('[data-key="cnpj"]')?.parentElement;
-  if (caixaCnpj && !caixaCnpj.querySelector('[data-visat-ajuda-cnpj]')) {
-    const ajuda = document.createElement('p');
-    ajuda.className = 'field-help';
-    ajuda.dataset.visatAjudaCnpj = '';
-    ajuda.textContent = 'Informe o CNPJ do local onde a pessoa trabalha (matriz ou filial), não o da sede.';
-    caixaCnpj.append(ajuda);
-  }
   // Apoio à conferência (não são campos do Sinan): vêm do CNPJ consultado.
   const auxiliar = (chave, rotulo) => {
     const caixa = criarCampo(chave, rotulo);
@@ -384,10 +367,6 @@ function montarEmpregador(area) {
   secundario.querySelector('select').replaceChildren(new Option('Usar só se a atividade da pessoa for outra', ''));
   secundario.dataset.visatOpcional = '';
   secundario.dataset.visatSomenteTela = ''; // ferramenta de escolha: o CNAE escolhido sai no campo CNAE
-  const ajudaSecundario = document.createElement('p');
-  ajudaSecundario.className = 'field-help';
-  ajudaSecundario.textContent = 'Lista vinda do CNPJ. A escolha substitui o CNAE acima.';
-  secundario.append(ajudaSecundario);
   empregador.append(secundario);
   const uf = incluir(empregador, [['ufEmp', 'uf'], 'UF da empresa']);
   const municipio = incluir(empregador, [['munEmp', 'municipio'], 'Município da empresa']);
@@ -410,7 +389,7 @@ function montarEmpregador(area) {
     caixa.hidden = true;
   }
 
-  const endereco = bloco('Endereço da empresa', 'Endereço cadastral da empresa ou do empregador.');
+  const endereco = bloco('Endereço da empresa');
   const cep = area.querySelector('[data-key="cepEmp"]')?.parentElement || criarCampo('cepEmp', 'CEP da empresa');
   cep.dataset.visatSomenteBusca = '';
   endereco.append(cep);
@@ -763,6 +742,16 @@ container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
 root.querySelectorAll('[data-key="refEmp"], [data-key="refRes"]').forEach(campo => campo.parentElement.remove());
 const TOTAL = montarBlocoSinan(root, options);
+// Os modelos trazem textos fixos junto aos campos. Preserve os atalhos de consulta.
+root.querySelectorAll('p.field-help, p.hint-line').forEach(aviso => {
+  if (aviso.querySelector('a')) return;
+  if (aviso.id) root.querySelectorAll('[aria-describedby]').forEach(campo => {
+    const ids = campo.getAttribute('aria-describedby').split(/\s+/).filter(id => id !== aviso.id);
+    if (ids.length) campo.setAttribute('aria-describedby', ids.join(' '));
+    else campo.removeAttribute('aria-describedby');
+  });
+  aviso.remove();
+});
 const config = blocosSinan[options.templateId];
 aplicarAjustesVisat(root, options);
 const today = new Intl.DateTimeFormat('sv-SE', {
