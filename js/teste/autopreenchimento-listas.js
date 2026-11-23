@@ -533,10 +533,6 @@
     var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
       vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
     if (unidadeAtendimento && !unidadeAtendimento.dataset.visatLista) {
-      var orientacaoAtendimento = document.createElement('p');
-      orientacaoAtendimento.className = 'field-help';
-      orientacaoAtendimento.textContent = 'Busque pelo nome ou CNES na Grande Florianópolis e nos estabelecimentos estaduais de SC. Se a unidade não estiver na lista, preencha os dois campos manualmente.';
-      unidadeAtendimento.parentElement.append(orientacaoAtendimento);
       function limparEstabelecimentoAtendimento() {
         [unidadeAtendimento, cnesAtendimento].filter(Boolean).forEach(function (el) {
           if (!el.value) return;
