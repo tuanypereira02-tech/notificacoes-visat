@@ -38,6 +38,32 @@
         });
       });
     },
+    cnesAtendimento: function () {
+      return Promise.all([
+        fetch('data/cnes-atendimento.json').then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
+        }),
+        carregar('mun')
+      ]).then(function (fontes) {
+        var municipios = new Map(fontes[1].map(function (item) { return [item.c, item]; }));
+        if (!municipios.size) throw new Error('Tabela de municípios indisponível');
+        return fontes[0].flatMap(function (linha) {
+          var municipio = municipios.get(linha[2]);
+          if (!municipio) return [];
+          var nome = window.visatTitulo?.(linha[1]) ?? linha[1];
+          var tipo = window.visatTitulo?.(linha[3]) ?? linha[3];
+          return [{
+            c: linha[0], v: nome,
+            d: [nome, tipo, municipio.v + '/' + municipio.uf].filter(Boolean).join(' · '),
+            municipio: municipio.v, uf: municipio.uf, ibge: municipio.c
+          }];
+        });
+      }).catch(function () {
+        delete cache.cnesAtendimento;
+        return carregar('cnes');
+      });
+    },
     // Tabela local (IBGE, 5.571 municípios; código do Sinan com 6 dígitos) — data/municipios.json.
     mun: function () {
       return fetch('data/municipios.json')
@@ -158,6 +184,7 @@
 
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
   function anexarLista(input, tipo, aoEscolher, codigoDerivado, aceitarItem) {
+    var fonte = aceitarItem && tipo === 'cnes' ? 'cnesAtendimento' : tipo;
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
     input.dataset.visatLista = tipo;
     var dl = document.createElement('datalist');
@@ -186,7 +213,7 @@
       // CNAE: os outros dados da empresa (nome, CNPJ, município, CEP, bairro, rua) restringem a lista (localizador-empregador.js).
       var restricao = tipo === 'cnae' && window.visatCnaesCompativeis ? window.visatCnaesCompativeis(input) : null;
       if (!termo && !restricao) return;
-      Promise.all([carregar(tipo), restricao]).then(function (res) {
+      Promise.all([carregar(fonte), restricao]).then(function (res) {
         var lista = filtrarContexto(res[0]), compat = res[1];
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         if (!termo && !(compat && compat.total)) return;
@@ -203,6 +230,7 @@
           if (restritos.length) { itens = restritos; filtradoPorEmpresa = true; }
         }
         if (tipo !== 'cnes' || termo.length < 3) itens = itens.slice(0, 12);
+        else if (aceitarItem) itens = itens.slice(0, 30);
         listaRapida = document.createElement('div');
         listaRapida.className = 'visat-lista-apoio';
         if (tipo === 'cnes') listaRapida.dataset.visatSemJanela = '1';
@@ -280,7 +308,7 @@
     function atualizar() {
       var termo = norm(input.value);
       if (!termo) { dl.textContent = ''; return; }
-      carregar(tipo).then(function (lista) {
+      carregar(fonte).then(function (lista) {
         if (norm(input.value) !== termo) return;
         lista = filtrarContexto(lista);
         var achados = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 30) :
@@ -301,7 +329,7 @@
       var valor = norm(input.value);
       if (!valor) { estadoCodigo(input, ''); return; }
       if (input.dataset.visatConfirmado === valor) return;
-      carregar(tipo).then(function (lista) {
+      carregar(fonte).then(function (lista) {
         if (!input.isConnected || norm(input.value) !== valor) return;
         if (!lista.length) { estadoCodigo(input, 'indisponivel', tipo); return; }
         lista = filtrarContexto(lista);
@@ -323,7 +351,7 @@
       });
     }
 
-    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value) || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
+    input.addEventListener('focus', function () { carregar(fonte); if(norm(input.value) || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
     input.addEventListener('input', function (evento) {
       delete input.dataset.visatConfirmado;
       atualizar();
@@ -507,7 +535,7 @@
     if (unidadeAtendimento && !unidadeAtendimento.dataset.visatLista) {
       var orientacaoAtendimento = document.createElement('p');
       orientacaoAtendimento.className = 'field-help';
-      orientacaoAtendimento.textContent = 'A lista cobre Florianópolis (SC). Para outros municípios, informe o nome e o CNES manualmente.';
+      orientacaoAtendimento.textContent = 'Busque pelo nome ou CNES na Grande Florianópolis e nos estabelecimentos estaduais de SC. Se a unidade não estiver na lista, preencha os dois campos manualmente.';
       unidadeAtendimento.parentElement.append(orientacaoAtendimento);
       function limparEstabelecimentoAtendimento() {
         [unidadeAtendimento, cnesAtendimento].filter(Boolean).forEach(function (el) {
