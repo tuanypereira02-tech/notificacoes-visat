@@ -593,14 +593,33 @@
       var destino = campo(raiz, chaves);
       if (definir(destino, valor)) preenchidos.set(destino, destino.value);
     }
+    function limparCnaeSecundario() {
+      var lista = destino.cnaeSecundario && campo(raiz, destino.cnaeSecundario);
+      if (!lista || lista.tagName !== 'SELECT') return;
+      lista.replaceChildren(lista.options[0]);
+      lista.disabled = true;
+    }
     // A seleção explícita de outra empresa invalida consultas e dados anteriores.
     el.addEventListener('visat:trocar-empresa', function () {
       consulta++;
       removerOpcoes();
       empresasConsultadas.delete(el);
       delete el.dataset.ultimoCnpj;
+      delete el.dataset.cnpjConsultado;
       preenchidos.clear();
+      limparCnaeSecundario();
       aviso(el, '');
+    });
+    var municipio = campo(raiz, destino.municipio);
+    if (municipio && destino.nome) municipio.addEventListener('visat:trocar-local-empresa', function () {
+      var cep = campo(raiz, destino.cep);
+      el.dispatchEvent(new Event('visat:trocar-empresa'));
+      if (cep) cep.dispatchEvent(new Event('visat:trocar-empresa'));
+      limparCampo(el);
+      Object.keys(destino).forEach(function (chave) {
+        if (['municipio', 'uf', 'ibge', 'cnaeSecundario'].includes(chave)) return;
+        limparCampo(campo(raiz, destino[chave]));
+      });
     });
     el.addEventListener('input', function () {
       var n = digitos(el.value);
@@ -615,11 +634,7 @@
       preenchidos.clear();
       // Troca de empresa (decisão VISAT 17/11/2026): ao mudar um CNPJ já consultado, o CNAE da empresa
       // anterior sai, inclusive quando foi digitado ou escolhido à mão.
-      var listaSecundaria = destino.cnaeSecundario && campo(raiz, destino.cnaeSecundario);
-      if (listaSecundaria && listaSecundaria.tagName === 'SELECT' && listaSecundaria.options.length > 1) {
-        listaSecundaria.replaceChildren(listaSecundaria.options[0]);
-        listaSecundaria.disabled = true;
-      }
+      limparCnaeSecundario();
       if (el.dataset.cnpjConsultado && el.dataset.cnpjConsultado !== n) {
         if (destino.cnae) limparCampo(campo(raiz, destino.cnae));
         delete el.dataset.cnpjConsultado;

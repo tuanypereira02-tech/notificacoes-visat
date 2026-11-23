@@ -220,7 +220,7 @@
           botao.addEventListener('pointerdown',function(e){e.preventDefault();});
           botao.addEventListener('click', function () {
             fecharListaRapida();
-            if (aoEscolher) aoEscolher(item);
+            if (aoEscolher) aoEscolher(item, true);
             else definir(input, item.v, true);
             input.focus();
           });
@@ -507,17 +507,36 @@
       if (!municipio || !ibge) return;
       // Ao editar a localização, descarta o código anterior e resolve a nova combinação.
       if (municipio.dataset.visatLista) return;
+      var localEmpresa = municipio.dataset.key === 'munEmp';
+      function limparEmpresa() {
+        municipio.dispatchEvent(new Event('visat:trocar-local-empresa'));
+      }
       [municipio, uf].filter(Boolean).forEach(function (el) {
+        var anterior = norm(el.value);
         el.addEventListener('input', function (evento) {
+          var atual = norm(el.value);
+          var mudou = anterior && anterior !== atual;
+          anterior = atual;
           if (!evento.isTrusted) return;
           ibge.value = '';
           delete municipio.dataset.visatConfirmado;
+          if (localEmpresa && mudou) {
+            limparEmpresa();
+            if (el === uf) {
+              municipio.value = '';
+              municipio.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
         });
       });
       if (uf) uf.addEventListener('change', function (evento) {
         if (evento.isTrusted) municipio.dispatchEvent(new Event('blur'));
       });
-      function preencherMunicipio(item) {
+      function preencherMunicipio(item, escolhaManual) {
+        if (localEmpresa && escolhaManual &&
+            ((ibge.value && ibge.value !== item.c) ||
+             (municipio.value && norm(municipio.value) !== norm(item.v)) ||
+             (uf?.value && norm(uf.value) !== norm(item.uf)))) limparEmpresa();
         definir(ibge, item.c, true);
         definir(municipio, item.v, true);
         definir(uf, item.uf, true);
