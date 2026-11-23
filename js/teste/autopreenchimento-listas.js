@@ -117,14 +117,14 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  function sugerirEstabelecimentos(lista, termo) {
+  function sugerirPorTrechos(lista, termo) {
     var termos = termo.split(' ');
     return lista.map(function (item) {
       var nome = norm(item.v);
-      var codigo = String(item.c);
+      var codigo = norm(item.c);
       var descricao = norm(item.d);
-      if (nome === termo || codigo === termo) return { item: item, nota: 0 };
-      if (nome.startsWith(termo) || codigo.startsWith(termo)) return { item: item, nota: 1 };
+      if (nome === termo || descricao === termo || codigo === termo) return { item: item, nota: 0 };
+      if (nome.startsWith(termo) || descricao.startsWith(termo) || codigo.startsWith(termo)) return { item: item, nota: 1 };
       if (nome.includes(termo)) return { item: item, nota: 2 };
       if (termos.every(function (palavra) { return descricao.includes(palavra); })) {
         return { item: item, nota: 3 };
@@ -182,17 +182,13 @@
       var termo = norm(input.value);
       // CNAE: os outros dados da empresa (nome, CNPJ, município, CEP, bairro, rua) restringem a lista (localizador-empregador.js).
       var restricao = tipo === 'cnae' && window.visatCnaesCompativeis ? window.visatCnaesCompativeis(input) : null;
-      if (termo.length < 3 && !restricao) return;
+      if (!termo && !restricao) return;
       Promise.all([carregar(tipo), restricao]).then(function (res) {
         var lista = res[0], compat = res[1];
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
-        if (termo.length < 3 && !(compat && compat.total)) return;
-        var palavras = termo.split(' ').filter(Boolean);
-        var itens = tipo === 'cnes' ? sugerirEstabelecimentos(lista, termo) :
-          tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
-          var alvo = norm(item.c + ' ' + item.d);
-          return palavras.every(function (p) { return alvo.includes(p); });
-        });
+        if (!termo && !(compat && compat.total)) return;
+        var itens = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) :
+          termo ? sugerirPorTrechos(lista, termo) : lista;
         // CNAE pela palavra do dia a dia (ex.: "panificadora" -> produtos de padaria).
         if (tipo === 'cnae' && !itens.length && termo.length >= 4 && window.visatAtividadeCombina) {
           itens = lista.filter(function (item) { return window.visatAtividadeCombina(termo, item.d); });
@@ -203,7 +199,7 @@
             .sort(function (a, b) { return compat.contagem[b.c] - compat.contagem[a.c]; });
           if (restritos.length) { itens = restritos; filtradoPorEmpresa = true; }
         }
-        if (tipo !== 'cnes') itens = itens.slice(0, 12);
+        if (tipo !== 'cnes' || termo.length < 3) itens = itens.slice(0, 12);
         listaRapida = document.createElement('div');
         listaRapida.className = 'visat-lista-apoio';
         if (tipo === 'cnes') listaRapida.dataset.visatSemJanela = '1';
@@ -259,7 +255,7 @@
     input.addEventListener('input', function(evento){
       clearTimeout(esperaLista);fecharListaRapida();
       // Só reabre a lista quando a pessoa digita; a escolha de uma sugestão fecha a lista.
-      if(evento.isTrusted && document.activeElement===input && norm(input.value).length>=3){
+      if(evento.isTrusted && document.activeElement===input && norm(input.value)){
         esperaLista=setTimeout(abrirListaRapida,180);
       }
     });
@@ -278,26 +274,11 @@
 
     function atualizar() {
       var termo = norm(input.value);
-      if (termo.length < 3) { dl.textContent = ''; return; }
+      if (!termo) { dl.textContent = ''; return; }
       carregar(tipo).then(function (lista) {
         if (norm(input.value) !== termo) return;
-        var palavras = termo.split(' ');
-        var achados = [];
-        for (var i = 0; i < lista.length && achados.length < 400; i++) {
-          var x = lista[i];
-          var alvo = norm(x.c + ' ' + x.d);
-          if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
-        }
-        if (tipo === 'mun') achados = sugerirMunicipios(lista, termo, ufVinculada(input), 30);
-        if (tipo === 'cnes') achados = sugerirEstabelecimentos(lista, termo);
-        // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
-        function nota(x) {
-          var v = norm(x.v), d = norm(x.d);
-          var n = (v === termo || x.c === termo) ? 0 : (v.indexOf(termo) === 0 || d.indexOf(termo) === 0 || x.c.indexOf(termo) === 0) ? 1 : 2;
-          return n - (x.uf === 'SC' ? 0.5 : 0);
-        }
-        if (tipo !== 'mun' && tipo !== 'cnes') achados.sort(function (a, b) { return nota(a) - nota(b); });
-        achados = achados.slice(0, 30);
+        var achados = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 30) :
+          sugerirPorTrechos(lista, termo).slice(0, 30);
         dl.textContent = '';
         achados.forEach(function (x) {
           var o = document.createElement('option');
@@ -335,7 +316,7 @@
       });
     }
 
-    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value).length>=3 || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
+    input.addEventListener('focus', function () { carregar(tipo); if(norm(input.value) || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
     input.addEventListener('input', function (evento) {
       delete input.dataset.visatConfirmado;
       atualizar();

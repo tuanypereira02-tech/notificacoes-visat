@@ -204,18 +204,18 @@
   function lerFiltros(c) {
     var f = {};
     var cnpj = digitos(c.cnpj && c.cnpj.value);
-    if (cnpj.length >= 8) f.cnpj = cnpj;
+    if (cnpj) f.cnpj = cnpj;
     var nome = norm(c.nome && c.nome.value);
-    if (nome.replace(/ /g, '').length >= 3) f.nome = nome.split(' ');
+    if (nome) f.nome = nome.split(' ');
     var cnae = String(c.cnae && c.cnae.value || '').match(/^\s*(\d{2})\.?(\d{2})-?(\d)(\d{2})?/);
     if (cnae) f.cnae = cnae[4] ? cnae.slice(1, 5).join('') : cnae.slice(1, 4).join('');
     else if (norm(c.cnae && c.cnae.value).replace(/[^A-Z]/g, '').length >= 4) f.cnae = 'T:' + (c.cnae.value || '');
     var cep = digitos(c.cep && c.cep.value);
-    if (cep.length >= 5) f.cep = cep;
+    if (cep) f.cep = cep;
     var bairro = norm(c.bairro && c.bairro.value);
-    if (bairro.length >= 3) f.bairro = bairro;
+    if (bairro) f.bairro = bairro;
     var end = norm(c.end && c.end.value).split(' ').filter(function (p) { return p && !TIPOS_LOG.test(p); });
-    if (end.join('').length >= 3) f.end = end;
+    if (end.length) f.end = end;
     var num = norm(c.num && c.num.value);
     if (num) f.num = num;
     var mun = norm(String(c.mun && c.mun.value || '').split('/')[0]);
@@ -359,7 +359,7 @@
     // e detalha os primeiros CNPJs (bairro, endereço, CNAE, situação) para que os demais filtros valham para eles.
     var ultimaOnline = '', esperaOnline = null, rodada = 0;
     function buscarOnline(f) {
-      if (!base || !f.nome) return;
+      if (!base || !f.nome || norm(c.nome.value).replace(/ /g, '').length < 3) return;
       var termo = (c.nome.value || '').trim();
       var munTxt = String(c.mun && c.mun.value || '').split('/')[0].trim();
       var uf = String(c.uf && c.uf.value || '').trim();
@@ -508,7 +508,7 @@
       function fechar() { if (listaB) listaB.remove(); listaB = null; }
       function abrir() {
         var termo = norm(c.bairro.value);
-        if (termo.length < 2) { fechar(); return; }
+        if (!termo) { fechar(); return; }
         garantirBase().then(function (d) {
           if (!d || norm(c.bairro.value) !== termo) return;
           var f = lerFiltros(c);
@@ -547,7 +547,7 @@
       }
       c.bairro.setAttribute('autocomplete', 'visat-sem-preenchimento');
       c.bairro.addEventListener('input', function (e) { if (!e.isTrusted) return; clearTimeout(esperaB); esperaB = setTimeout(abrir, 150); });
-      c.bairro.addEventListener('focus', function () { if (norm(c.bairro.value).length >= 2 && !escolhido) abrir(); });
+      c.bairro.addEventListener('focus', function () { if (norm(c.bairro.value) && !escolhido) abrir(); });
       c.bairro.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') fechar();
         if (e.key === 'ArrowDown' && listaB) { e.preventDefault(); var b = listaB.querySelector('button'); if (b) b.focus(); }

@@ -256,10 +256,17 @@
           var alvo = norm(e.c + ' ' + e.d);
           return palavras.every(function (p) { return alvo.indexOf(p) >= 0; });
         });
+        function relevancia(item) {
+          var codigo = item.c.replace('.', '');
+          var descricao = norm(item.d);
+          if (termo && codigo === cod) return 0;
+          if (codigo.startsWith(cod) || descricao.startsWith(termo)) return 1;
+          if (descricao.includes(termo)) return 2;
+          return 3;
+        }
         achados.sort(function (a, b) {
-          var pa = (a.c.replace('.', '').indexOf(cod) === 0 ? 0 : 2) - (a.l ? 1 : 0);
-          var pb = (b.c.replace('.', '').indexOf(cod) === 0 ? 0 : 2) - (b.l ? 1 : 0);
-          return pa - pb || (a.c < b.c ? -1 : 1);
+          return relevancia(a) - relevancia(b) || Number(Boolean(b.l)) - Number(Boolean(a.l)) ||
+            a.c.localeCompare(b.c);
         });
         lista.replaceChildren();
         achados.slice(0, 12).forEach(function (e) {
