@@ -126,6 +126,25 @@
     });
   }
 
+  function sugerirEstabelecimentos(lista, termo) {
+    var termos = termo.split(' ');
+    return lista.map(function (item) {
+      var nome = norm(item.v);
+      var codigo = String(item.c);
+      var descricao = norm(item.d);
+      if (nome === termo || codigo === termo) return { item: item, nota: 0 };
+      if (nome.startsWith(termo) || codigo.startsWith(termo)) return { item: item, nota: 1 };
+      if (nome.includes(termo)) return { item: item, nota: 2 };
+      if (termos.every(function (palavra) { return descricao.includes(palavra); })) {
+        return { item: item, nota: 3 };
+      }
+      return null;
+    }).filter(Boolean).sort(function (a, b) {
+      return a.nota - b.nota || a.item.v.localeCompare(b.item.v, 'pt-BR', { sensitivity: 'base' }) ||
+        String(a.item.c).localeCompare(String(b.item.c));
+    }).map(function (resultado) { return resultado.item; });
+  }
+
   function sugerirMunicipios(lista, termo, uf, limite) {
     var palavras = termo.split(' ').filter(Boolean);
     var ufPreferida = norm(uf) || 'sc';
@@ -147,9 +166,10 @@
   }
 
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
-  function anexarLista(input, tipo, aoEscolher, codigoDerivado) {
+  function anexarLista(input, tipo, aoEscolher, codigoDerivado, buscarUnidades) {
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
     input.dataset.visatLista = tipo;
+    buscarUnidades = buscarUnidades || sugerirUnidades;
     var dl = document.createElement('datalist');
     dl.id = 'visat-lista-' + tipo + '-' + Math.random().toString(36).slice(2, 8);
     input.insertAdjacentElement('afterend', dl);
@@ -178,7 +198,7 @@
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         if (termo.length < 3 && !(compat && compat.total)) return;
         var palavras = termo.split(' ').filter(Boolean);
-        var itens = tipo === 'cnes' ? sugerirUnidades(lista, termo) :
+        var itens = tipo === 'cnes' ? buscarUnidades(lista, termo) :
           tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
           var alvo = norm(item.c + ' ' + item.d);
           return palavras.every(function (p) { return alvo.includes(p); });
@@ -279,7 +299,7 @@
           if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
         }
         if (tipo === 'mun') achados = sugerirMunicipios(lista, termo, ufVinculada(input), 30);
-        if (tipo === 'cnes') achados = sugerirUnidades(lista, termo);
+        if (tipo === 'cnes') achados = buscarUnidades(lista, termo);
         // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
         function nota(x) {
           var v = norm(x.v), d = norm(x.d);
@@ -495,7 +515,7 @@
     }
     var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
       vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
-    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento);
+    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento, null, sugerirEstabelecimentos);
     anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento);
 
     var investigadora = campo(raiz, ['munInvestigadora']);
