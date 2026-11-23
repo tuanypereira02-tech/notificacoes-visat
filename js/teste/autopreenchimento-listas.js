@@ -117,6 +117,15 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  function sugerirUnidades(lista, termo) {
+    return lista.filter(function (item) {
+      return norm(item.v).startsWith(termo) || String(item.c).startsWith(termo);
+    }).sort(function (a, b) {
+      return a.v.localeCompare(b.v, 'pt-BR', { sensitivity: 'base' }) ||
+        String(a.c).localeCompare(String(b.c));
+    });
+  }
+
   function sugerirMunicipios(lista, termo, uf, limite) {
     var palavras = termo.split(' ').filter(Boolean);
     var ufPreferida = norm(uf) || 'sc';
@@ -169,7 +178,8 @@
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         if (termo.length < 3 && !(compat && compat.total)) return;
         var palavras = termo.split(' ').filter(Boolean);
-        var itens = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
+        var itens = tipo === 'cnes' ? sugerirUnidades(lista, termo) :
+          tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) : lista.filter(function (item) {
           var alvo = norm(item.c + ' ' + item.d);
           return palavras.every(function (p) { return alvo.includes(p); });
         });
@@ -183,9 +193,10 @@
             .sort(function (a, b) { return compat.contagem[b.c] - compat.contagem[a.c]; });
           if (restritos.length) { itens = restritos; filtradoPorEmpresa = true; }
         }
-        itens = itens.slice(0, 12);
+        if (tipo !== 'cnes') itens = itens.slice(0, 12);
         listaRapida = document.createElement('div');
         listaRapida.className = 'visat-lista-apoio';
+        if (tipo === 'cnes') listaRapida.dataset.visatSemJanela = '1';
         var aviso = document.createElement('p');
         aviso.setAttribute('role', 'status');
         aviso.textContent = !itens.length ? 'Nenhuma opção disponível para esta busca.' : filtradoPorEmpresa ?
@@ -268,13 +279,14 @@
           if (palavras.every(function (w) { return alvo.indexOf(w) >= 0; })) achados.push(x);
         }
         if (tipo === 'mun') achados = sugerirMunicipios(lista, termo, ufVinculada(input), 30);
+        if (tipo === 'cnes') achados = sugerirUnidades(lista, termo);
         // Ordem: nome exato, depois início igual, depois o restante; Santa Catarina primeiro.
         function nota(x) {
           var v = norm(x.v), d = norm(x.d);
           var n = (v === termo || x.c === termo) ? 0 : (v.indexOf(termo) === 0 || d.indexOf(termo) === 0 || x.c.indexOf(termo) === 0) ? 1 : 2;
           return n - (x.uf === 'SC' ? 0.5 : 0);
         }
-        if (tipo !== 'mun') achados.sort(function (a, b) { return nota(a) - nota(b); });
+        if (tipo !== 'mun' && tipo !== 'cnes') achados.sort(function (a, b) { return nota(a) - nota(b); });
         achados = achados.slice(0, 30);
         dl.textContent = '';
         achados.forEach(function (x) {

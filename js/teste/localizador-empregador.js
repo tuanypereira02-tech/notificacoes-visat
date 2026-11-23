@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  var MAX_LISTA = 12;
+  var MAX_LISTA = 4;
     var ALIAS = {
     cnpj: ['cnpj'], nome: ['empresa', 'empresaNome', 'razao'], cnae: ['cnae'],
     mun: ['munEmp'], ibge: ['ibgeEmp'], uf: ['ufEmp'], cep: ['cepEmp'],
@@ -296,8 +296,7 @@
     box.setAttribute('aria-label', 'Localizar empresa');
     var topo = el('div', 'visat-loc-topo');
     var tit = el('strong', 'visat-loc-titulo', 'Localizar empresa');
-    var dica = el('span', 'visat-loc-dica', 'Preencha o que souber, em qualquer ordem (nome, município do local de trabalho, bairro, CNAE, CEP, rua ou CNPJ): os campos se completam e reduzem as opções uns dos outros. O CNPJ deve ser o da unidade onde a pessoa trabalha.');
-    topo.append(tit, dica);
+    topo.append(tit);
     var status = el('p', 'visat-loc-status');
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
@@ -311,11 +310,27 @@
     var fonte = el('p', 'visat-loc-fonte');
     var online = el('p', 'visat-loc-fonte');
     online.setAttribute('aria-live', 'polite');
-    box.append(topo, filtrosEl, status, facetas, lista, mais, online, fonte);
+    var sugestoes = el('div', 'visat-lista-apoio visat-loc-sugestoes');
+    sugestoes.dataset.visatSemJanela = '1';
+    sugestoes.hidden = true;
+    sugestoes.append(lista, mais);
+    box.append(topo, filtrosEl, status, facetas, online, fonte);
     painel.append(box);
     caixaCnpj.before(painel);
 
     var base = null, escolhido = null, limite = MAX_LISTA, espera = null, aplicando = false;
+    var campoAtivo = null, revisao = 0;
+
+    function fecharSugestoes() {
+      campoAtivo = null;
+      sugestoes.hidden = true;
+    }
+
+    function abrirNoCampo(input) {
+      campoAtivo = input;
+      input.after(sugestoes);
+      sugestoes.hidden = true;
+    }
 
     function garantirBase() {
       if (base) return Promise.resolve(base);
@@ -328,7 +343,7 @@
       });
     }
 
-    function limparLista() { lista.replaceChildren(); facetas.replaceChildren(); filtrosEl.replaceChildren(); mais.hidden = true; }
+    function limparLista() { sugestoes.hidden = true; lista.replaceChildren(); facetas.replaceChildren(); filtrosEl.replaceChildren(); mais.hidden = true; }
 
     function marcarAntigaLista(temLocal) {
       // Com resultado na base local, a lista antiga do nome fica oculta; sem resultado, ela mostra o cadastro online.
@@ -337,11 +352,14 @@
 
     function atualizar() {
       if (aplicando) return;
+      revisao++;
+      sugestoes.hidden = true;
       clearTimeout(espera);
       espera = setTimeout(executar, 180);
     }
 
     function executar() {
+      var consulta = ++revisao;
       var f = lerFiltros(c);
       var chaves = Object.keys(f);
       if (escolhido && digitos(c.cnpj.value) === escolhido) { mostrarEscolhido(); return; }
@@ -349,6 +367,7 @@
       if (!chaves.length) { limparLista(); status.textContent = ''; marcarAntigaLista(false); box.classList.remove('ativo'); return; }
       box.classList.add('ativo');
       garantirBase().then(function (d) {
+        if (consulta !== revisao || !painel.isConnected) return;
         limparLista();
         chaves.forEach(function (k) {
           var chip = el('button', 'visat-loc-chip', resumoFiltro(k, c));
@@ -370,7 +389,7 @@
           res.length.toLocaleString('pt-BR') + ' empresas compatíveis. Acrescente outro dado ou escolha uma opção.';
         if (res.length > 1) montarFacetas(d, res, f);
         desenhar(d, res, f);
-      }).then(function () { buscarOnline(lerFiltros(c)); });
+      }).then(function () { if (consulta === revisao && painel.isConnected) buscarOnline(lerFiltros(c)); });
     }
 
     // Nome digitado: busca também no cadastro online (matriz e filiais), no município do local de trabalho quando informado,
@@ -495,6 +514,7 @@
         var li = el('li');
         var b = el('button', 'visat-loc-item');
         b.type = 'button';
+        b.addEventListener('pointerdown', function (evento) { evento.preventDefault(); });
         var nome = el('span', 'visat-loc-nome', titulo(r[1] || r[2]));
         var linha2 = el('span', 'visat-loc-linha', [r[1] && r[2] ? titulo(r[2]) : '', fmtCnpj(r[0])].filter(Boolean).join(' · '));
         var subs = d.cnaeSinan[r[3]] || [];
@@ -510,6 +530,7 @@
         li.append(b);
         lista.append(li);
       });
+      sugestoes.hidden = !campoAtivo || !lista.childElementCount;
       mais.hidden = res.length <= limite;
       mais.textContent = 'Mostrar mais (' + Math.min(MAX_LISTA, res.length - limite) + ' de ' + (res.length - limite).toLocaleString('pt-BR') + ' restantes)';
     }
@@ -546,6 +567,7 @@
     function mostrarEscolhido(d, r) {
       d = d || base;
       if (!r && d) r = d.registros.find(function (x) { return x[0] === escolhido; });
+      fecharSugestoes();
       limparLista();
       marcarAntigaLista(true);
       if (!r) { status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
@@ -640,11 +662,22 @@
       c.bairro.parentElement.addEventListener('focusout', function (e) { if (!c.bairro.parentElement.contains(e.relatedTarget)) fechar(); });
     })();
 
+    mais.addEventListener('pointerdown', function (evento) { evento.preventDefault(); });
     mais.addEventListener('click', function () { limite += MAX_LISTA; executar(); });
     ['cnpj', 'nome', 'cnae', 'mun', 'cep', 'bairro', 'end', 'num'].forEach(function (k) {
       if (!c[k]) return;
-      c[k].addEventListener('input', atualizar);
-      c[k].addEventListener('change', atualizar);
+      var input = c[k];
+      input.addEventListener('input', function (evento) {
+        if (evento.isTrusted && document.activeElement === input) abrirNoCampo(input);
+        atualizar();
+      });
+      input.addEventListener('change', atualizar);
+      input.addEventListener('keydown', function (evento) {
+        if (evento.key === 'Escape' && campoAtivo === input) fecharSugestoes();
+      });
+      input.parentElement.addEventListener('focusout', function (evento) {
+        if (campoAtivo === input && !input.parentElement.contains(evento.relatedTarget)) fecharSugestoes();
+      });
     });
     // Carrega a base ao primeiro foco no bloco, antes da digitação.
     painel.parentElement.addEventListener('focusin', function primeiro() {
