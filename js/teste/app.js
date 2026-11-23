@@ -781,6 +781,7 @@
     const rodape = document.querySelector('footer.rodape');
     if (!lista || !rodape || !window.ResizeObserver) return;
     const BASE = parseFloat(getComputedStyle(lista).maxHeight) || 340;
+    const emQuadro = document.documentElement.classList.contains('visat-em-quadro');
     const cartao = document.querySelector('#principal > section[aria-labelledby="h-resultado"]');
     let ajustando = false;
     function ajustar() {
@@ -792,6 +793,13 @@
         if (cartao) cartao.style.minHeight = '';
         const fimRodape = () => rodape.getBoundingClientRect().bottom + (window.scrollY || 0);
         let folga = Math.floor(window.innerHeight - fimRodape());
+        // Conteúdo maior que o quadro: a lista de agravos encolhe (até um mínimo) para nada ficar cortado
+        // e não haver rolagem da página dentro do quadro; só a página do Sites rola.
+        if (folga < 0 && emQuadro) {
+          const MINIMO = 200;
+          const atual = Math.min(BASE, lista.scrollHeight + 2);
+          lista.style.maxHeight = Math.max(MINIMO, atual + folga) + 'px';
+        }
         if (folga > 0) {
           // Primeiro a lista mostra mais agravos; o que ainda sobrar estende o cartão do direcionamento.
           const extraLista = Math.max(0, Math.min(folga, lista.scrollHeight + 2 - BASE));
