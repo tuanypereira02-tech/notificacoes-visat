@@ -404,7 +404,6 @@
         botao.className = 'item-agravo item-subitem';
         botao.dataset.id = subitem.id;
         botao.textContent = rotuloAgravo(subitem);
-        if (escopoVisat) botao.title = 'Código na lista geral de notificações: ' + codigoDoAgravo(subitem.nome);
         botao.setAttribute('aria-pressed', String(subitem.id === estado.agravoId));
         configurarConceito(botao, subitem.conceito);
         itemLi.appendChild(botao);
