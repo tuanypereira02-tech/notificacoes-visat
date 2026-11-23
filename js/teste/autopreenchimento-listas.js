@@ -157,7 +157,7 @@
   }
 
   /* Lista de sugestões nativa do navegador (datalist), filtrada enquanto a pessoa digita. */
-  function anexarLista(input, tipo, aoEscolher, codigoDerivado) {
+  function anexarLista(input, tipo, aoEscolher, codigoDerivado, aceitarItem) {
     if (!input || input.tagName !== 'INPUT' || input.dataset.visatLista) return;
     input.dataset.visatLista = tipo;
     var dl = document.createElement('datalist');
@@ -169,6 +169,9 @@
     input.title = 'Digite o nome ou código e escolha uma sugestão.';
     var listaRapida;
     var abertura = 0;
+    function filtrarContexto(lista) {
+      return aceitarItem ? lista.filter(aceitarItem) : lista;
+    }
 
     function fecharListaRapida() {
       abertura++;
@@ -184,7 +187,7 @@
       var restricao = tipo === 'cnae' && window.visatCnaesCompativeis ? window.visatCnaesCompativeis(input) : null;
       if (!termo && !restricao) return;
       Promise.all([carregar(tipo), restricao]).then(function (res) {
-        var lista = res[0], compat = res[1];
+        var lista = filtrarContexto(res[0]), compat = res[1];
         if (atual !== abertura || !input.isConnected || norm(input.value) !== termo) return;
         if (!termo && !(compat && compat.total)) return;
         var itens = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 12) :
@@ -205,7 +208,9 @@
         if (tipo === 'cnes') listaRapida.dataset.visatSemJanela = '1';
         var aviso = document.createElement('p');
         aviso.setAttribute('role', 'status');
-        aviso.textContent = !itens.length ? 'Nenhuma opção disponível para esta busca.' : filtradoPorEmpresa ?
+        aviso.textContent = !itens.length && aceitarItem ?
+          'Nenhuma opção para este local e busca. Informe o estabelecimento e o CNES manualmente.' :
+          !itens.length ? 'Nenhuma opção disponível para esta busca.' : filtradoPorEmpresa ?
           'Atividades das empresas compatíveis com os dados já preenchidos (' + compat.rotulo + ').' :
           'Lista de apoio. Digite no campo para filtrar.';
         listaRapida.append(aviso);
@@ -277,6 +282,7 @@
       if (!termo) { dl.textContent = ''; return; }
       carregar(tipo).then(function (lista) {
         if (norm(input.value) !== termo) return;
+        lista = filtrarContexto(lista);
         var achados = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 30) :
           sugerirPorTrechos(lista, termo).slice(0, 30);
         dl.textContent = '';
@@ -298,6 +304,7 @@
       carregar(tipo).then(function (lista) {
         if (!input.isConnected || norm(input.value) !== valor) return;
         if (!lista.length) { estadoCodigo(input, 'indisponivel', tipo); return; }
+        lista = filtrarContexto(lista);
         var uf = tipo === 'mun' ? ufVinculada(input) : '';
         var exatos = lista.filter(function (x) {
           return norm(x.d) === valor || x.c === valor || norm(x.v + ' – ' + x.c) === valor ||
@@ -476,18 +483,50 @@
     anexarLista(cnes, 'cnes', preencherUnidade);
     var unidadeAtendimento = campo(raiz, ['unidAtendimento']);
     var cnesAtendimento = campo(raiz, ['cnesAtendimento']);
+    var municipioAtendimento = campo(raiz, ['munAtendimento']);
+    var ufAtendimento = campo(raiz, ['ufAtendimento']);
+    var ibgeAtendimento = campo(raiz, ['ibgeAtendimento']);
+    function estabelecimentoDoMunicipio(item) {
+      var codigo = ibgeAtendimento?.value.trim();
+      var municipio = norm(municipioAtendimento?.value);
+      var uf = norm(ufAtendimento?.value);
+      return (!codigo || codigo.slice(0, 6) === item.ibge) &&
+        (!municipio || municipio === norm(item.municipio)) && (!uf || uf === norm(item.uf));
+    }
     function preencherUnidadeAtendimento(item) {
+      if (!estabelecimentoDoMunicipio(item)) return;
+      definir(ibgeAtendimento, item.ibge, true);
+      definir(municipioAtendimento, item.municipio, true);
+      definir(ufAtendimento, item.uf, true);
       definir(unidadeAtendimento, item.v, true);
       definir(cnesAtendimento, item.c, true);
-      definir(campo(raiz, ['ibgeAtendimento']), item.ibge, true);
-      definir(campo(raiz, ['munAtendimento']), item.municipio, true);
-      definir(campo(raiz, ['ufAtendimento']), item.uf, true);
       if (confirmarAtendimento) confirmarAtendimento();
     }
     var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
       vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
-    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento);
-    anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento);
+    if (unidadeAtendimento && !unidadeAtendimento.dataset.visatLista) {
+      var orientacaoAtendimento = document.createElement('p');
+      orientacaoAtendimento.className = 'field-help';
+      orientacaoAtendimento.textContent = 'A lista cobre Florianópolis (SC). Para outros municípios, informe o nome e o CNES manualmente.';
+      unidadeAtendimento.parentElement.append(orientacaoAtendimento);
+      function limparEstabelecimentoAtendimento() {
+        [unidadeAtendimento, cnesAtendimento].filter(Boolean).forEach(function (el) {
+          if (!el.value) return;
+          el.value = '';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      }
+      [municipioAtendimento, ufAtendimento].filter(Boolean).forEach(function (el) {
+        var anterior = norm(el.value);
+        el.addEventListener('input', function () {
+          var atual = norm(el.value);
+          if (anterior && anterior !== atual) limparEstabelecimentoAtendimento();
+          anterior = atual;
+        });
+      });
+    }
+    anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento, cnesAtendimento, estabelecimentoDoMunicipio);
+    anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento, null, estabelecimentoDoMunicipio);
 
     var investigadora = campo(raiz, ['munInvestigadora']);
     anexarLista(investigadora, 'cnes', function (item) {
