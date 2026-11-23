@@ -317,6 +317,9 @@
     box.append(topo, filtrosEl, status, facetas, online, fonte);
     painel.append(box);
     caixaCnpj.before(painel);
+    var avisoMunicipio = el('small', 'visat-loc-aviso-municipio');
+    avisoMunicipio.setAttribute('role', 'status');
+    c.cnpj.after(avisoMunicipio);
 
     var base = null, escolhido = null, limite = MAX_LISTA, espera = null, aplicando = false;
     var campoAtivo = null, revisao = 0;
@@ -364,6 +367,7 @@
       var chaves = Object.keys(f);
       if (escolhido && digitos(c.cnpj.value) === escolhido) { mostrarEscolhido(); return; }
       escolhido = null;
+      avisoMunicipio.textContent = '';
       if (!chaves.length) { limparLista(); status.textContent = ''; marcarAntigaLista(false); box.classList.remove('ativo'); return; }
       box.classList.add('ativo');
       garantirBase().then(function (d) {
@@ -516,15 +520,16 @@
         b.type = 'button';
         b.addEventListener('pointerdown', function (evento) { evento.preventDefault(); });
         var nome = el('span', 'visat-loc-nome', titulo(r[1] || r[2]));
-        var linha2 = el('span', 'visat-loc-linha', [r[1] && r[2] ? titulo(r[2]) : '', fmtCnpj(r[0])].filter(Boolean).join(' · '));
         var subs = d.cnaeSinan[r[3]] || [];
         var cnaeTxt = subs.length === 1 ? subs[0] + ' – ' + titulo(descricaoCnae(subs[0])) : d.cnaes[r[3]] ? 'CNAE ' + d.cnaes[r[3]] : '';
         var m = d.municipios[r[12]] || [];
-        var end = [titulo(d.logradouros[r[7]]), r[8], r[9] && titulo(r[9]), titulo(d.bairros[r[6]]),
-          m[0] ? titulo(m[0]) + '/' + m[1] : '', fmtCep(r[5])].filter(Boolean).join(', ');
+        var local = [titulo(d.bairros[r[6]]), m[0] ? titulo(m[0]) + '/' + m[1] : ''].filter(Boolean).join(' · ');
+        var linha2 = el('span', 'visat-loc-linha', 'CNPJ ' + fmtCnpj(r[0]));
+        var end = [titulo(d.logradouros[r[7]]), r[8], r[9] && titulo(r[9]), fmtCep(r[5])].filter(Boolean).join(', ');
         var linha3 = el('span', 'visat-loc-linha', [cnaeTxt, end || (r[13] === 'online' ? 'conferindo endereço…' : '')].filter(Boolean).join(' · '));
         var sel = el('span', 'visat-loc-selos');
         selos(d, r, x).forEach(function (s) { sel.append(el('span', 'visat-loc-selo ' + s[1], s[0])); });
+        if (local) nome.append(el('span', 'visat-loc-local', local));
         b.append(nome, sel, linha2, linha3);
         b.addEventListener('click', function () { selecionar(d, r); });
         li.append(b);
@@ -570,14 +575,16 @@
       fecharSugestoes();
       limparLista();
       marcarAntigaLista(true);
-      if (!r) { status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
+      if (!r) { avisoMunicipio.textContent = ''; status.textContent = 'Empresa selecionada. Confira os dados.'; return; }
       var avisos = [];
       if (r[11] && r[11] !== 'A') avisos.push('situação cadastral ' + (d.situacoes[r[11]] || r[11]).toLowerCase() + ' na Receita');
       var mr = d.municipios[r[12]] || [];
       var munInf = norm(String(c.mun && c.mun.value || '').split('/')[0]);
-      if (mr[0] && munInf && munInf.indexOf(norm(mr[0])) !== 0)
-        avisos.push('este CNPJ é de ' + titulo(mr[0]) + '/' + mr[1] + ', diferente do município do local de trabalho; escolha a unidade (filial) onde a pessoa trabalha');
-      if (r[10] === 2) avisos.push('filial: confirme se é o estabelecimento onde a pessoa trabalha');
+      var ufInf = norm(c.uf && c.uf.value);
+      var diverge = mr[0] && ((munInf && munInf !== norm(mr[0])) || (ufInf && ufInf !== norm(mr[1])));
+      avisoMunicipio.textContent = diverge
+        ? 'CNPJ de ' + titulo(mr[0]) + '/' + mr[1] + '. Confira o município do local de trabalho.'
+        : '';
       if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('o CNAE tem mais de uma correspondência no Sinan: escolha a atividade');
       status.textContent = 'Selecionada: ' + titulo(r[1] || r[2]) + ' (' + fmtCnpj(r[0]) + '). ' +
         (avisos.length ? 'Atenção: ' + avisos.join('; ') + '. ' : '') + 'A consulta do CNPJ completa telefone e confere os dados.';

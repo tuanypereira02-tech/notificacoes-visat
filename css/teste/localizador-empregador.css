@@ -47,6 +47,9 @@ div:has(> .visat-lista-apoio:not(.visat-loc-sugestoes):not([hidden])) > .visat-l
 }
 .visat-loc-item:is(:hover, .visat-item-ativo) { border-color: #CC6A00; background: #FFFBF6; }
 .visat-loc-nome { font-weight: 700; color: #112C45; font-size: 12.5px; }
+.visat-loc-local { display: block; color: #4A5A6E; font-weight: 400; }
+.visat-loc-aviso-municipio { display: block; margin-top: 4px; color: #8A4700; font-size: 12px; overflow-wrap: anywhere; }
+.visat-loc-aviso-municipio:empty { display: none; }
 .visat-loc-selos { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
 .visat-loc-linha { grid-column: 1 / -1; color: #4A5A6E; overflow-wrap: anywhere; }
 .visat-loc-selo { font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #EEF2F6; color: #34465C; }

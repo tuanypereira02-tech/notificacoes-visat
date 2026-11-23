@@ -1259,7 +1259,6 @@ function checarDadosDigitados() {
   return avisos;
 }
 
-let avisosCoerencia = [];
 let conferindoCoerencia = false;
 async function verificarCoerencia() {
   const avisos = checarDadosDigitados().concat(window.visatConferirEmpresas?.(root) || [], window.visatAvisosCid?.(root) || []);
@@ -1293,93 +1292,94 @@ function focarCampo(campo) {
   for (let grupo = campo.closest('details'); grupo; grupo = grupo.parentElement.closest('details')) {
     grupo.open = true;
   }
-  const controleVisivel = campo.matches('[data-chips="sexo"], [data-chips="gestante"], [data-chips="raca"]') ? campo.nextElementSibling : campo;
-  (controleVisivel?.matches('input, select, textarea') ? controleVisivel : controleVisivel?.querySelector('button'))?.focus();
+  const seguinte = campo.nextElementSibling;
+  const controle = campo.matches('input:not([type="hidden"]), select, textarea') ? campo
+    : campo.matches('[data-chips]') && seguinte?.matches('select') ? seguinte
+    : campo.querySelector('button') || seguinte?.querySelector('button');
+  controle?.focus();
 }
 
-function mostrarCoerencia(ancora) {
-  root.querySelector('[data-visat-coerencia]')?.remove();
-  if (!avisosCoerencia.length) return;
-  const painel = document.createElement('section');
-  painel.dataset.visatCoerencia = '1';
-  painel.className = 'highlight-box';
-  const titulo = document.createElement('h2');
-  titulo.textContent = 'Confira possíveis divergências';
-  const lista = document.createElement('ul');
-  avisosCoerencia.forEach(({ campo, mensagem }) => {
-    const linha = document.createElement('li');
-    if (campo) {
-      const botao = document.createElement('button');
-      botao.type = 'button';
-      botao.className = 'btn';
-      botao.dataset.variant = 'outline';
-      botao.textContent = mensagem;
-      botao.addEventListener('click', () => {
-              showScreen(Number(campo.closest('.screen').dataset.screen));
-        focarCampo(campo);
-      });
-      linha.append(botao);
-    } else linha.textContent = mensagem;
-    lista.append(linha);
-  });
-  painel.append(titulo, lista);
-  ancora.before(painel);
-}
-
-async function finalizarFicha() {
-  if (conferindoCoerencia) return;
-  persistInputs();
-  const pendentes = camposBasicosPendentes().concat(documentosPendentes());
-  if (!pendentes.length) {
-    conferindoCoerencia = true;
-    btnContinuar.disabled = true;
-    btnVoltar.disabled = true;
-    btnPdfConferencia.disabled = true;
-    area.inert = true;
-    try {
-      avisosCoerencia = await verificarCoerencia();
-      if (!root.isConnected) return;
-      showScreen(TOTAL + 1);
-    } finally {
-      conferindoCoerencia = false;
-      btnContinuar.disabled = false;
-      btnVoltar.disabled = false;
-      btnPdfConferencia.disabled = false;
-      area.inert = false;
-    }
-    return;
-  }
-  mostrarPendencias(pendentes, pendentes.length === 1 ? '1 pendência para gerar o PDF final' : pendentes.length + ' pendências para gerar o PDF final');
-}
-
-function mostrarPendencias(pendentes, mensagem) {
+function mostrarRevisaoAntesDoPdf(pendencias, avisos) {
   root.querySelector('[data-visat-pendencias]')?.remove();
   const caixa = document.createElement('section');
   caixa.className = 'highlight-box';
   caixa.dataset.visatPendencias = '1';
   const titulo = document.createElement('h2');
-  titulo.textContent = mensagem;
+  titulo.textContent = 'Revisão antes do PDF';
   titulo.tabIndex = -1;
-  const instrucao = document.createElement('p');
-  instrucao.textContent = 'Selecione um item para ir direto ao campo.';
-  const lista = document.createElement('ul');
-  pendentes.forEach(({ tela, rotulo, campo }) => {
-    const item = document.createElement('li');
-    const botao = document.createElement('button');
-    botao.type = 'button';
-    botao.className = 'btn';
-    botao.dataset.variant = 'outline';
-    botao.textContent = rotulo;
-    botao.addEventListener('click', () => {
-      showScreen(tela);
-      focarCampo(campo);
-    });
-    item.append(botao);
-    lista.append(item);
-  });
-  caixa.append(titulo, instrucao, lista);
+  caixa.append(titulo);
+
+  const camposListados = new Set();
+  const mensagensGerais = new Set();
+  function listar(rotulo, itens) {
+    const lista = document.createElement('ul');
+    for (const { campo, mensagem } of itens) {
+      if (campo ? camposListados.has(campo) : mensagensGerais.has(mensagem)) continue;
+      if (campo) camposListados.add(campo);
+      else mensagensGerais.add(mensagem);
+      const item = document.createElement('li');
+      item.textContent = mensagem;
+      if (campo?.closest('.screen') && !campo.closest('[hidden]') && !campo.readOnly && !campo.disabled) {
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'btn';
+        botao.dataset.variant = 'outline';
+        botao.textContent = 'Ir ao campo';
+        botao.setAttribute('aria-label', 'Ir ao campo: ' + mensagem);
+        botao.addEventListener('click', () => {
+          showScreen(Number(campo.closest('.screen').dataset.screen));
+          focarCampo(campo);
+        });
+        item.append(' ', botao);
+      }
+      lista.append(item);
+    }
+    if (!lista.childElementCount) return;
+    const cabecalho = document.createElement('h3');
+    cabecalho.textContent = rotulo;
+    caixa.append(cabecalho, lista);
+  }
+  listar('Corrigir', pendencias.map(({ campo, rotulo }) => ({ campo, mensagem: rotulo })));
+  listar('Conferir', avisos);
+
+  if (!pendencias.length) {
+    const continuar = document.createElement('button');
+    continuar.type = 'button';
+    continuar.className = 'btn';
+    continuar.textContent = 'Conferi os avisos e quero continuar';
+    continuar.addEventListener('click', () => finalizarFicha(true));
+    caixa.append(continuar);
+  }
   getScreens()[state.screen - 1].prepend(caixa);
   titulo.focus();
+}
+
+async function finalizarFicha(confirmou = false) {
+  if (conferindoCoerencia) return;
+  persistInputs();
+  const pendencias = camposBasicosPendentes().concat(documentosPendentes());
+  if (confirmou && !pendencias.length) {
+    showScreen(TOTAL + 1);
+    return;
+  }
+  conferindoCoerencia = true;
+  btnContinuar.disabled = true;
+  btnVoltar.disabled = true;
+  btnPdfConferencia.disabled = true;
+  area.inert = true;
+  let avisos;
+  try {
+    avisos = await verificarCoerencia();
+  } finally {
+    conferindoCoerencia = false;
+    btnContinuar.disabled = false;
+    btnVoltar.disabled = false;
+    btnPdfConferencia.disabled = false;
+    area.inert = false;
+  }
+  if (!root.isConnected) return;
+  if (pendencias.length || avisos.length) mostrarRevisaoAntesDoPdf(pendencias, avisos);
+  else showScreen(TOTAL + 1);
 }
 
 function renderProgress() {
@@ -1726,7 +1726,6 @@ root.querySelector('[data-visat-revisao]').before(cartao.querySelector('.visat-e
 cartao.querySelector('.success-icon')?.setAttribute('aria-hidden', 'true');
 const subtitulo = cartao.querySelector('.screen-sub');
 if (subtitulo) subtitulo.textContent = 'Confira os dados da notificação antes de enviar.';
-mostrarCoerencia(cartao.querySelector('.visat-entrega'));
 const marcados = root.querySelectorAll('[data-summary]');
 const items = marcados.length
   ? Array.from(marcados).filter(el => !el.closest('[hidden]')).map((el) => [rotuloResumo(el), valorResumo(el)])
@@ -1754,7 +1753,14 @@ function escapeHtml(s) {
 return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-btnContinuar.addEventListener('click', finalizarFicha);
+btnContinuar.addEventListener('click', () => finalizarFicha());
+area.addEventListener('input', evento => {
+  if (evento.isTrusted) root.querySelector('[data-visat-pendencias]')?.remove();
+});
+area.addEventListener('change', evento => {
+  if (evento.isTrusted) root.querySelector('[data-visat-pendencias]')?.remove();
+});
+
 
 root.querySelector('#btnRevisar').addEventListener('click', () => {
 showScreen(1);

@@ -363,8 +363,8 @@
     el.textContent = {
       '': '',
       digitando: 'Escolha na lista.',
-      validado: { mun: 'Município identificado.', cnes: 'Unidade identificada.', cbo: 'Ocupação identificada.',
-        cnae: 'CNAE identificado.' }[tipo],
+      validado: { mun: 'IBGE ' + extra + ' vinculado.', cnes: 'CNES ' + extra + ' vinculado.',
+        cbo: 'CBO ' + extra + ' vinculado.', cnae: 'CNAE identificado.' }[tipo],
       varios: extra + ' opções. Escolha na lista.',
       manual: 'Código não validado. Escolha na lista.',
       indisponivel: 'Tabela indisponível. Tente novamente.'
