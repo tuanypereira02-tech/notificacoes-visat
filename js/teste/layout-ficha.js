@@ -213,7 +213,7 @@ const VISAT_ROTULOS = {
 "O paciente está exposto em seu local de trabalho a": "Exposto no trabalho a",
 "Limitação e incapacidade para o exercício de tarefas": "Limitação para tarefas",
 "Com afastamento do trabalho, o quadro": "Com afastamento, o quadro",
-"Com afastamento do trabalho": "Com afastamento",
+"Com afastamento do trabalho": "Com afastamento, o quadro",
 "Histórico de saúde vocal e tratamentos": "Histórico vocal e tratamentos",
 "Agentes aos quais houve exposição": "Agentes de exposição",
 "Se alta com conversão sorológica, qual vírus": "Vírus da soroconversão",

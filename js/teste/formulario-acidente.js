@@ -742,6 +742,14 @@ container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
 root.querySelectorAll('[data-key="refEmp"], [data-key="refRes"]').forEach(campo => campo.parentElement.remove());
 const TOTAL = montarBlocoSinan(root, options);
+if (root.querySelector('[data-chips="afastamento"], [data-key="afastamento"]')) {
+  const tempo = root.querySelector('[data-key="afastTempo"], [data-key="tempoAfast"]');
+  const quadro = root.querySelector('[data-chips="comAfast"], [data-chips="evolAfast"]');
+  [tempo?.closest('.unit-row')?.parentElement, quadro?.parentElement].filter(Boolean).forEach(caixa => {
+    caixa.dataset.showWhen = 'afastamento=Sim';
+    caixa.hidden = true;
+  });
+}
 // Os modelos trazem textos fixos junto aos campos. Preserve os atalhos de consulta.
 root.querySelectorAll('p.field-help, p.hint-line').forEach(aviso => {
   if (aviso.querySelector('a')) return;
