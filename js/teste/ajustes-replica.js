@@ -566,6 +566,7 @@
   function organizarResultadosBiologico(root) {
     const referencia = caixa(campo(root, 'fonte'));
     if (!referencia) return;
+    const mostrarPessoaNoRotulo = new URLSearchParams(location.search).get('rotulosExames') === '1';
     const resultados = document.createElement('section');
     resultados.className = 'visat-resultados-biologico';
     const grupos = [
@@ -590,10 +591,10 @@
         if (!bloco) continue;
         const rotulo = bloco.querySelector('.field-label');
         const rotuloCompleto = titulo + ' — ' + exame;
-        rotulo.textContent = exame + ' (' + pessoa + ')';
+        rotulo.textContent = mostrarPessoaNoRotulo ? exame + ' (' + pessoa + ')' : exame;
         rotulo.dataset.visatRotuloPdf = rotuloCompleto;
         grupo.dataset.summary = rotuloCompleto;
-        bloco.querySelector('select')?.setAttribute('aria-label', rotulo.textContent);
+        bloco.querySelector('select')?.setAttribute('aria-label', mostrarPessoaNoRotulo ? rotulo.textContent : rotuloCompleto);
         coluna.append(bloco);
       }
       resultados.append(coluna);
