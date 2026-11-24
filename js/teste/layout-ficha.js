@@ -531,18 +531,44 @@ window.aplicarLayoutRascunho = function(root) {
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).
-const gruposEmLista = ['sexo','gestante','raca','comoOcorreu','local','tipoAcidente'].map(key => root.querySelector('[data-chips="'+key+'"]')).filter(Boolean);
-root.querySelectorAll('[data-chips]').forEach(grupo => {
-  const rotulo = grupo.previousElementSibling;
-  if (rotulo && /^Há ou houve outros trabalhadores/i.test(rotulo.textContent.trim()) && !gruposEmLista.includes(grupo)) gruposEmLista.push(grupo);
-});
-for(const group of gruposEmLista){const key=group.dataset.chips;
- const select=document.createElement('select');select.className='input';select.setAttribute('aria-label',{sexo:'Sexo',gestante:'Gestante',raca:'Raça/cor'}[key]||group.previousElementSibling?.textContent.trim()||key);select.add(new Option('Selecione',''));select.options[0].disabled=true;
- const chips=[...group.querySelectorAll('.chip')];chips.forEach(c=>select.add(new Option(c.textContent.trim(),c.dataset.value)));
- select.addEventListener('change',()=>{const chip=chips.find(c=>c.dataset.value===select.value);if(chip)chip.click();});
- group.after(select);group.style.display='none';
- function sync(){select.value=chips.find(c=>c.classList.contains('selected'))?.dataset.value||'';select.disabled=chips.every(c=>c.disabled);}
- new MutationObserver(sync).observe(group,{attributes:true,subtree:true,attributeFilter:['class','disabled','aria-pressed']});sync();
+const chavesEmLista = new Set(['sexo', 'gestante', 'raca', 'comoOcorreu', 'local', 'tipoAcidente']);
+const respostasPadrao = new Set(['sim', 'não', 'ignorado', 'não se aplica']);
+for (const grupo of root.querySelectorAll('[data-chips]')) {
+  const chave = grupo.dataset.chips;
+  const rotulo = grupo.previousElementSibling?.textContent.trim();
+  const chips = [...grupo.querySelectorAll('.chip')];
+  const respostas = chips.map(chip => chip.dataset.value?.trim().toLowerCase());
+  const listaPadrao = grupo.dataset.single === 'true' &&
+    (respostas.includes('sim') || respostas.includes('não')) &&
+    respostas.every(resposta => respostasPadrao.has(resposta));
+  if (!chavesEmLista.has(chave) && !/^Há ou houve outros trabalhadores/i.test(rotulo || '') && !listaPadrao) continue;
+
+  const select = document.createElement('select');
+  select.className = 'input';
+  select.setAttribute('aria-label', { sexo: 'Sexo', gestante: 'Gestante', raca: 'Raça/cor' }[chave] || rotulo || chave);
+  select.add(new Option('Selecione', ''));
+  select.options[0].disabled = true;
+  const opcoes = new Map();
+  for (const chip of chips) {
+    if (opcoes.has(chip.dataset.value)) continue;
+    opcoes.set(chip.dataset.value, chip);
+    select.add(new Option(chip.textContent.trim(), chip.dataset.value));
+  }
+  select.addEventListener('change', () => opcoes.get(select.value)?.click());
+  grupo.after(select);
+  grupo.style.display = 'none';
+
+  function sincronizar() {
+    select.value = chips.find(chip => chip.classList.contains('selected'))?.dataset.value || '';
+    for (const opcao of [...select.options].slice(1)) {
+      opcao.disabled = opcoes.get(opcao.value).disabled;
+    }
+    select.disabled = chips.every(chip => chip.disabled);
+  }
+  new MutationObserver(sincronizar).observe(grupo, {
+    attributes: true, subtree: true, attributeFilter: ['class', 'disabled', 'aria-pressed']
+  });
+  sincronizar();
 }
 for (const secao of root.querySelectorAll('[data-visat-secao-complementar]')) {
   const titulo = secao.querySelector(':scope > .screen-title');
