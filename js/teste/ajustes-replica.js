@@ -402,8 +402,8 @@
   // Blocos comuns a todas as fichas (mesma posição e tamanho em todas).
   const LAYOUT_COMUM = [
     [['#sinan-nome', 2], ['#sinan-nasc', 1], ['#sinan-idade', 1]],
-    [['sexo', 1], ['raca', 1], ['#sinan-esc', 1]],
-    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2], ['gestante', 1]],
+    [['sexo', 1], ['gestante', 1], ['raca', 1], ['#sinan-esc', 1]],
+    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2]],
     [['#sinan-residencia-pais', 1], ['#sinan-pais', 3], ['#sinan-mun-res', 3]],
     [['#sinan-cep', 1], ['#sinan-logr', 2], ['#sinan-num', 1]],
     [['#sinan-bairro', 1], ['#sinan-tel', 1], ['zona', 2]],
