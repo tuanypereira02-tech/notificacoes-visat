@@ -616,17 +616,6 @@
       limparCnaeSecundario();
       aviso(el, '');
     });
-    var municipio = campo(raiz, destino.municipio);
-    if (municipio && destino.nome) municipio.addEventListener('visat:trocar-local-empresa', function () {
-      var cep = campo(raiz, destino.cep);
-      el.dispatchEvent(new Event('visat:trocar-empresa'));
-      if (cep) cep.dispatchEvent(new Event('visat:trocar-empresa'));
-      limparCampo(el);
-      Object.keys(destino).forEach(function (chave) {
-        if (['municipio', 'uf', 'ibge', 'cnaeSecundario'].includes(chave)) return;
-        limparCampo(campo(raiz, destino[chave]));
-      });
-    });
     el.addEventListener('input', function () {
       var n = digitos(el.value);
       if (n === el.dataset.ultimoCnpj) return;
@@ -821,7 +810,9 @@
       numEmp: campo(raiz, ['numEmp', 'numero']), bairroEmp: campo(raiz, ['bairroEmp', 'bairro']),
       compEmp: campo(raiz, ['compEmp']), cepEmp: campo(raiz, ['cepEmp']),
       ibgeEmp: campo(raiz, ['ibgeEmp']), cnae: campo(raiz, ['cnae']),
-      telEmp: campo(raiz, ['telEmp', 'telefone'])
+      telEmp: campo(raiz, ['telEmp', 'telefone']),
+      situacaoCadastral: campo(raiz, ['situacaoCadastral']),
+      matrizFilial: campo(raiz, ['matrizFilial'])
     };
     var consultaAtual = 0;
     var espera;
@@ -831,13 +822,31 @@
     function cancelar() { consultaAtual++; clearTimeout(espera); }
     function filtroDe(el) { return el && el.value.trim() ? normalizarNome(el.value) : ''; }
 
-    function selecionar(empresa) {
+    var selecionada = false;
+    var local = ['munEmp', 'ufEmp', 'ibgeEmp'];
+
+    function reiniciar(preservar, manterLocal) {
       cancelar();
+      ocultar();
+      retorno.textContent = '';
+      selecionada = false;
+      cnpj.dispatchEvent(new Event('visat:trocar-empresa'));
+      enderecoEmpresa.cepEmp?.dispatchEvent(new Event('visat:trocar-empresa'));
+      if (preservar !== cnpj) limparCampo(cnpj);
+      if (preservar !== nome) limparCampo(nome);
+      Object.keys(enderecoEmpresa).forEach(function (chave) {
+        if (!manterLocal || !local.includes(chave)) limparCampo(enderecoEmpresa[chave]);
+      });
+      var terceirizada = raiz.querySelector('[data-chips="terceirizada"] .chip.selected');
+      if (terceirizada) terceirizada.click();
+      limparCampo(campo(raiz, ['terceirizada']));
+    }
+
+    function selecionar(empresa) {
       aplicando = true;
       try {
-        cnpj.dispatchEvent(new Event('visat:trocar-empresa'));
-        if (enderecoEmpresa.cepEmp) enderecoEmpresa.cepEmp.dispatchEvent(new Event('visat:trocar-empresa'));
-        Object.keys(enderecoEmpresa).forEach(function (chave) { limparCampo(enderecoEmpresa[chave]); });
+        reiniciar();
+        selecionada = true;
         nome.value = titulo(empresa.nome);
         nome.dispatchEvent(new Event('input', { bubbles: true }));
         // Preenche a seleção e consulta o CNPJ para completar os dados disponíveis.
@@ -946,7 +955,21 @@
       });
     }
 
-    nome.addEventListener('input', function (ev) { if (ev.isTrusted) atualizar(); });
+    nome.addEventListener('input', function (ev) {
+      if (!ev.isTrusted) return;
+      if (selecionada || cnpj.dataset.ultimoCnpj || cnpj.dataset.cnpjConsultado) reiniciar(nome);
+      atualizar();
+    });
+    cnpj.addEventListener('input', function (ev) {
+      if (!ev.isTrusted) return;
+      var anterior = cnpj.dataset.ultimoCnpj;
+      if (anterior && digitos(cnpj.value) === anterior) return;
+      if (selecionada || anterior || cnpj.dataset.cnpjConsultado) reiniciar(cnpj);
+      else { cancelar(); ocultar(); retorno.textContent = ''; }
+    }, true);
+    enderecoEmpresa.munEmp?.addEventListener('visat:trocar-local-empresa', function () {
+      reiniciar(null, true);
+    });
     nome.parentElement.addEventListener('focusout', function (ev) {
       if (nome.parentElement.contains(ev.relatedTarget)) return;
       cancelar();
