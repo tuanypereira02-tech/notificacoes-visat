@@ -1,0 +1,60 @@
+/* Densidade da ficha em homologação. Os campos seguem a ordem e a visibilidade do modelo. */
+.visat-teste-compacto .acidente-inline.visat-modelo-final {
+  --r-gap-y: 11px;
+  --r-gap-x: 14px;
+  --r-alt: 44px;
+  padding-inline: clamp(12px, 2vw, 22px) !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .screen {
+  margin-bottom: 16px !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .field-group {
+  row-gap: var(--r-gap-y);
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .screen [data-visat-secao-complementar],
+.visat-teste-compacto .acidente-inline.visat-modelo-final .visat-sequencia {
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .visat-sequencia:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .field-label {
+  margin-bottom: 4px !important;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  container-type: inline-size;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+  grid-column: span var(--visat-colunas-previstas) !important;
+}
+
+@container (max-width: 635px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+    grid-column: span 2 !important;
+  }
+
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r >
+  :is([data-visat-colunas="3"], [data-visat-colunas="4"], div:has(textarea, .unit-row, [data-chips], input[type="search"])) {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@container (max-width: 315px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+    grid-column: 1 / -1 !important;
+  }
+}

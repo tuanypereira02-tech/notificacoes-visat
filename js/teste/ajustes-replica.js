@@ -455,6 +455,14 @@
     if (/nome|endere|logr|empresa|ocupa|mun|unid|estabelec|descr|especif|outr|qual|cid|agente|vínculo|vinculo/i.test(chave + ' ' + rotulo) || rotulo.length > 30) return 2;
     return 1;
   }
+  function larguraNaGrade(caixa, colunas) {
+    if (document.documentElement.classList.contains('visat-teste-compacto')) {
+      caixa.dataset.visatColunas = String(colunas);
+      caixa.style.setProperty('--visat-colunas-previstas', String(colunas));
+      return;
+    }
+    caixa.style.setProperty('grid-column', 'span ' + colunas, 'important');
+  }
   function gradeAutomatica(root) {
     const ESTRUTURA = 'section, details, .field-group, .draft-detalhes, .visat-sequencia, [data-visat-secao-complementar], .visat-painel-causa';
     const ehCampo = el => el.nodeType === 1 && !el.matches(ESTRUTURA + ', .visat-titulo-agravo, h1, h2, h3, p, .screen-title, .screen-sub')
@@ -473,7 +481,7 @@
           filho.before(secao);
         }
         caixas.forEach(c => {
-          c.style.setProperty('grid-column', 'span ' + larguraPadrao(c), 'important');
+          larguraNaGrade(c, larguraPadrao(c));
           c.removeAttribute('data-visat-span');
           secao.append(c);
         });
@@ -512,7 +520,7 @@
       itens.forEach(([c, n]) => {
         const pai = c.parentElement;
         if (pai && pai.matches('.draft-row, .visat-linha-campos, .pair-row')) antigas.add(pai);
-        c.style.setProperty('grid-column', 'span ' + n, 'important');
+        larguraNaGrade(c, n);
         c.removeAttribute('data-visat-span');
         c.style.removeProperty('--visat-span');
         secao.append(c);
