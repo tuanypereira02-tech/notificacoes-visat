@@ -569,16 +569,16 @@
     const resultados = document.createElement('section');
     resultados.className = 'visat-resultados-biologico';
     const grupos = [
-      ['Resultados da pessoa acidentada (data zero)', [
+      ['Resultados da pessoa acidentada (data zero)', 'Acidentado', [
         ['sorAntiHIV', 'Anti-HIV'], ['sorHBsAg', 'HBsAg'],
         ['sorAntiHBs', 'Anti-HBs'], ['sorAntiHCV', 'Anti-HCV']
       ]],
-      ['Resultados da pessoa-fonte', [
+      ['Resultados da pessoa-fonte', 'Pessoa-fonte', [
         ['fonteAntiHIV', 'Anti-HIV'], ['fonteHBsAg', 'HBsAg'],
         ['fonteAntiHBc', 'Anti-HBc'], ['fonteAntiHCV', 'Anti-HCV']
       ]]
     ];
-    for (const [titulo, exames] of grupos) {
+    for (const [titulo, pessoa, exames] of grupos) {
       const coluna = document.createElement('div');
       coluna.className = 'visat-coluna-resultados';
       const cabecalho = document.createElement('h4');
@@ -590,10 +590,10 @@
         if (!bloco) continue;
         const rotulo = bloco.querySelector('.field-label');
         const rotuloCompleto = titulo + ' — ' + exame;
-        rotulo.textContent = exame;
+        rotulo.textContent = exame + ' (' + pessoa + ')';
         rotulo.dataset.visatRotuloPdf = rotuloCompleto;
         grupo.dataset.summary = rotuloCompleto;
-        bloco.querySelector('select')?.setAttribute('aria-label', rotuloCompleto);
+        bloco.querySelector('select')?.setAttribute('aria-label', rotulo.textContent);
         coluna.append(bloco);
       }
       resultados.append(coluna);
