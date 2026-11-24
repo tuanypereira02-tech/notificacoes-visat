@@ -1,7 +1,8 @@
 /* Página de teste VISAT (notificacao-teste.html): versão do rascunho v22 levada ao repositório. */
-// Incorporada no Google Sites (quadro de altura fixa): a ficha rola dentro do quadro.
-try { if (window.self !== window.top) document.documentElement.classList.add('visat-em-quadro'); }
-catch (erro) { document.documentElement.classList.add('visat-em-quadro'); }
+// Apenas quadros de altura fixa precisam de rolagem no contêiner da ficha.
+if (window.self !== window.top && new URLSearchParams(window.location.search).get('paginaInteira') !== '1') {
+  document.documentElement.classList.add('visat-em-quadro');
+}
 // Guarda a altura (no quadro) do botão "Abrir formulário" clicado, para a ficha abrir nessa altura.
 document.addEventListener('click', evento => {
   const botao = evento.target instanceof Element && evento.target.closest('button, a');
@@ -379,7 +380,8 @@ window.aplicarLayoutRascunho = function(root) {
     caixaCausa.classList.add('visat-painel-causa-resultado');
     const destino = caixaDe(tipo);
     const linhaTipo = destino.closest('.draft-row, .visat-linha-campos') || destino;
-    linhaTipo.after(painel);
+    const atendimento = root.querySelector('[data-key="dataAtendimento"]')?.closest('[data-show-when="atendimentoMedico=Sim"]');
+    (atendimento || linhaTipo).after(painel);
     grade.append(...itens);
     painel.append(caixaCausa);
   })();
