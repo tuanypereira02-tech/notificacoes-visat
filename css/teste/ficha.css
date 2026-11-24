@@ -1616,10 +1616,6 @@ html:not(.visat-em-quadro) body.modo-formulario-acidente :is(#principal, #result
   }
 }
 
-/* Alinha os controles de resposta mesmo quando um rótulo ocupa duas linhas. */
-.acidente-inline.visat-modelo-final .visat-r > :has(> select):not(:has(.unit-row)) {
-  align-self: end;
-}
 body.modo-formulario-acidente .acidente-inline.visat-modelo-final .visat-painel-causa-grade {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }

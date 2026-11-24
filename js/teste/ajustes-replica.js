@@ -403,7 +403,7 @@
   const LAYOUT_COMUM = [
     [['#sinan-nome', 2], ['#sinan-nasc', 1], ['#sinan-idade', 1]],
     [['sexo', 1], ['gestante', 1], ['raca', 1], ['#sinan-esc', 1]],
-    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2]],
+    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 3]],
     [['#sinan-residencia-pais', 1], ['#sinan-pais', 3], ['#sinan-mun-res', 3]],
     [['#sinan-cep', 1], ['#sinan-logr', 2], ['#sinan-num', 1]],
     [['#sinan-bairro', 1], ['#sinan-tel', 1], ['zona', 2]],
@@ -626,6 +626,19 @@
         ...LAYOUT_COMUM
       ]);
       if (options && options.templateId === 'form-acidente-template') aplicarLayout(root, LAYOUT_ACIDENTE);
+      if (options?.templateId === 'form-biologico-template') aplicarLayout(root, [
+        [['tipoExposicao', 4], ['tipoExposicaoOutro', 4]],
+        [['horaAcidente', 1], ['local', 3]],
+        [['fonte', 4]],
+        [['sorAntiHIV', 2], ['sorHBsAg', 2]],
+        [['sorAntiHBs', 2], ['sorAntiHCV', 2]],
+        [['fonteHBsAg', 2], ['fonteAntiHBc', 2]],
+        [['fonteAntiHIV', 2], ['fonteAntiHCV', 2]]
+      ]);
+      if (options?.templateId === 'form-cancer-template') aplicarLayout(root, [
+        [['regime', 2], ['tempoExposicao', 2]],
+        [['exposicao', 2], ['agentes', 4]]
+      ]);
       gradeAutomatica(root);
     } catch (erro) {
       console.warn('[VISAT réplica] ajuste não aplicado:', erro);
