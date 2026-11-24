@@ -325,8 +325,14 @@
       raiz.classList.toggle('visat-loc-com-resultados', !!temLocal);
     }
 
-    function atualizar() {
+    function atualizar(evento) {
       if (aplicando) return;
+      if (evento?.isTrusted && evento.type === 'input') {
+        clearTimeout(esperaOnline);
+        rodada++;
+        ultimaOnline = '';
+        limite = MAX_LISTA;
+      }
       revisao++;
       sugestoes.hidden = true;
       clearTimeout(espera);
@@ -459,6 +465,7 @@
         escolhido = r[0];
         // Por último o CNPJ: a consulta online confere e completa (telefone, situação, CNAE no código do Sinan).
         escrever(c.cnpj, fmtCnpj(r[0]));
+        c.cnpj.dispatchEvent(new Event('visat:empresa-selecionada'));
       } finally {
         aplicando = false;
       }
@@ -562,7 +569,7 @@
       var input = c[k];
       input.addEventListener('input', function (evento) {
         if (evento.isTrusted && document.activeElement === input) abrirNoCampo(input);
-        atualizar();
+        atualizar(evento);
       });
       input.addEventListener('change', atualizar);
       input.addEventListener('keydown', function (evento) {

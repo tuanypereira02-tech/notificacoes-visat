@@ -238,13 +238,48 @@
       return ['uf', 'localidade', 'logradouro', 'bairro'].map(chave => dadosEndereco[chave]?.value.trim() || '');
     }
     const numeroEndereco = campo(raiz, chaveCep === 'cep' ? ['numRes'] : ['numEmp', 'numero']);
-    for (const el of [...Object.values(dadosEndereco), numeroEndereco, cep].filter(Boolean)) {
-      el.addEventListener('input', evento => { if (evento.isTrusted) fecharResultados(); });
-      el.addEventListener('change', evento => { if (evento.isTrusted) fecharResultados(); });
-      el.addEventListener('visat:escolha-manual', fecharResultados);
-    }
     let ultimoCep = '';
     let consulta = 0;
+
+    function reiniciarEndereco(origem) {
+      fecharResultados();
+      consulta++;
+      ultimoCep = '';
+      for (const [el, valor] of preenchidosPeloCep) {
+        if (el !== origem && el !== dadosEndereco.uf && el !== dadosEndereco.localidade &&
+            el.value === valor) limparCampo(el);
+      }
+      preenchidosPeloCep.clear();
+      limparCampo(cep);
+      aviso(cep, '');
+    }
+
+    if (chaveCep === 'cep') {
+      for (const el of [...Object.values(dadosEndereco), numeroEndereco, cep].filter(Boolean)) {
+        el.addEventListener('input', evento => { if (evento.isTrusted) fecharResultados(); });
+        el.addEventListener('change', evento => { if (evento.isTrusted) fecharResultados(); });
+        el.addEventListener('visat:escolha-manual', fecharResultados);
+      }
+    } else {
+      for (const el of Object.values(dadosEndereco).filter(Boolean)) {
+        const enderecoBase = el !== dadosEndereco.ibge && el !== dadosEndereco.complemento;
+        let anterior = normalizar(el.value);
+        el.addEventListener('input', evento => {
+          const atual = normalizar(el.value);
+          const mudou = anterior !== atual;
+          anterior = atual;
+          if (!evento.isTrusted || !mudou) return;
+          if (enderecoBase && cep.value) reiniciarEndereco(el);
+          else fecharResultados();
+        });
+        el.addEventListener('visat:escolha-manual', () => {
+          if (enderecoBase && cep.value) reiniciarEndereco(el);
+          else fecharResultados();
+        });
+      }
+      numeroEndereco?.addEventListener('input', evento => { if (evento.isTrusted) fecharResultados(); });
+      cep.addEventListener('input', evento => { if (evento.isTrusted) fecharResultados(); });
+    }
 
     cep.addEventListener('visat:trocar-empresa', function () {
       consulta++;
@@ -448,6 +483,10 @@
             }
           } catch { /* sem sugestões; o campo segue manual */ }
         }, 500);
+      });
+      if (chaveCep !== 'cep') [cep, dadosEndereco.uf, dadosEndereco.localidade, dadosEndereco.bairro].filter(Boolean).forEach(el => {
+        el.addEventListener('input', evento => { if (evento.isTrusted) fecharRuas(); });
+        el.addEventListener('visat:escolha-manual', fecharRuas);
       });
       cep.addEventListener('visat:trocar-empresa', fecharRuas);
       campoRua.addEventListener('blur', () => setTimeout(fecharRuas, 200));
@@ -835,7 +874,7 @@
       if (preservar !== cnpj) limparCampo(cnpj);
       if (preservar !== nome) limparCampo(nome);
       Object.keys(enderecoEmpresa).forEach(function (chave) {
-        if (!manterLocal || !local.includes(chave)) limparCampo(enderecoEmpresa[chave]);
+        if (enderecoEmpresa[chave] !== preservar && (!manterLocal || !local.includes(chave))) limparCampo(enderecoEmpresa[chave]);
       });
       var terceirizada = raiz.querySelector('[data-chips="terceirizada"] .chip.selected');
       if (terceirizada) terceirizada.click();
@@ -967,6 +1006,15 @@
       if (selecionada || anterior || cnpj.dataset.cnpjConsultado) reiniciar(cnpj);
       else { cancelar(); ocultar(); retorno.textContent = ''; }
     }, true);
+    cnpj.addEventListener('visat:empresa-selecionada', function () { selecionada = true; });
+    ['cnae', 'cepEmp', 'bairroEmp', 'endEmp', 'numEmp'].forEach(function (chave) {
+      var el = enderecoEmpresa[chave];
+      el?.addEventListener('input', function (evento) {
+        if (evento.isTrusted && (selecionada || cnpj.dataset.ultimoCnpj || cnpj.dataset.cnpjConsultado)) {
+          reiniciar(el);
+        }
+      }, true);
+    });
     enderecoEmpresa.munEmp?.addEventListener('visat:trocar-local-empresa', function () {
       reiniciar(null, true);
     });

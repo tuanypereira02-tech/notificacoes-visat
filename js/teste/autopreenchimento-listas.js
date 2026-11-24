@@ -8,7 +8,7 @@
  *   - Ocupação: CBO 2002 (MTE) + códigos adaptados pelo DATASUS (data/cbo-datasus-adicional.json); 6 caracteres.
  *   - CID-10: tratado em js/cid-qualificado.js (escopo por ficha, LDRT e cap. XIX/XX no acidente de trabalho).
  * Ao escolher um item da lista, o campo recebe "código – descrição" (ou o nome, no caso de unidade e município)
- * e o campo de código correspondente é preenchido. Nada já digitado é apagado.
+ * e o campo de código correspondente é preenchido. Alterações descartam os dados vinculados à seleção anterior.
  */
 (function () {
   'use strict';
@@ -196,6 +196,7 @@
     input.title = 'Digite o nome ou código e escolha uma sugestão.';
     var listaRapida;
     var abertura = 0;
+    var revisao = 0;
     function filtrarContexto(lista) {
       return aceitarItem ? lista.filter(aceitarItem) : lista;
     }
@@ -285,6 +286,14 @@
       abrirListaRapida();
     });
     var esperaLista;
+    input.addEventListener('visat:reiniciar-lista', function () {
+      revisao++;
+      delete input.dataset.visatConfirmado;
+      clearTimeout(esperaLista);
+      fecharListaRapida();
+      dl.replaceChildren();
+      if (aoEscolher) estadoCodigo(input, '', tipo);
+    });
     input.addEventListener('input', function(evento){
       clearTimeout(esperaLista);fecharListaRapida();
       // Só reabre a lista quando a pessoa digita; a escolha de uma sugestão fecha a lista.
@@ -306,10 +315,12 @@
 
 
     function atualizar() {
+      var consulta = revisao;
       var termo = norm(input.value);
-      if (!termo) { dl.textContent = ''; return; }
+      dl.replaceChildren();
+      if (!termo) return;
       carregar(fonte).then(function (lista) {
-        if (norm(input.value) !== termo) return;
+        if (consulta !== revisao || !input.isConnected || norm(input.value) !== termo) return;
         lista = filtrarContexto(lista);
         var achados = tipo === 'mun' ? sugerirMunicipios(lista, termo, ufVinculada(input), 30) :
           sugerirPorTrechos(lista, termo).slice(0, 30);
@@ -329,8 +340,9 @@
       var valor = norm(input.value);
       if (!valor) { estadoCodigo(input, ''); return; }
       if (input.dataset.visatConfirmado === valor) return;
+      var consulta = revisao;
       carregar(fonte).then(function (lista) {
-        if (!input.isConnected || norm(input.value) !== valor) return;
+        if (consulta !== revisao || !input.isConnected || norm(input.value) !== valor) return;
         if (!lista.length) { estadoCodigo(input, 'indisponivel', tipo); return; }
         lista = filtrarContexto(lista);
         var uf = tipo === 'mun' ? ufVinculada(input) : '';
@@ -353,6 +365,7 @@
 
     input.addEventListener('focus', function () { carregar(fonte); if(norm(input.value) || (tipo === 'cnae' && window.visatCnaesCompativeis)) abrirListaRapida(); });
     input.addEventListener('input', function (evento) {
+      revisao++;
       delete input.dataset.visatConfirmado;
       atualizar();
       // Preenchimento feito pelo próprio formulário (escolha no campo vinculado): só registra a validação.
@@ -471,31 +484,58 @@
     var municipioNotif = campo(raiz, ['munNotif', 'municipioNotif', 'municipioNotificacao', 'municipio']);
     var ufNotif = campo(raiz, ['ufNotif', 'ufNotificacao', 'uf']);
     var ibgeNotif = campo(raiz, ['ibgeNotif']);
-    function vincularCampos(origens, vinculados) {
+    function limparCampo(el) {
+      if (!el) return;
+      el.dispatchEvent(new Event('visat:reiniciar-lista'));
+      if (!el.value) return;
+      el.value = '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function vincularCampos(origens, derivados = []) {
+      origens = origens.filter(Boolean);
+      derivados = derivados.filter(Boolean);
       var confirmados = new Map();
-      origens.filter(Boolean).forEach(function (origem) {
+      var preenchidos = new Map();
+
+      function reiniciar(origem, manterLocal) {
+        origens.forEach(function (el) { if (el !== origem) limparCampo(el); });
+        preenchidos.forEach(function (valor, el) {
+          if (!manterLocal && norm(el.value) === valor) limparCampo(el);
+        });
+        confirmados.clear();
+        preenchidos.clear();
+      }
+
+      origens.forEach(function (origem) {
         origem.addEventListener('input', function (evento) {
-          if (!evento.isTrusted || !confirmados.has(origem) || confirmados.get(origem) === norm(origem.value)) return;
-          confirmados.clear();
-          vinculados.forEach(function (el) {
-            if (!el || el === origem || !el.value) return;
-            el.value = '';
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-          });
+          if (evento.isTrusted && confirmados.has(origem) &&
+              confirmados.get(origem) !== norm(origem.value)) reiniciar(origem);
         });
       });
-      return function () {
-        origens.filter(Boolean).forEach(function (origem) { confirmados.set(origem, norm(origem.value)); });
+      return {
+        preencher: function (acao) {
+          var anteriores = derivados.map(function (el) { return norm(el.value); });
+          acao();
+          derivados.forEach(function (el, indice) {
+            var valor = norm(el.value);
+            if (valor !== anteriores[indice]) preenchidos.set(el, valor);
+          });
+          origens.forEach(function (el) { confirmados.set(el, norm(el.value)); });
+        },
+        reiniciar: reiniciar
       };
     }
-    var confirmarUnidade = !nomeUnidade?.dataset.visatLista && vincularCampos([nomeUnidade, cnes], [nomeUnidade, cnes]);
+    var grupoUnidade = ![nomeUnidade, cnes].some(el => el?.dataset.visatLista) &&
+      vincularCampos([nomeUnidade, cnes], [ibgeNotif, municipioNotif, ufNotif]);
     function preencherUnidade(item) {
-      definir(nomeUnidade, item.v, true);
-      definir(cnes, item.c, true);
-      definir(ibgeNotif, item.ibge, true);
-      definir(municipioNotif, item.municipio, true);
-      definir(ufNotif, item.uf, true);
-      if (confirmarUnidade) confirmarUnidade();
+      grupoUnidade.preencher(function () {
+        definir(nomeUnidade, item.v, true);
+        definir(cnes, item.c, true);
+        definir(ibgeNotif, item.ibge, true);
+        definir(municipioNotif, item.municipio, true);
+        definir(ufNotif, item.uf, true);
+      });
     }
     anexarLista(nomeUnidade, 'cnes', preencherUnidade);
     anexarLista(cnes, 'cnes', preencherUnidade);
@@ -511,42 +551,51 @@
       return (!codigo || codigo.slice(0, 6) === item.ibge) &&
         (!municipio || municipio === norm(item.municipio)) && (!uf || uf === norm(item.uf));
     }
+    var grupoAtendimento = ![unidadeAtendimento, cnesAtendimento].some(el => el?.dataset.visatLista) &&
+      vincularCampos([unidadeAtendimento, cnesAtendimento], [ibgeAtendimento, municipioAtendimento, ufAtendimento]);
     function preencherUnidadeAtendimento(item) {
       if (!estabelecimentoDoMunicipio(item)) return;
-      definir(ibgeAtendimento, item.ibge, true);
-      definir(municipioAtendimento, item.municipio, true);
-      definir(ufAtendimento, item.uf, true);
-      definir(unidadeAtendimento, item.v, true);
-      definir(cnesAtendimento, item.c, true);
-      if (confirmarAtendimento) confirmarAtendimento();
+      grupoAtendimento.preencher(function () {
+        definir(ibgeAtendimento, item.ibge, true);
+        definir(municipioAtendimento, item.municipio, true);
+        definir(ufAtendimento, item.uf, true);
+        definir(unidadeAtendimento, item.v, true);
+        definir(cnesAtendimento, item.c, true);
+      });
     }
-    var confirmarAtendimento = !unidadeAtendimento?.dataset.visatLista &&
-      vincularCampos([unidadeAtendimento, cnesAtendimento], [unidadeAtendimento, cnesAtendimento]);
-    if (unidadeAtendimento && !unidadeAtendimento.dataset.visatLista) {
-      function limparEstabelecimentoAtendimento() {
-        [unidadeAtendimento, cnesAtendimento].filter(Boolean).forEach(function (el) {
-          if (!el.value) return;
-          el.value = '';
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        });
-      }
-      [municipioAtendimento, ufAtendimento].filter(Boolean).forEach(function (el) {
+    function observarLocal(campos, grupo) {
+      if (!grupo) return;
+      campos.filter(Boolean).forEach(function (el) {
         var anterior = norm(el.value);
-        el.addEventListener('input', function () {
+        function mudou(evento) {
           var atual = norm(el.value);
-          if (anterior && anterior !== atual) limparEstabelecimentoAtendimento();
+          if (evento.isTrusted && anterior !== atual) grupo.reiniciar(null, true);
           anterior = atual;
+        }
+        el.addEventListener('input', mudou);
+        el.addEventListener('visat:escolha-manual', function () {
+          // A escolha na lista emite input sintético antes de sinalizar a ação manual.
+          grupo.reiniciar(null, true);
         });
       });
     }
+    observarLocal([municipioAtendimento, ufAtendimento, ibgeAtendimento], grupoAtendimento);
+    observarLocal([municipioNotif, ufNotif, ibgeNotif], grupoUnidade);
     anexarLista(unidadeAtendimento, 'cnes', preencherUnidadeAtendimento, cnesAtendimento, estabelecimentoDoMunicipio);
     anexarLista(cnesAtendimento, 'cnes', preencherUnidadeAtendimento, null, estabelecimentoDoMunicipio);
 
     var investigadora = campo(raiz, ['munInvestigadora']);
-    anexarLista(investigadora, 'cnes', function (item) {
-      definir(investigadora, item.v, true);
-      definir(campo(raiz, ['codUnidInv']), item.c, true);
-    });
+    var cnesInvestigadora = campo(raiz, ['codUnidInv']);
+    var grupoInvestigadora = ![investigadora, cnesInvestigadora].some(el => el?.dataset.visatLista) &&
+      vincularCampos([investigadora, cnesInvestigadora]);
+    function preencherInvestigadora(item) {
+      grupoInvestigadora.preencher(function () {
+        definir(investigadora, item.v, true);
+        definir(cnesInvestigadora, item.c, true);
+      });
+    }
+    anexarLista(investigadora, 'cnes', preencherInvestigadora);
+    anexarLista(cnesInvestigadora, 'cnes', preencherInvestigadora);
 
     // A escolha inclui a UF para distinguir municípios com o mesmo nome.
     [
@@ -571,14 +620,12 @@
           var mudou = anterior && anterior !== atual;
           anterior = atual;
           if (!evento.isTrusted) return;
-          ibge.value = '';
-          delete municipio.dataset.visatConfirmado;
+          limparCampo(ibge);
+          if (el === uf && mudou && municipio.dataset.key !== 'munRes') {
+            limparCampo(municipio);
+          }
           if (localEmpresa && mudou) {
             limparEmpresa();
-            if (el === uf) {
-              municipio.value = '';
-              municipio.dispatchEvent(new Event('input', { bubbles: true }));
-            }
           }
         });
       });
@@ -586,6 +633,7 @@
         if (evento.isTrusted) municipio.dispatchEvent(new Event('blur'));
       });
       function preencherMunicipio(item, escolhaManual) {
+        var mudouMunicipio = norm(municipio.value) !== norm(item.v) || norm(uf?.value) !== norm(item.uf);
         if (localEmpresa && escolhaManual &&
             ((ibge.value && ibge.value !== item.c) ||
              (municipio.value && norm(municipio.value) !== norm(item.v)) ||
@@ -593,6 +641,7 @@
         definir(ibge, item.c, true);
         definir(municipio, item.v, true);
         definir(uf, item.uf, true);
+        if (escolhaManual && mudouMunicipio) municipio.dispatchEvent(new Event('visat:escolha-manual'));
       }
       anexarLista(municipio, 'mun', preencherMunicipio, ibge);
     });

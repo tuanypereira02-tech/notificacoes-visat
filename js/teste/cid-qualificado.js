@@ -324,8 +324,8 @@
     }
     el.addEventListener('click', sugerir);
     el.addEventListener('input', function (evento) {
-      if (evento.isTrusted) sugerir();
-      else fecharLista();
+      fecharLista();
+      if (evento.isTrusted && el.value.trim()) sugerir();
       conferir();
     });
     function fecharAoSair(evento) {
