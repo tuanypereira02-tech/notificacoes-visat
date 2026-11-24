@@ -375,7 +375,9 @@ function montarEmpregador(area) {
   codigo.querySelector('.field-label').textContent = 'Código IBGE da empresa';
   codigo.classList.add('visat-codigo-derivado');
   municipio.after(codigo);
-  incluir(empregador, [['terceirizada'], 'O empregador é empresa terceirizada?', 'text', opcoes]);
+  const terceirizadaAnterior = area.querySelector('[data-key="terceirizada"], [data-chips="terceirizada"]');
+  terceirizadaAnterior?.parentElement.remove();
+  empregador.append(criarCampo('terceirizada', 'Empregador terceirizado?', 'text', opcoes));
   const dadosContratante = [
     [['empresaPrincipal', 'razaoPrincipal', 'razaoPrinc'], 'Nome da empresa principal (contratante)'],
     [['cnpjPrincipal', 'cnpjPrinc'], 'CNPJ da empresa principal (contratante)']
