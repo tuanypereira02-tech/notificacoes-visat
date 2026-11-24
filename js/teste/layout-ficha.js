@@ -531,16 +531,15 @@ window.aplicarLayoutRascunho = function(root) {
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).
-const chavesEmLista = new Set(['sexo', 'gestante', 'raca', 'comoOcorreu', 'local', 'tipoAcidente', 'comAfast', 'evolAfast']);
+const chavesEmLista = new Set(['sexo', 'gestante', 'raca', 'comoOcorreu', 'local']);
 const respostasPadrao = new Set(['sim', 'não', 'ignorado', 'não se aplica']);
 for (const grupo of root.querySelectorAll('[data-chips]')) {
   const chave = grupo.dataset.chips;
   const rotulo = grupo.previousElementSibling?.textContent.trim();
   const chips = [...grupo.querySelectorAll('.chip')];
-  const respostas = chips.map(chip => chip.dataset.value?.trim().toLowerCase());
-  const listaPadrao = grupo.dataset.single === 'true' &&
-    (respostas.includes('sim') || respostas.includes('não')) &&
-    respostas.every(resposta => respostasPadrao.has(resposta));
+  const respostas = [...new Set(chips.map(chip => chip.dataset.value?.trim().toLowerCase()))];
+  const listaPadrao = grupo.dataset.single === 'true' && respostas.length >= 2 &&
+    (respostas.length <= 3 || respostas.every(resposta => respostasPadrao.has(resposta)));
   if (!chavesEmLista.has(chave) && !/^Há ou houve outros trabalhadores/i.test(rotulo || '') && !listaPadrao) continue;
 
   const select = document.createElement('select');
