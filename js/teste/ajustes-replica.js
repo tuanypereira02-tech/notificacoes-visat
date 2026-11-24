@@ -608,6 +608,9 @@
       const sub = etapa?.querySelector('.screen-sub');
       if (sub) sub.textContent = 'Exposição, situação sorológica, conduta e conclusão.';
       ['distEmp', 'munInvestigadora', 'codUnidInv', 'fonteAntiHBs'].forEach(k => remover(root, k));
+      root.querySelectorAll('[data-show-when="terceirizada=Sim"]').forEach(bloco => {
+        if (!bloco.querySelector('[data-key], [data-chips], button, a')) bloco.remove();
+      });
       organizarResultadosBiologico(root);
       condicao(root, 'virusConversao', 'data-show-when', 'evolucao=Alta com conversão sorológica');
       rotulo(root, 'virusConversao', 'Vírus da conversão sorológica');

@@ -1006,7 +1006,12 @@
       if (selecionada || anterior || cnpj.dataset.cnpjConsultado) reiniciar(cnpj);
       else { cancelar(); ocultar(); retorno.textContent = ''; }
     }, true);
-    cnpj.addEventListener('visat:empresa-selecionada', function () { selecionada = true; });
+    cnpj.addEventListener('visat:empresa-selecionada', function () {
+      cancelar();
+      ocultar();
+      selecionada = true;
+      retorno.textContent = 'Empresa selecionada. Confira o CNPJ, o município e o CNAE preenchidos.';
+    });
     ['cnae', 'cepEmp', 'bairroEmp', 'endEmp', 'numEmp'].forEach(function (chave) {
       var el = enderecoEmpresa[chave];
       el?.addEventListener('input', function (evento) {

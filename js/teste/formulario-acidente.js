@@ -923,6 +923,11 @@ function aplicarCondicoes() {
     const texto = Array.isArray(valor) ? valor.join(' ') : String(valor || '');
     atualizarVisibilidade(el, !texto.includes(esperado));
   });
+  for (const { chave, modelo } of regrasCondicionais) {
+    if (modelo && modelo !== options.templateId || options.obito && chave === 'dataObito') continue;
+    const campo = root.querySelector('[data-key="' + chave + '"], [data-chips="' + chave + '"]');
+    if (campo) marcarObrigatorio(campo, !campo.closest('[hidden]') && !campo.disabled);
+  }
   // Uma limpeza pode ocultar outros blocos que dependiam do valor apagado.
   if (limpou && profundidadeCondicoes < 3) {
     profundidadeCondicoes++;
@@ -1118,6 +1123,35 @@ function preenchidoComLetras(campo) {
   return /\p{L}/u.test(campo.value);
 }
 
+// A ficha só exige os complementos previstos para o agravo e visíveis na resposta atual.
+const regrasCondicionais = [
+  { chave: 'dataAtendimento', rotulo: 'Houve atendimento médico. Informe a data do atendimento.' },
+  { chave: 'virusConversao', rotulo: 'Foi registrada conversão sorológica. Informe o vírus.' },
+  { chave: 'agentes', modelo: 'form-cancer-template', rotulo: 'Foi informada exposição. Informe o agente.' },
+  { chave: 'afastTempo', unidade: 'afastUnid', rotulo: 'Houve afastamento. Informe a duração e a unidade.' },
+  { chave: 'tempoAfast', unidade: 'tempoAfastUnid', rotulo: 'Houve afastamento. Informe a duração e a unidade.' },
+  { chave: 'dataObito', rotulo: 'Foi registrada evolução por óbito. Informe a data do óbito.' }
+];
+
+function avaliarComplementos() {
+  return regrasCondicionais.flatMap(({ chave, modelo, unidade, rotulo }) => {
+    if (modelo && modelo !== options.templateId || options.obito && chave === 'dataObito') return [];
+    const campo = root.querySelector('[data-key="' + chave + '"], [data-chips="' + chave + '"]');
+    if (!campo || campo.closest('[hidden]') || campo.disabled) return [];
+    const valor = state.values[chave];
+    const preenchido = Array.isArray(valor) ? valor.length > 0 : Boolean(String(valor ?? '').trim());
+    const duracaoValida = !unidade || Number(valor) > 0 && campo.validity.valid && Boolean(state.values[unidade]);
+    return [{ campo, rotulo, falta: !preenchido || !duracaoValida }];
+  });
+}
+
+function pendenciasParaFinalizar() {
+  const complementos = avaliarComplementos().filter(regra => regra.falta).map(({ campo, rotulo }) => ({
+    campo, rotulo, tela: Number(campo.closest('.screen').dataset.screen)
+  }));
+  return camposBasicosPendentes().concat(documentosPendentes(), complementos);
+}
+
 function camposBasicosPendentes() {
   const notificacao = root.querySelector('#sinan-data-notif');
   const nascimento = root.querySelector('#sinan-nasc');
@@ -1259,6 +1293,17 @@ function checarDadosDigitados() {
   const campoNome = root.querySelector('#sinan-nome');
   const aviso = avisoNome(campoNome.value);
   if (aviso) avisos.push({ campo: campoNome, mensagem: aviso });
+  const complementosParaConferir = [
+    ['qualAplicativo', 'Foi informado trabalho por plataforma digital. Confira o aplicativo, se conhecido.'],
+    ['outrosAtingidosQuantidade', 'Foi informado que outros trabalhadores foram atingidos. Confira a quantidade, se conhecida.'],
+    ['fonteAntiHIV', 'A pessoa-fonte é conhecida. Confira os resultados disponíveis.'],
+    ['tempoTabaco', 'Confira o tempo de tabagismo, se conhecido.'],
+    ['tabacoValor', 'Confira o tempo de tabagismo, se conhecido.']
+  ];
+  complementosParaConferir.forEach(([chave, mensagem]) => {
+    const campo = root.querySelector('[data-key="' + chave + '"], [data-chips="' + chave + '"]');
+    if (campo && !campo.closest('[hidden]') && !state.values[chave]) avisos.push({ campo, mensagem });
+  });
   const fechamento = ['dataFechamento', 'dataFinal', 'data'].map(input).find(campo => campo?.type === 'date');
   const obito = input('dataObito');
   if (obito?.value && fechamento?.value && fechamento.value < obito.value &&
@@ -1366,7 +1411,7 @@ function mostrarRevisaoAntesDoPdf(pendencias, avisos) {
 async function finalizarFicha(confirmou = false) {
   if (conferindoCoerencia) return;
   persistInputs();
-  const pendencias = camposBasicosPendentes().concat(documentosPendentes());
+  const pendencias = pendenciasParaFinalizar();
   if (confirmou && !pendencias.length) {
     showScreen(TOTAL + 1);
     return;
@@ -1558,9 +1603,10 @@ function nomePdfFinal() {
 let retornoEnvio;
 async function prepararPdfFinal(botao) {
   persistInputs();
-  const pendentes = camposBasicosPendentes().concat(documentosPendentes());
+  const pendentes = pendenciasParaFinalizar();
   if (pendentes.length) {
-      mostrarPendencias(pendentes, pendentes.length === 1 ? '1 pendência para gerar o PDF final' : pendentes.length + ' pendências para gerar o PDF final');
+    if (state.screen > TOTAL) showScreen(1);
+    mostrarRevisaoAntesDoPdf(pendentes, []);
     return null;
   }
   buildPrint();
@@ -1588,14 +1634,6 @@ root.querySelector('#btnImprimir').addEventListener('click', async evento => {
 });
 
 btnPdfConferencia.addEventListener('click', () => {
-  const nome = root.querySelector('#sinan-nome');
-  const problema = problemaNome(nome.value);
-  if (problema) {
-    showScreen(Number(nome.closest('.screen').dataset.screen));
-    mostrarPendencias([{ tela: Number(nome.closest('.screen').dataset.screen), rotulo: problema, campo: nome }],
-      'Corrija o nome para gerar o PDF');
-    return;
-  }
   persistInputs();
   buildPrint(true);
   window.print();
@@ -1778,7 +1816,32 @@ root.querySelector('.top-bar')?.scrollIntoView({ block: 'start' });
 
 const dlg = root.querySelector('#dlgNova');
 root.querySelector('[data-dialog-close]').addEventListener('click', () => dlg.close());
-root.querySelector('[data-voltar-consulta]').addEventListener('click', onVoltar);
+const voltarConsulta = root.querySelector('[data-voltar-consulta]');
+const confirmarSaida = dlg.cloneNode(true);
+confirmarSaida.id = 'dlgVoltarConsulta';
+const tituloSaida = confirmarSaida.querySelector('h2');
+tituloSaida.id = 'visat-titulo-voltar';
+tituloSaida.textContent = 'Descartar o preenchimento?';
+confirmarSaida.setAttribute('aria-labelledby', tituloSaida.id);
+confirmarSaida.querySelector('p').textContent = 'Ao voltar à consulta, os dados desta ficha serão apagados.';
+const continuarPreenchendo = confirmarSaida.querySelector('[data-dialog-close]');
+continuarPreenchendo.textContent = 'Continuar preenchendo';
+continuarPreenchendo.autofocus = true;
+continuarPreenchendo.addEventListener('click', () => confirmarSaida.close());
+const descartar = confirmarSaida.querySelector('#btnConfirmaNova');
+descartar.removeAttribute('id');
+descartar.textContent = 'Descartar e voltar';
+descartar.addEventListener('click', () => {
+  confirmarSaida.close();
+  onVoltar();
+});
+dlg.after(confirmarSaida);
+let valoresIniciais;
+voltarConsulta.addEventListener('click', () => {
+  persistInputs();
+  if (JSON.stringify(state.values) === valoresIniciais) onVoltar();
+  else confirmarSaida.showModal();
+});
 root.querySelector('#btnNova').addEventListener('click', () => dlg.showModal());
 root.querySelector('#btnConfirmaNova').addEventListener('click', () => {
   dlg.close();
@@ -1811,6 +1874,8 @@ getScreens().slice(0, TOTAL).forEach((tela, indice) => {
 adicionarAtalho('Conclusão', btnContinuar);
 area.before(indiceFicha);
 restoreInputs();
+persistInputs();
+valoresIniciais = JSON.stringify(state.values);
 showScreen(1);
 const activeHeading = root.querySelector('.screen.active h1');
 if (activeHeading) {
