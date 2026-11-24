@@ -123,7 +123,6 @@ function aplicarAjustesVisat(root, options) {
     if (caixa.nextElementSibling?.matches('[data-visat-aviso-cat]')) return;
     caixa.after(novoBloco(`<div data-show-when="cat=Não" hidden data-visat-aviso-cat class="highlight-box">
       <p><strong>A CAT ainda pode ser feita.</strong> Se a empresa não registrou, o próprio trabalhador, um familiar, o sindicato, o médico ou uma autoridade pública podem registrar. Nesses casos não há prazo, e o serviço é gratuito.</p>
-      <p><a href="https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat" target="_blank" rel="noopener">Registrar CAT (gov.br / Meu INSS)</a></p>
       <details><summary>Saiba mais</summary><p>A CAT registra o acidente ou a doença do trabalho no INSS. A empresa deve comunicar até o dia útil seguinte (imediatamente em caso de óbito). Na falta da empresa, outras pessoas podem registrar, sem prazo (Lei 8.213/1991, art. 22, § 2º). Canais: Meu INSS (gov.br/meuinss) e telefone 135. Vale para segurados do INSS (empregado, avulso, doméstico); servidor estatutário segue o regime próprio (“Não se aplica”).</p></details>
     </div>`));
   });

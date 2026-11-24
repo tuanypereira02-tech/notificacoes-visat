@@ -609,15 +609,16 @@
     });
     // A emissão da CAT é um serviço externo distinto da notificação.
     raiz.querySelectorAll('[data-chips="cat"]').forEach(function (grupo) {
-      if (grupo.nextElementSibling?.matches('[data-visat-link-cat]')) return;
+      if (grupo.parentElement.querySelector('[data-visat-link-cat]')) return;
+      var opcoes = grupo.nextElementSibling?.matches('select') ? grupo.nextElementSibling : grupo;
       var link = document.createElement('a');
       link.dataset.visatLinkCat = '';
       link.className = 'field-help';
       link.href = 'https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat';
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.textContent = 'Registrar CAT no INSS';
-      grupo.after(link);
+      link.textContent = 'Cadastrar CAT';
+      opcoes.after(link);
     });
     // Diagnóstico -> CID-10: busca restrita ao escopo de cada ficha em js/cid-qualificado.js.
   }
