@@ -831,3 +831,41 @@
     ajustar();
   })();
 })();
+
+// Ficha em página própria do Google Sites (?ficha=…): o quadro tem altura fixa.
+// A folga entre o fim da ficha e o fim do quadro vai para o último campo de texto livre
+// (observações), sem espaço vazio no fim; quando campos condicionais abrem, esse campo
+// volta ao tamanho mínimo, para a ficha caber sem rolagem dentro do quadro.
+(function encherAlturaDaFicha() {
+  if (!new URLSearchParams(window.location.search).get('ficha') || !window.ResizeObserver) return;
+  let campo = null, base = 0, ajustando = false;
+  function localizar() {
+    const lista = [...document.querySelectorAll('#resultado textarea')].filter((t) => t.offsetParent);
+    const ultimo = lista[lista.length - 1] || null;
+    if (ultimo !== campo) { campo = ultimo; base = campo ? Math.max(96, campo.getBoundingClientRect().height) : 0; }
+  }
+  function ajustar() {
+    if (ajustando) return;
+    ajustando = true;
+    requestAnimationFrame(() => {
+      if (!document.documentElement.classList.contains('visat-pagina-ficha')) { ajustando = false; return; }
+      localizar();
+      if (campo) {
+        campo.style.height = base + 'px';
+        const fim = Math.max(0, ...[...document.body.children].filter((e) => e.offsetParent || e === document.body.lastElementChild)
+          .map((e) => e.getBoundingClientRect().bottom + (window.scrollY || 0) + (parseFloat(getComputedStyle(e).marginBottom) || 0)));
+        const folga = Math.floor(window.innerHeight - fim);
+        if (folga > 0) campo.style.height = (base + folga) + 'px';
+      }
+      requestAnimationFrame(() => { ajustando = false; });
+    });
+  }
+  const observar = () => {
+    const alvo = document.getElementById('resultado');
+    if (!alvo) return;
+    new ResizeObserver(ajustar).observe(alvo);
+    new MutationObserver((registros) => { if (registros.some((r) => r.target !== campo)) ajustar(); }).observe(alvo, { attributes: true, subtree: true, attributeFilter: ['hidden', 'style', 'class'] });
+  };
+  window.addEventListener('resize', ajustar);
+  window.addEventListener('load', () => { observar(); setTimeout(ajustar, 300); });
+})();
