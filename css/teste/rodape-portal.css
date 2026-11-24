@@ -1,0 +1,59 @@
+.visat-portal-footer {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  min-height: clamp(13rem, 25vw, 18rem);
+  padding: clamp(1rem, 4vw, 2.5rem);
+  border-top: 3px solid #cc6a00;
+  background: #112c45;
+  color: #fff;
+}
+.visat-portal-footer__image,
+.visat-portal-footer::before {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.visat-portal-footer__image {
+  z-index: -2;
+  object-fit: cover;
+  object-position: center 65%;
+}
+.visat-portal-footer::before {
+  z-index: -1;
+  content: "";
+  background: linear-gradient(90deg, rgba(5, 23, 36, .97), rgba(5, 23, 36, .86) 55%, rgba(5, 23, 36, .48));
+}
+.visat-portal-footer__content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.visat-portal-footer__content p {
+  margin: 0 0 .25rem;
+}
+.visat-portal-footer__content strong {
+  font-size: 1.375rem;
+}
+.visat-portal-footer address {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  margin-top: .625rem;
+  font-style: normal;
+}
+.visat-portal-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  color: inherit;
+  text-decoration: underline;
+}
+.visat-portal-footer a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+@media print {
+  .visat-portal-footer { display: none !important; }
+}
