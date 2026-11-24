@@ -481,7 +481,7 @@
         avisos.push('CNPJ de ' + titulo(mr[0]) + '/' + mr[1] + '. Confira o município do local de trabalho.');
       }
       if (r[11] && r[11] !== 'A') avisos.push('Confira a situação cadastral do CNPJ.');
-      if ((d.cnaeSinan[r[3]] || []).length > 1) avisos.push('Escolha o CNAE da atividade.');
+      if ((d.cnaeSinan[r[3]] || []).length > 1 && !/^\s*\d{2}\.?\d{2}-?\d\b/.test(c.cnae?.value || '')) avisos.push('Escolha o CNAE da atividade.');
       avisoMunicipio.textContent = avisos.join(' ');
     }
 

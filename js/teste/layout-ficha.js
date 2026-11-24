@@ -365,8 +365,7 @@ window.aplicarLayoutRascunho = function(root) {
     painel.className = 'visat-painel-causa';
     painel.setAttribute('aria-labelledby', 'visat-painel-causa-titulo');
     painel.innerHTML = '<div class="visat-painel-causa-cabecalho"><h3 id="visat-painel-causa-titulo">Como ocorreu <span class="visat-obrigatorio" aria-hidden="true">*</span></h3>' +
-      '<span class="visat-etiqueta">Gera o CID da causa (campo 54)</span>' +
-      '<span class="field-help">Escolha a forma e o detalhe; o código é preenchido automaticamente e pode ser corrigido.</span></div>' +
+      '<span class="visat-etiqueta">Gera o CID da causa</span></div>' +
       '<div class="visat-painel-causa-grade"></div>';
     const grade = painel.querySelector('.visat-painel-causa-grade');
     const caixaComo = como.parentElement;
@@ -377,7 +376,7 @@ window.aplicarLayoutRascunho = function(root) {
       pegar('[data-key="tipoLocalInstalacoes"]'), pegar('[data-key="vitimaVeiculo"]')].filter(Boolean);
     const caixaCausa = caixaDe(causa);
     const rotuloCausa = caixaCausa.querySelector('.field-label');
-    if (rotuloCausa) rotuloCausa.textContent = 'CID-10 da causa (campo 54)';
+    if (rotuloCausa) rotuloCausa.textContent = 'CID-10 da causa';
     caixaCausa.classList.add('visat-painel-causa-resultado');
     const destino = caixaDe(tipo);
     const linhaTipo = destino.closest('.draft-row, .visat-linha-campos') || destino;
@@ -534,7 +533,7 @@ window.aplicarLayoutRascunho = function(root) {
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).
-const chavesEmLista = new Set(['sexo', 'gestante', 'raca', 'comoOcorreu', 'local']);
+const chavesEmLista = new Set(['sexo', 'gestante', 'raca', 'comoOcorreu', 'local', 'tipoRuido', 'regime']);
 const respostasPadrao = new Set(['sim', 'não', 'ignorado', 'não se aplica']);
 for (const grupo of root.querySelectorAll('[data-chips]')) {
   const chave = grupo.dataset.chips;

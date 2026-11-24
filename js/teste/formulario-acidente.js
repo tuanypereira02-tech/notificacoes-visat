@@ -742,6 +742,15 @@ container.replaceChildren(template.content.cloneNode(true));
 const root = container.querySelector('.acidente-inline');
 root.querySelectorAll('[data-key="refEmp"], [data-key="refRes"]').forEach(campo => campo.parentElement.remove());
 const TOTAL = montarBlocoSinan(root, options);
+for (const grupo of root.querySelectorAll('[data-chips="regime"]')) {
+  for (const valor of ['Ambulatorial', 'Hospitalar', 'Ambos']) {
+    const opcao = [...grupo.querySelectorAll('.chip')].find(chip => chip.dataset.value === valor) ||
+      grupo.querySelector('.chip').cloneNode(false);
+    opcao.dataset.value = valor;
+    opcao.textContent = valor;
+    grupo.append(opcao);
+  }
+}
 if (root.querySelector('[data-chips="afastamento"], [data-key="afastamento"]')) {
   const tempo = root.querySelector('[data-key="afastTempo"], [data-key="tempoAfast"]');
   const quadro = root.querySelector('[data-chips="comAfast"], [data-chips="evolAfast"]');

@@ -431,6 +431,8 @@
   // Demais campos (dados do agravo das doenças, 1b, 1e, 1j): grade de 4 colunas na ordem da ficha,
   // com largura padronizada pelo tipo de campo.
   function larguraPadrao(c) {
+    if (c.querySelector('[data-chips="sintomas"], [data-chips="agravos"], [data-chips="condutas"]')) return 4;
+    if (c.querySelector('[data-chips="afastamento"], [data-chips="outrosTrab"], [data-chips="caps"], [data-chips="outrosTrabalhadores"]')) return 2;
     if (c.querySelector('textarea') || c.matches('.highlight-box, [data-visat-aviso-cat]')) return 4;
     const chips = [...c.querySelectorAll('[data-chips]:not([style*="display: none"]) .chip')];
     if (chips.length) {
@@ -585,6 +587,7 @@
       
     },
     'form-mental-template'(root) {
+      rotulo(root, 'agenteValor', 'Tempo de exposição ao fator de risco no trabalho');
       condicao(root, 'tabacoValor', 'data-show-in', 'fumar=Sim|Ex-fumante');
       
     },
