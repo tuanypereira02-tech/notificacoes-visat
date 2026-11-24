@@ -747,8 +747,39 @@ details.visat-sequencia > summary { cursor: pointer; font-size: 16px; }
 details.visat-sequencia[open] > summary { margin-bottom: 16px; }
 [data-visat-pendencias] { padding: 16px; }
 [data-visat-pendencias] h2 { margin: 0 0 8px; font-size: 18px; }
-[data-visat-pendencias] ul { display: grid; gap: 8px; padding: 0; list-style: none; }
-[data-visat-pendencias] button { text-align: left; }
+[data-visat-pendencias] ul {
+  display: grid;
+  margin: 4px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+[data-visat-pendencias] li {
+  padding: 4px 0;
+  border-bottom: 1px solid #e5ebf0;
+}
+[data-visat-pendencias] li:last-child { border-bottom: 0; }
+[data-visat-pendencias] li:has(> button) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.acidente-inline [data-visat-pendencias] li > .btn[data-variant="outline"] {
+  min-height: 26px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: #195e8c;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+.acidente-inline [data-visat-pendencias] li > .btn:focus-visible {
+  outline: 2px solid #195e8c;
+  outline-offset: 2px;
+}
 
 /* Janela de envio da ficha por e-mail (js/envio-ficha.js) */
 .acidente-inline dialog.visat-janela-email { width: min(620px, calc(100vw - 28px)); }
