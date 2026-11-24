@@ -1595,3 +1595,23 @@ html:not(.visat-em-quadro) body.modo-formulario-acidente :is(#principal, #result
   max-height: none;
   overflow: visible;
 }
+
+/* Página inteira do Google Sites: mantém a rolagem no documento da ficha. */
+@media (min-width: 850px) and (min-height: 260px) {
+  html.visat-incorporacao-integral body.modo-formulario-acidente #principal {
+    padding-inline: 8px;
+  }
+  html.visat-incorporacao-integral .acidente-inline.visat-modelo-final {
+    max-width: none;
+    padding-inline: 4px !important;
+  }
+  html.visat-incorporacao-integral .acidente-inline.visat-modelo-final .visat-indice-ficha {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    box-shadow: 0 2px 8px rgba(17, 44, 69, .08);
+  }
+  html.visat-incorporacao-integral {
+    scroll-padding-top: 96px;
+  }
+}

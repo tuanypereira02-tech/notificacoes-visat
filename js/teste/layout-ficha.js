@@ -1,7 +1,8 @@
 /* Página de teste VISAT (notificacao-teste.html): versão do rascunho v22 levada ao repositório. */
 // Apenas quadros de altura fixa precisam de rolagem no contêiner da ficha.
-if (window.self !== window.top && new URLSearchParams(window.location.search).get('paginaInteira') !== '1') {
-  document.documentElement.classList.add('visat-em-quadro');
+if (window.self !== window.top) {
+  const paginaInteira = new URLSearchParams(window.location.search).get('paginaInteira') === '1';
+  document.documentElement.classList.add(paginaInteira ? 'visat-incorporacao-integral' : 'visat-em-quadro');
 }
 // Guarda a altura (no quadro) do botão "Abrir formulário" clicado, para a ficha abrir nessa altura.
 document.addEventListener('click', evento => {
