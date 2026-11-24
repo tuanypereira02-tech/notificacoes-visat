@@ -563,12 +563,51 @@
     setTimeout(() => window.visatBalancearLinhas?.(), 0);
   }
 
+  function organizarResultadosBiologico(root) {
+    const referencia = caixa(campo(root, 'fonte'));
+    if (!referencia) return;
+    const resultados = document.createElement('section');
+    resultados.className = 'visat-resultados-biologico';
+    const grupos = [
+      ['Resultados da pessoa acidentada (data zero)', [
+        ['sorAntiHIV', 'Anti-HIV'], ['sorHBsAg', 'HBsAg'],
+        ['sorAntiHBs', 'Anti-HBs'], ['sorAntiHCV', 'Anti-HCV']
+      ]],
+      ['Resultados da pessoa-fonte', [
+        ['fonteAntiHIV', 'Anti-HIV'], ['fonteHBsAg', 'HBsAg'],
+        ['fonteAntiHBc', 'Anti-HBc'], ['fonteAntiHCV', 'Anti-HCV']
+      ]]
+    ];
+    for (const [titulo, exames] of grupos) {
+      const coluna = document.createElement('div');
+      coluna.className = 'visat-coluna-resultados';
+      const cabecalho = document.createElement('h4');
+      cabecalho.textContent = titulo;
+      coluna.append(cabecalho);
+      for (const [chave, exame] of exames) {
+        const grupo = campo(root, chave);
+        const bloco = caixa(grupo);
+        if (!bloco) continue;
+        const rotulo = bloco.querySelector('.field-label');
+        const rotuloCompleto = titulo + ' — ' + exame;
+        rotulo.textContent = exame;
+        rotulo.dataset.visatRotuloPdf = rotuloCompleto;
+        grupo.dataset.summary = rotuloCompleto;
+        bloco.querySelector('select')?.setAttribute('aria-label', rotuloCompleto);
+        coluna.append(bloco);
+      }
+      resultados.append(coluna);
+    }
+    referencia.after(resultados);
+  }
+
   const AJUSTES = {
     'form-biologico-template'(root) {
       const etapa = campo(root, 'evolucao')?.closest('.screen');
       const sub = etapa?.querySelector('.screen-sub');
       if (sub) sub.textContent = 'Exposição, situação sorológica, conduta e conclusão.';
       ['distEmp', 'munInvestigadora', 'codUnidInv', 'fonteAntiHBs'].forEach(k => remover(root, k));
+      organizarResultadosBiologico(root);
       condicao(root, 'virusConversao', 'data-show-when', 'evolucao=Alta com conversão sorológica');
       rotulo(root, 'virusConversao', 'Vírus da conversão sorológica');
       condicao(root, 'dataObito', 'data-show-contains', 'evolucao=Óbito');
@@ -629,11 +668,7 @@
       if (options?.templateId === 'form-biologico-template') aplicarLayout(root, [
         [['tipoExposicao', 4], ['tipoExposicaoOutro', 4]],
         [['horaAcidente', 1], ['local', 3]],
-        [['fonte', 4]],
-        [['sorAntiHIV', 2], ['sorHBsAg', 2]],
-        [['sorAntiHBs', 2], ['sorAntiHCV', 2]],
-        [['fonteHBsAg', 2], ['fonteAntiHBc', 2]],
-        [['fonteAntiHIV', 2], ['fonteAntiHCV', 2]]
+        [['fonte', 4]]
       ]);
       if (options?.templateId === 'form-cancer-template') aplicarLayout(root, [
         [['regime', 2], ['tempoExposicao', 2]],

@@ -1481,7 +1481,7 @@ root.querySelectorAll('.screen[data-screen], [data-visat-secao-complementar]').f
         fieldLabel.closest('[hidden], [data-visat-somente-tela]')) return;
     const opcional = Boolean(fieldLabel.closest('[data-visat-complementares], [data-visat-opcional]')) ||
       ['visat-inicioSintomas', 'sinan-cep', 'sinan-cod-unid'].includes(fieldLabel.htmlFor);
-    const labelText = fieldLabel.textContent.trim();
+    const labelText = fieldLabel.dataset.visatRotuloPdf || fieldLabel.textContent.trim();
     const following = fieldLabel.nextElementSibling;
     if (!following) return;
 
