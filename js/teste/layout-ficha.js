@@ -531,7 +531,7 @@ window.aplicarLayoutRascunho = function(root) {
 
 // Reuse original chip events and state while presenting the approved dropdowns.
 // Também em lista: "Há ou houve outros trabalhadores com a mesma doença no local de trabalho?" (rótulo longo, opções curtas).
-const gruposEmLista = ['sexo','gestante','raca','comoOcorreu','local'].map(key => root.querySelector('[data-chips="'+key+'"]')).filter(Boolean);
+const gruposEmLista = ['sexo','gestante','raca','comoOcorreu','local','tipoAcidente'].map(key => root.querySelector('[data-chips="'+key+'"]')).filter(Boolean);
 root.querySelectorAll('[data-chips]').forEach(grupo => {
   const rotulo = grupo.previousElementSibling;
   if (rotulo && /^Há ou houve outros trabalhadores/i.test(rotulo.textContent.trim()) && !gruposEmLista.includes(grupo)) gruposEmLista.push(grupo);
