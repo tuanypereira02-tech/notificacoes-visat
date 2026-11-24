@@ -1,0 +1,82 @@
+/* Densidade da ficha em homologação. Os campos seguem a ordem e a visibilidade do modelo. */
+.visat-teste-compacto .acidente-inline.visat-modelo-final {
+  --r-gap-y: 11px;
+  --r-gap-x: 14px;
+  --r-alt: 44px;
+  padding-inline: clamp(12px, 2vw, 22px) !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .screen {
+  margin-bottom: 16px !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .field-group {
+  row-gap: var(--r-gap-y);
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .screen [data-visat-secao-complementar],
+.visat-teste-compacto .acidente-inline.visat-modelo-final .visat-sequencia {
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .visat-sequencia:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final .field-label {
+  margin-bottom: 4px !important;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+/* Os campos visíveis preenchem a linha na ordem da ficha; campos ocultos não reservam espaço. */
+.visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  container-type: inline-size;
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+  --visat-colunas-linha: var(--visat-colunas-previstas);
+  flex: 1 1 calc((100% + var(--r-gap-x)) * var(--visat-colunas-linha) / 4 - var(--r-gap-x));
+}
+
+.visat-teste-compacto .acidente-inline.visat-modelo-final [data-visat-opcoes]:not([style*="display: none"]) {
+  display: flex !important;
+  flex-wrap: wrap;
+}
+.visat-teste-compacto .acidente-inline.visat-modelo-final [data-visat-opcoes] > .chip {
+  flex: 1 1 calc((100% + 8px) / var(--visat-opcoes, 1) - 8px);
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 635px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+    --visat-colunas-linha: 2;
+  }
+
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r >
+  :is([data-visat-colunas="3"], [data-visat-colunas="4"], div:has(textarea, .unit-row, [data-chips]:not([style*="display: none"]), input[type="search"])) {
+    --visat-colunas-linha: 4;
+  }
+}
+
+@container (max-width: 315px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r > [data-visat-colunas] {
+    --visat-colunas-linha: 4;
+  }
+}
+
+/* Alinha os controles de tabagismo mesmo com o rótulo seguinte em duas linhas. */
+@container (min-width: 636px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r:has([data-chips="fumo"]) > [data-visat-colunas] {
+    align-self: end;
+  }
+}
