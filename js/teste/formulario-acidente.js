@@ -616,6 +616,9 @@ function montarBlocoSinan(root, options) {
 
   const etapasDoAgravo = [...area.querySelectorAll('.screen')].slice(0, -1);
   const empregador = montarEmpregador(area);
+  if (options.templateId === 'form-voz-template') {
+    etapasDoAgravo[0].querySelector('.field-group').append(criarCampo('cid', 'Diagnóstico específico — CID-10'));
+  }
   const cidDoCaso = [...area.querySelectorAll('[data-key="cid"], [data-key="cid10"], [data-key="cidCod"], [data-key="cidDiag"], [data-key="cidCausa"]')];
   if (cidDoCaso.length) {
     const blocoCid = criarComplementares('CID-10 do caso', false);

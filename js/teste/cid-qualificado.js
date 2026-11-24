@@ -14,7 +14,7 @@
   'use strict';
 
   var FICHA_POR_AGRAVO = { 'C80': 'cancer', 'L98.9': 'dermatose', 'Z57.9': 'lerdort', 'H83.3': 'pair', 'J64': 'pneumo', 'F99': 'mental', 'Y96': 'at', 'Z20.9': 'biologico', 'R49': 'voz' };
-  var CAMPO_DIAGNOSTICO = { cancer: 'cid', dermatose: 'cid10', lerdort: 'cidCod', pair: 'cid', pneumo: 'cidDiag', mental: 'cid', at: 'cid' };
+  var CAMPO_DIAGNOSTICO = { cancer: 'cid', dermatose: 'cid10', lerdort: 'cidCod', pair: 'cid', pneumo: 'cidDiag', mental: 'cid', voz: 'cid', at: 'cid' };
   var FAIXAS = {
     cancer: [['C00', 'C97'], ['D00', 'D48']],
     dermatose: [['L00', 'L99']],
@@ -22,23 +22,33 @@
     pair: [['H833'], ['H90', 'H91'], ['H93', 'H93']],
     pneumo: [['J60', 'J65'], ['J92', 'J92']],
     mental: [['F00', 'F99'], ['Z730'], ['Y90', 'Y91'], ['R40', 'R46'], ['Z55', 'Z65'], ['Y96', 'Y96'], ['X60', 'X84']],
+    voz: [['J371'], ['J38', 'J38'], ['R49', 'R49']],
     lesao: [['S00', 'T98']],
     causa: [['V01', 'Y95'], ['Y97', 'Y98']]
   };
   var NOMES = {
     cancer: 'Câncer relacionado ao trabalho', dermatose: 'Dermatoses ocupacionais', lerdort: 'LER/DORT',
     pair: 'PAIR', pneumo: 'Pneumoconioses', mental: 'Transtornos mentais relacionados ao trabalho',
+    voz: 'Distúrbio de voz relacionado ao trabalho',
     lesao: 'lesão do acidente de trabalho, cap. XIX', causa: 'causa externa do acidente, cap. XX'
   };
   var DESCRICAO_FAIXA = {
     cancer: 'C00 a C97 e D00 a D48', dermatose: 'L00 a L99', lerdort: 'M00 a M99, G50 a G59 e G90 a G99',
     pair: 'H83.3, H90, H91 e H93', pneumo: 'J60 a J65 e J92', mental: 'F00 a F99, Z73.0, Y90 a Y91, R40 a R46, Z55 a Z65, Y96 e X60 a X84',
+    voz: 'J37.1, J38 e R49',
     lesao: 'S00 a T98', causa: 'V01 a Y98, exceto Y96'
   };
 
   /* ---------- dados ---------- */
   var dados = { dart: null, at: null };
   var promessas = {};
+  // Portaria GM/MS nº 5.674/2024, Anexo LXXX.
+  var cidVozLdrt = [
+    { c: 'J37.1', d: 'Laringotraqueíte crônica' },
+    { c: 'J38', d: 'Doenças das cordas vocais e da laringe não classificadas em outra parte' },
+    { c: 'J38.2', d: 'Nódulos das cordas vocais' },
+    { c: 'R49', d: 'Distúrbios da voz', busca: 'disfonia rouquidão' }
+  ];
   function carregar(qual) {
     if (!promessas[qual]) {
       promessas[qual] = fetch('data/cid-' + qual + '.json?v=20261117-faixas-sinan', { credentials: 'omit' })
@@ -46,6 +56,9 @@
         .then(function (j) {
           var mapa = {};
           if (qual === 'dart') {
+            cidVozLdrt.forEach(function (e) {
+              j.cid.push(Object.assign({ f: ['voz'], l: 1 }, e));
+            });
             j.cid.forEach(function (e) { mapa[e.c.replace('.', '')] = e; });
           } else {
             ['lesao', 'causa'].forEach(function (k) {
@@ -77,7 +90,7 @@
   }
   function escopoDoCampo(el) { return el.dataset.visatCid; }
   function outrasFichas(c) {
-    return ['cancer', 'dermatose', 'lerdort', 'pair', 'pneumo', 'mental', 'lesao', 'causa'].filter(function (e) { return naFaixa(c, e); });
+    return ['cancer', 'dermatose', 'lerdort', 'pair', 'pneumo', 'mental', 'voz', 'lesao', 'causa'].filter(function (e) { return naFaixa(c, e); });
   }
   function tabelaDo(escopo) { return escopo === 'lesao' || escopo === 'causa' ? dados.at : dados.dart; }
 
@@ -253,7 +266,7 @@
         var achados = itensDoEscopo(t).filter(function (e) {
           if (!termo) return !!e.l;
           if (e.c.replace('.', '').indexOf(cod) === 0) return true;
-          var alvo = norm(e.c + ' ' + e.d);
+          var alvo = norm(e.c + ' ' + e.d + ' ' + (e.busca || ''));
           return palavras.every(function (p) { return alvo.indexOf(p) >= 0; });
         });
         function relevancia(item) {
@@ -363,7 +376,7 @@
     var ficha = fichaDe(raiz);
     if (!ficha) return;
     var campo = raiz.querySelector('[data-key="' + CAMPO_DIAGNOSTICO[ficha] + '"]');
-    if (!CAMPO_DIAGNOSTICO[ficha]) return; // 1.b e 1.e não têm campo de diagnóstico específico
+    if (!CAMPO_DIAGNOSTICO[ficha]) return; // A ficha de material biológico usa somente o CID do agravo.
     if (ficha === 'at') {
       anexar(campo, 'lesao');
       anexar(raiz.querySelector('[data-key="cidCausa"]'), 'causa');
