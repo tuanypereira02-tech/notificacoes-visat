@@ -401,12 +401,9 @@
   // Cada linha: [chave, colunas]. Campos condicionais ficam na mesma linha e só ocupam espaço quando aparecem.
   // Blocos comuns a todas as fichas (mesma posição e tamanho em todas).
   const LAYOUT_COMUM = [
-    [['#sinan-data-notif', 1], ['[data-visat-data-referencia]', 1], ['#sinan-mun-notif', 2]],
-    [['#sinan-unid', 4]],
-    [['cid|cid10|cidCod|cidDiag', 4]],
     [['#sinan-nome', 2], ['#sinan-nasc', 1], ['#sinan-idade', 1]],
-    [['sexo', 1], ['gestante', 1], ['raca', 1], ['#sinan-esc', 1]],
-    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2]],
+    [['sexo', 1], ['raca', 1], ['#sinan-esc', 1]],
+    [['#sinan-cpf', 1], ['#sinan-sus', 1], ['#sinan-mae', 2], ['gestante', 1]],
     [['#sinan-residencia-pais', 1], ['#sinan-pais', 3], ['#sinan-mun-res', 3]],
     [['#sinan-cep', 1], ['#sinan-logr', 2], ['#sinan-num', 1]],
     [['#sinan-bairro', 1], ['#sinan-tel', 1], ['zona', 2]],
@@ -616,7 +613,16 @@
       }
       reducoesComuns(root, options);
       // Layout em grade de 4 colunas: blocos comuns, 1a e, nos demais campos, largura padronizada.
-      aplicarLayout(root, LAYOUT_COMUM);
+      const inicioSintomas = root.querySelector('[data-key="inicioSintomas"]:not([data-visat-data-referencia])');
+      const datas = [['#sinan-data-notif', 1], ['[data-visat-data-referencia]', 1]];
+      if (inicioSintomas) datas.splice(1, 0, ['[data-key="inicioSintomas"]:not([data-visat-data-referencia])', 1]);
+      const local = ['#sinan-mun-notif', inicioSintomas ? 1 : 2];
+      aplicarLayout(root, [
+        [...datas, local],
+        [['#sinan-unid', 4]],
+        [['cid|cid10|cidCod|cidDiag', 4]],
+        ...LAYOUT_COMUM
+      ]);
       if (options && options.templateId === 'form-acidente-template') aplicarLayout(root, LAYOUT_ACIDENTE);
       gradeAutomatica(root);
     } catch (erro) {
