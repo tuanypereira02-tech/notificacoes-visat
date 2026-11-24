@@ -73,3 +73,10 @@
     --visat-colunas-linha: 4;
   }
 }
+
+/* Alinha os controles de tabagismo mesmo com o rótulo seguinte em duas linhas. */
+@container (min-width: 636px) {
+  .visat-teste-compacto .acidente-inline.visat-modelo-final section.visat-r:has([data-chips="fumo"]) > [data-visat-colunas] {
+    align-self: end;
+  }
+}
