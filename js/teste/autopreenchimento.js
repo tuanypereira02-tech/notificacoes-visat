@@ -135,13 +135,21 @@
     if (!nasc || !idade || nasc.dataset.autopreenchimentoIdade) return;
     nasc.dataset.autopreenchimentoIdade = '1';
 
+    var evento = raiz.querySelector('[data-visat-data-referencia]');
+    var notificacao = raiz.querySelector('#sinan-data-notif');
+
+    function dataValida(el) {
+      return el && el.validity.valid && /^\d{4}-\d{2}-\d{2}$/.test(el.value);
+    }
+
     function calcular() {
       idade.readOnly = !!nasc.value;
       if (unidade) unidade.disabled = !!nasc.value;
-      var referencia = [campo(raiz, ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico']),
-        campo(raiz, ['dataNotificacao', 'dataNotif'])].find(function (el) { return el && el.value; });
-      if (!nasc.value || !referencia || nasc.value > referencia.value) {
-        if (idade.dataset.autopreenchido === '1') {
+      var referencia = evento && (evento.value || evento.validity.badInput) ? evento : notificacao;
+      if (!dataValida(nasc) || !dataValida(referencia) || nasc.value > referencia.value ||
+          (referencia === evento && dataValida(notificacao) && evento.value > notificacao.value)) {
+        idade.removeAttribute('title');
+        if (nasc.value || idade.dataset.autopreenchido === '1') {
           limparCampo(idade);
           if (unidade) definir(unidade, 'Ano', true);
           delete idade.dataset.autopreenchido;
@@ -157,18 +165,16 @@
           Number(ref.getUTCDate() < n.getUTCDate());
         if (meses >= 1) { valor = meses; un = 'Mês'; } else { valor = Math.floor((ref - n) / 86400000); un = 'Dia'; }
       }
+      var dataBase = referencia.value.split('-').reverse().join('/');
+      var rotuloBase = referencia.labels[0]?.textContent.trim() || 'Data de referência';
+      idade.title = 'Idade calculada em ' + dataBase + ' (' + rotuloBase + ')';
       definir(idade, valor, true);
       idade.dataset.autopreenchido = '1';
       if (unidade) definir(unidade, un, true);
     }
-    nasc.addEventListener('input', calcular);
-    nasc.addEventListener('change', calcular);
-    ['inicioSintomas', 'dataAcidente', 'dataDiag', 'dataDiagnostico', 'dataNotificacao', 'dataNotif'].forEach(function (chave) {
-      var data = campo(raiz, [chave]);
-      if (data) {
-        data.addEventListener('input', calcular);
-        data.addEventListener('change', calcular);
-      }
+    [nasc, evento, notificacao].filter(Boolean).forEach(function (data) {
+      data.addEventListener('input', calcular);
+      data.addEventListener('change', calcular);
     });
     calcular();
   }
