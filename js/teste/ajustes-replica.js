@@ -419,8 +419,7 @@
   ];
   const LAYOUT_ACIDENTE = [
     [['horaAcidente', 1], ['tipoAcidente', 1], ['munOcorrencia', 2]],
-    [['outrosAtingidos', 2], ['atendimentoMedico', 2]],
-    [['outrosAtingidosQuantidade', 1]],
+    [['outrosAtingidos', 1], ['outrosAtingidosQuantidade', 1], ['atendimentoMedico', 1]],
     [['dataAtendimento', 1], ['munAtendimento', 1], ['unidAtendimento', 2]],
     [['parteCorpo', 4]],
     [['parteCorpoOutra', 2], ['regime', 2]],

@@ -428,16 +428,15 @@ function montarAtendimentoAcidente(detalhes) {
     criarCampo('munOcorrencia', 'Município de ocorrência do acidente'), codigoLocal,
     criarCampo('ufOcorrencia', 'UF da ocorrência'),
     criarLinhaCampos(
-      criarCampo('outrosAtingidos', 'Houve outros trabalhadores atingidos?', 'text', opcoes),
-      criarCampo('atendimentoMedico', 'Houve atendimento médico?', 'text', opcoes)
-    ),
-    quantidade
+      criarCampo('outrosAtingidos', 'Outros trabalhadores atingidos?', 'text', opcoes),
+      quantidade,
+      criarCampo('atendimentoMedico', 'Atendimento médico?', 'text', opcoes)
+    )
   );
-  const atendimento = criarEtapa('Atendimento médico');
-  atendimento.classList.remove('screen');
-  atendimento.dataset.visatSecaoComplementar = '';
+  const atendimento = document.createElement('div');
+  atendimento.className = 'field-group';
   atendimento.dataset.showWhen = 'atendimentoMedico=Sim';
-  const grupo = atendimento.querySelector('.field-group');
+  atendimento.hidden = true;
   const codigoAtendimento = criarCampo('ibgeAtendimento', 'Código IBGE do atendimento');
   codigoAtendimento.classList.add('visat-codigo-derivado');
   const localAtendimento = criarLinhaCampos(
@@ -447,7 +446,7 @@ function montarAtendimentoAcidente(detalhes) {
   );
   localAtendimento.classList.add('draft-cols-3');
   const estabelecimento = criarLinhaCampos(
-    criarCampo('unidAtendimento', 'Estabelecimento de saúde do atendimento'),
+    criarCampo('unidAtendimento', 'Estabelecimento atendimento'),
     criarCampo('cnesAtendimento', 'Código CNES do estabelecimento')
   );
   const parteCorpo = detalhes.querySelector('[data-chips="parteCorpo"]').parentElement;
@@ -456,12 +455,12 @@ function montarAtendimentoAcidente(detalhes) {
   const outraParte = criarCampo('parteCorpoOutra', 'Especifique a parte do corpo atingida');
   outraParte.dataset.showWhen = 'parteCorpo=Outro';
   lesao.querySelector('.field-group').append(outraParte);
-  const dataAtendimento = criarCampo('dataAtendimento', 'Data do atendimento', 'date');
-  grupo.append(dataAtendimento, localAtendimento, estabelecimento);
+  const dataAtendimento = criarCampo('dataAtendimento', 'Data atendimento médico', 'date');
+  atendimento.append(dataAtendimento, localAtendimento, estabelecimento);
   // Sequência do SINAN: 58 atendimento médico; 59 a 62 dados do atendimento; 63 partes do corpo; 65 regime de tratamento.
   regime.dataset.showWhen = 'atendimentoMedico=Sim';
   lesao.querySelector('.field-group').append(regime);
-  ocorrencia.after(atendimento);
+  campos.append(atendimento);
 }
 
 const blocosSinan = {
