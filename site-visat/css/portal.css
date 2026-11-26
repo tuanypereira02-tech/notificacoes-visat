@@ -1,0 +1,23 @@
+:root {
+  color-scheme: light;
+  --portal-texto: #304459;
+  font-family: Arial, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--portal-texto); background: #fff; }
+a { color: inherit; }
+
+.portal-capa { display: flex; align-items: center; justify-content: flex-start; padding: 1rem clamp(1.25rem, 3vw, 2.5rem); border-bottom: 1px solid #e1e7ec; }
+.portal-capa img { display: block; width: min(100%, 580px); max-height: 100px; object-fit: contain; object-position: left center; }
+.portal-conteudo { min-width: 0; padding: 1.5rem clamp(1.25rem, 3vw, 2.5rem) 2rem; }
+.portal-aplicacao { display: block; width: 100%; min-height: 75vh; border: 0; background: #fff; overflow: hidden; }
+.portal-rodape { padding: .85rem 1.5rem; border-top: 1px solid #e1e7ec; background: #f5f7f9; text-align: center; }
+.portal-rodape p { margin: 0; color: #657487; font-size: .8rem; }
+
+@media (max-width: 700px) {
+  .portal-capa { padding: .75rem .9rem; }
+  .portal-capa img { width: min(100%, 440px); max-height: 76px; }
+  .portal-conteudo { padding: 1.2rem .9rem 1.5rem; }
+  .portal-aplicacao { min-height: 80vh; }
+}
