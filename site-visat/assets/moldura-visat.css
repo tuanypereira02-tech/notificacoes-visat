@@ -192,3 +192,8 @@
   .bar .nav { padding: .25rem 0 .5rem; }
   .bar .nav a { min-height: 44px; padding-inline: 1rem; }
 }
+/* credito-discreto */
+.credit summary, .landmark .credit summary { width: 30px; height: 30px; opacity: .55; }
+.credit summary:hover, .credit summary:focus-visible, .credit[open] summary { opacity: 1; }
+.credit summary svg { width: 14px; height: 14px; }
+.credit span { font-size: .66rem; padding: .28rem .5rem; line-height: 1.3; }
