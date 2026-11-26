@@ -1,0 +1,69 @@
+/* Localizador cruzado da empresa/empregador — padrão do portal VISAT (#112C45, #CC6A00, Roboto) */
+.visat-loc-host { min-width: 0; }
+.visat-loc {
+  font-family: Roboto, Arial, sans-serif !important;
+  border: 1px solid #D5DEE8 !important;
+  border-left: 3px solid #CC6A00 !important;
+  border-radius: 8px !important;
+  background: #F7F9FB !important;
+  padding: 10px 14px !important;
+  margin: 0 0 4px !important;
+  font-size: 12px;
+  color: #243249;
+}
+.visat-loc-topo { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.visat-loc-titulo { font-size: 13px; font-weight: 700; color: #112C45; }
+.visat-loc-status { margin: 6px 0 0 !important; color: #112C45; font-weight: 500; }
+.visat-loc-status:empty { display: none; }
+.visat-loc-filtros, .visat-loc-facetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.visat-loc-filtros:empty, .visat-loc-facetas:empty { display: none; }
+.visat-loc-grupo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.visat-loc-grupo-rotulo { color: #5B6B80; font-weight: 500; }
+.visat-loc-chip, .visat-loc-faceta, .visat-loc-mais {
+  font: 500 12px Roboto, Arial, sans-serif;
+  border-radius: 999px;
+  padding: 4px 10px;
+  min-height: 28px;
+  cursor: pointer;
+  border: 1px solid #C9D4E0;
+  background: #fff;
+  color: #112C45;
+}
+.visat-loc-chip { background: #112C45; border-color: #112C45; color: #fff; }
+.visat-loc-chip::after { content: " ×"; font-weight: 700; }
+.visat-loc-faceta:hover, .visat-loc-mais:hover { border-color: #CC6A00; color: #8A4700; }
+.visat-loc button:focus-visible, .visat-loc-item:focus-visible, .visat-loc-mais:focus-visible { outline: 2px solid #CC6A00; outline-offset: 2px; }
+.visat-loc-lista { list-style: none; margin: 8px 0 0 !important; padding: 0 !important; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.visat-loc-lista:empty,
+.visat-loc-sugestoes[hidden],
+div:has(> .visat-lista-apoio:not(.visat-loc-sugestoes):not([hidden])) > .visat-loc-sugestoes {
+  display: none;
+}
+.visat-loc-item {
+  width: 100%; text-align: left; cursor: pointer;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px;
+  font: 400 12px Roboto, Arial, sans-serif; color: #243249;
+  background: #fff; border: 1px solid #DDE4EB; border-radius: 6px; padding: 7px 10px;
+}
+.visat-loc-item:is(:hover, .visat-item-ativo) { border-color: #CC6A00; background: #FFFBF6; }
+.visat-loc-nome { font-weight: 700; color: #112C45; font-size: 12.5px; }
+.visat-loc-local { display: block; color: #4A5A6E; font-weight: 400; }
+.visat-loc-aviso-municipio { display: block; margin-top: 4px; color: #8A4700; font-size: 12px; overflow-wrap: anywhere; }
+.visat-loc-aviso-municipio:empty { display: none; }
+.visat-loc-selos { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
+.visat-loc-linha { grid-column: 1 / -1; color: #4A5A6E; overflow-wrap: anywhere; }
+.visat-loc-selo { font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #EEF2F6; color: #34465C; }
+.visat-loc-selo.ok { background: #E6F2EA; color: #1E6B3A; }
+.visat-loc-selo.alerta { background: #FCEFE1; color: #8A4700; }
+.visat-loc-mais { margin-top: 6px; }
+.visat-loc-fonte { margin: 6px 0 0 !important; color: #6B7A8C; font-size: 11px; }
+.visat-loc:not(.ativo) .visat-loc-fonte { display: none; }
+.visat-loc-fonte:empty { display: none; }
+/* Com resultados na base local, a lista antiga do nome não se repete. */
+.visat-loc-com-resultados [data-key="empresa"] ~ ul.empresa-resultados,
+.visat-loc-com-resultados [data-key="empresaNome"] ~ ul.empresa-resultados,
+.visat-loc-com-resultados [data-key="razao"] ~ ul.empresa-resultados { display: none !important; }
+@media (max-width: 760px) {
+  .visat-loc { font-size: 16px; }
+}
+@media print { .visat-loc-host, .visat-loc-sugestoes { display: none !important; } }
