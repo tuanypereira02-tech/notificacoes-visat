@@ -193,7 +193,11 @@
   .bar .nav a { min-height: 44px; padding-inline: 1rem; }
 }
 /* credito-discreto */
-.credit summary, .landmark .credit summary { width: 30px; height: 30px; opacity: .55; }
+.caption { position: relative; }
+.caption-inner { position: static !important; }
+.caption-inner:has(.credit:hover), .caption-inner:has(.credit[open]), .caption-inner:has(.credit summary:focus-visible) { padding-bottom: 0 !important; }
+.credit, .landmark .credit { position: absolute !important; right: .4rem; bottom: .3rem; z-index: 2; }
+.credit summary, .landmark .credit summary { width: 28px; height: 28px; opacity: .55; }
 .credit summary:hover, .credit summary:focus-visible, .credit[open] summary { opacity: 1; }
 .credit summary svg { width: 14px; height: 14px; }
-.credit span { font-size: .66rem; padding: .28rem .5rem; line-height: 1.3; }
+.credit span { font-size: .66rem; padding: .28rem .5rem; line-height: 1.3; top: 50% !important; bottom: auto !important; right: calc(100% + 4px) !important; transform: translateY(-50%); white-space: nowrap; }
