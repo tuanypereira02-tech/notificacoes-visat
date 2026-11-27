@@ -1,7 +1,11 @@
 /* Página de teste VISAT (notificacao-teste.html): versão do rascunho v22 levada ao repositório. */
+const parametrosLayoutVisat = new URLSearchParams(window.location.search);
+if (parametrosLayoutVisat.get('rodapeInterno') === '0') {
+  document.querySelector('[data-visat-moldura="rodape"]')?.remove();
+}
 // Apenas quadros de altura fixa precisam de rolagem no contêiner da ficha.
 if (window.self !== window.top) {
-  const paginaInteira = new URLSearchParams(window.location.search).get('paginaInteira') === '1';
+  const paginaInteira = parametrosLayoutVisat.get('paginaInteira') === '1';
   document.documentElement.classList.add(paginaInteira ? 'visat-incorporacao-integral' : 'visat-em-quadro');
 }
 // Guarda a altura (no quadro) do botão "Abrir formulário" clicado, para a ficha abrir nessa altura.
