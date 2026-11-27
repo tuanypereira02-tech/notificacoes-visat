@@ -148,7 +148,24 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  // Sinônimos de unidades de saúde (qualificação 27/11/2026): a lista do CNES usa a sigla "CS",
+  // e a busca também aceita "centro de saúde", "posto de saúde", "UBS" e "unidade básica de saúde".
+  var SINONIMOS_UNIDADE = [
+    [/^(centro de saude|posto de saude|unidade basica de saude|ubs)( |$)/, 'cs$2']
+  ];
   function sugerirPorTrechos(lista, termo) {
+    var achados = sugerirPorTrechosBase(lista, termo);
+    SINONIMOS_UNIDADE.forEach(function (regra) {
+      var variante = termo.replace(regra[0], regra[1]).trim();
+      if (variante === termo || !variante) return;
+      sugerirPorTrechosBase(lista, variante).forEach(function (item) {
+        if (achados.indexOf(item) < 0) achados.push(item);
+      });
+    });
+    return achados;
+  }
+
+  function sugerirPorTrechosBase(lista, termo) {
     var termos = termo.split(' ');
     return lista.map(function (item) {
       var nome = norm(item.v);

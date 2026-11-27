@@ -676,6 +676,18 @@
     return avisos;
   };
 
+  function cnpjValidoNumerico(c) {
+    if (!/^\d{14}$/.test(c) || /^(\d)\1+$/.test(c)) return false;
+    function dv(base) {
+      var pesos = base.length === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+      var soma = 0;
+      for (var i = 0; i < base.length; i++) soma += +base[i] * pesos[i];
+      var resto = soma % 11;
+      return resto < 2 ? 0 : 11 - resto;
+    }
+    return dv(c.slice(0, 12)) === +c[12] && dv(c.slice(0, 13)) === +c[13];
+  }
+
   function configurarCnpj(raiz, chavesCnpj, destino) {
     var el = campo(raiz, chavesCnpj);
     if (!el || el.dataset.autopreenchimentoCnpj) return;
@@ -732,6 +744,12 @@
     function buscar() {
       var n = digitos(el.value);
       if (n.length !== 14 || el.dataset.ultimoCnpj === n) return; // CPF e CNPJ alfanumérico não são consultados neste serviço
+      // CNPJ inválido (qualificação 27/11/2026): algarismos repetidos ou dígito verificador incorreto
+      // recebem mensagem própria, sem consulta ao serviço externo.
+      if (!cnpjValidoNumerico(n)) {
+        aviso(el, 'CNPJ inválido. Confira o número informado.', true);
+        return;
+      }
       el.dataset.ultimoCnpj = n;
       var atual = ++consulta;
       aviso(el, 'Consultando CNPJ…');
