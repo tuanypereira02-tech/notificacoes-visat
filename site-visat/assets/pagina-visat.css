@@ -101,3 +101,18 @@ html.visat-replica-nativa .replica-conteudo > .portal { min-height:0!important; 
 html.visat-fichas body :is(main,#conteudo){padding-top:22px!important;padding-inline:clamp(14px,2.35vw,32px)!important}
 html.visat-fichas body :is(main,#conteudo) h1{margin-bottom:16px!important;letter-spacing:.2px!important}
 html.visat-fichas body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label){font-size:16px;line-height:1.55}
+
+/* Ajustes aprovados na réplica: lista legível e encerramento compacto. */
+html.visat-fichas #lista-agravos .item-agravo,
+html.visat-fichas #lista-agravos .grupo-agravo-titulo,
+html.visat-fichas #busca-status { font-size:.875rem!important; line-height:1.5!important; }
+html.visat-fichas #lista-agravos,
+html.visat-fichas #lista-agravos ul,
+html.visat-fichas #lista-agravos li { list-style:none!important; }
+html.visat-fichas #nota-fluxo-ve { margin:16px 0 0; padding:0; background:transparent; color:#283747; }
+html.visat-fichas #nota-fluxo-ve :is(p,li,a) { font-size:.875rem!important; line-height:1.5!important; }
+html.visat-fichas #nota-fluxo-ve h2 { margin:0 0 12px; }
+html.visat-fichas #nota-fluxo-ve a { color:#195E8C; text-underline-offset:2px; }
+html.visat-fichas #nota-fluxo-ve a:hover { color:#9B4F00; }
+html.visat-fichas body > footer.rodape { height:0!important; min-height:0!important; margin:0!important; padding:0!important; border:0!important; overflow:hidden; }
+html.visat-fichas body > main#principal { padding-bottom:24px!important; }
