@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR" class="visat-replica-nativa">
+<head><script src="../assets/modo-visat.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contatos | VISAT</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style id="visat-padrao">
+/* VISAT — padrão do portal (design system VISAT Florianópolis, 18/11/2026).
+   Fontes: texto 14 px (16 px no celular), título 22 px em caixa alta, subtítulos 18 px.
+   Cabeçalho e rodapé iguais aos da página Início. */
+:root{
+  --marinho:#112C45; --azul:#195E8C; --azul-hover:#124D75;
+  --laranja:#CC6A00; --laranja-suave:#FFF0DF; --laranja-texto:#7D4000;
+  --texto:#283747; --texto-suave:#505B65; --borda:#DEDCD7;
+  --fundo:#FAF8F5; --exterior:#F2F0ED; --branco:#FFFFFF;
+  --margem:28px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:var(--branco);color:var(--texto);font:14px/1.55 Roboto,Arial,sans-serif}
+a{color:var(--azul);text-underline-offset:.2em}
+a:focus-visible{outline:3px solid var(--azul);outline-offset:3px}
+.portal{background:var(--fundo);border:1px solid var(--borda);border-radius:14px 14px 0 0;container-type:inline-size;overflow:hidden}
+
+/* Cabeçalho */
+.identity{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:clamp(10px,4vw,48px);padding:12px clamp(12px,4vw,48px);background:var(--marinho);border-bottom:3px solid var(--laranja)}
+.brand{position:relative;width:100%;max-width:260px;aspect-ratio:3.3;overflow:hidden;background:#fff;border-radius:8px}
+.brand-pmf{justify-self:start}.brand-visat{justify-self:end}
+.brand img{position:absolute;display:block;width:84%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%)}
+.brand-visat img{width:70%;top:49%}
+/* Títulos e texto */
+.secao{padding:22px var(--margem) 24px}
+.secao:not(.topo) + .secao{padding-top:0}
+.topo{background:var(--branco);padding-bottom:22px}
+h1{margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--marinho)}
+h1::after{content:"";display:block;width:48px;height:3px;margin-top:10px;background:var(--laranja)}
+h2{margin:0 0 10px;font-size:18px;line-height:1.35;font-weight:700;color:var(--marinho)}
+p{margin:0 0 10px;max-width:80ch}
+.topo p:last-child{margin:0}
+.apoio{color:var(--texto-suave)}
+/* Rodapé */
+.bridge-footer{position:relative;border-top:3px solid var(--laranja);overflow:hidden}
+.bridge-photo{position:relative;overflow:hidden;aspect-ratio:5.8;min-height:211px}
+.bridge-photo img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 65%}
+.bridge-footer::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(5,23,36,.94),rgba(5,23,36,.79) 38%,rgba(5,23,36,.35) 68%,transparent 100%)}
+.bridge-contact{position:absolute;z-index:2;inset:clamp(16px,2vw,28px) auto auto clamp(16px,2.5vw,36px);max-width:calc(100% - 30px);color:#fff;font-size:14px;line-height:1.4;text-shadow:0 1px 2px #071522,0 0 5px #071522}
+.bridge-contact p{margin:0 0 4px}
+.bridge-identity{display:flex;flex-direction:column;gap:2px}
+.bridge-identity strong{font-size:22px}
+.bridge-contact address{display:flex;flex-direction:column;align-items:flex-start;margin-top:12px;font-style:normal}
+.bridge-contact a{display:flex;align-items:center;gap:8px;min-height:28px;color:#fff;text-decoration:none;max-width:100%}
+.bridge-contact a span{overflow-wrap:anywhere}
+.bridge-contact svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bridge-contact a:focus-visible{outline-color:#fff}
+@container (max-width:560px){
+  .identity{grid-template-columns:1fr;gap:10px}
+  .brand-visat{justify-self:start}
+  .secao{padding-left:18px;padding-right:18px}
+  .bridge-photo{min-height:228px}
+  .bridge-footer::before{background:linear-gradient(90deg,rgba(5,23,36,.94),rgba(5,23,36,.62) 77%,rgba(5,23,36,.24))}
+}
+@media (max-width:480px){html,body{font-size:16px}h1{font-size:20px}}
+</style>
+<style>
+/* Contatos */
+.equipe-contato{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
+.equipe dl{margin:0}
+.equipe dl>div{padding:5px 0;border-bottom:1px solid var(--borda)}
+.equipe dl>div:last-child{border-bottom:0}
+.equipe dt{display:inline;font-weight:500;color:var(--marinho)}
+.equipe dd{display:inline;margin:0;color:var(--texto-suave)}
+.equipe dd::before{content:" — "}
+.painel{background:var(--branco);border:1px solid var(--borda);border-top:3px solid var(--laranja);border-radius:12px;padding:18px 20px 20px}
+.painel p{color:var(--texto-suave)}
+.canais{display:flex;flex-direction:column;gap:8px}
+.canal{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border-radius:9px;background:var(--azul);color:#fff;text-decoration:none;font-weight:500;overflow-wrap:anywhere}
+.canal:hover{background:var(--azul-hover)}
+.canal svg,.endereco svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mapa{height:180px;margin:6px 0 10px;border:1px solid var(--borda);border-radius:12px;overflow:hidden}
+.mapa iframe{display:block;width:100%;height:100%;border:0}
+.endereco{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--borda);border-radius:12px;background:var(--branco);color:var(--texto);text-decoration:none}
+.endereco:hover{border-color:var(--azul)}
+.endereco svg{color:var(--laranja-texto);margin-top:2px}
+.endereco strong{display:block;color:var(--marinho)}
+.endereco small{display:block;font-size:13px;color:var(--texto-suave)}
+@container (max-width:560px){.equipe-contato{grid-template-columns:1fr;gap:18px}}
+</style>
+<link rel="stylesheet" href="../assets/pagina-visat.css"><script data-so-replica-src="../assets/moldura-visat.js"></script><link rel="stylesheet" href="../assets/padrao-visat.css"><script defer src="../assets/pesquisa-visat.js"></script><meta name="robots" content="noindex,nofollow"></head>
+<body><div data-visat-moldura="cabecalho"><template shadowrootmode="open"><link rel="stylesheet" href="../assets/moldura-visat.css"><header><p class="notice">RÉPLICA PARA TESTES — NÃO É O SITE OFICIAL</p><div class="bar"><div class="bar-inner"><button class="nav-toggle" type="button" aria-controls="menu" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Menu</button><a class="site-link" aria-label="VISAT, início" href="index.html">VISAT</a></div><nav hidden id="menu" class="nav" aria-label="Menu do portal"><a href="index.html">Início</a><a href="../../site-visat/consulta-sites.html?escopo=visat&amp;homologacao=1&amp;paginaInteira=1&amp;rotulosExames=1">Como notificar</a><a href="acidentes.html">Acidentes de trabalho</a><a href="doencas.html">Doenças do trabalho</a><a href="denuncias.html">Denúncias</a><a href="inspecoes.html">Inspeções</a><a href="legislacao.html">Legislação</a><a href="materiais.html">Materiais e cursos</a><a href="contatos.html" aria-current="page">Contatos</a><a href="dados.html">Dados e indicadores</a><a href="conheca.html">Conheça a VISAT</a></nav></div></header><nav class="crumb" aria-label="Você está em"><a href="index.html">Início</a><span aria-hidden="true">›</span><span aria-current="page">Contatos</span></nav></template></div><div class="replica-conteudo">
+<div class="portal">
+<main>
+<section class="secao topo" aria-labelledby="titulo">
+<h1 id="titulo">Contatos</h1>
+<p>Use os canais da VISAT para apoio técnico, matriciamento e comunicação de riscos nos ambientes de trabalho.</p>
+</section>
+<section class="secao">
+<div class="equipe-contato">
+<div class="equipe" aria-labelledby="equipe">
+<h2 id="equipe">Equipe VISAT</h2>
+<dl>
+<div><dt>Patrícia Vieira Marques</dt><dd>Fisioterapeuta</dd></div>
+<div><dt>Milena Godinho Sabino</dt><dd>Engenheira de Segurança do Trabalho</dd></div>
+<div><dt>Flávia Soares da Cruz</dt><dd>Téc. Enfermagem</dd></div>
+<div><dt>Mariana Dal Ri</dt><dd>Enfermeira</dd></div>
+<div><dt>Tuany Flesch Pereira</dt><dd>Enfermeira</dd></div>
+<div><dt>Kenny Del Hoyo</dt><dd>Enfermeira</dd></div>
+<div><dt>Ricardo Vieira</dt><dd>Médico</dd></div>
+</dl>
+</div>
+<aside class="painel" aria-labelledby="canais">
+<h2 id="canais">Fale com a VISAT</h2>
+<p>Denúncias e apoio técnico</p>
+<div class="canais">
+<a class="canal" href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg><span>saudetrab.sms.pmf@floripa.sc.gov.br</span></a>
+<a class="canal" href="tel:+554832391589"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3H4a1 1 0 0 0-1 1c0 9.4 7.6 17 17 17a1 1 0 0 0 1-1v-3l-5-2-2 2a15 15 0 0 1-7-7l2-2-2-5Z"/></svg><span>(48) 3239-1589</span></a>
+</div>
+<p class="apoio">Ao solicitar apoio, informe o tema, o serviço e uma forma de retorno. Para registrar denúncias, acesse o <a href="https://vigilanciaflorianopolis.celk.com.br/denuncia" target="_blank" rel="noopener">site de denúncias da PMF</a>.</p>
+</aside>
+</div>
+</section>
+<section class="secao" aria-labelledby="atendimento-saude">
+<h2 id="atendimento-saude">Atendimento em saúde</h2>
+<p class="apoio">A VISAT atua na vigilância em saúde do trabalhador e no apoio técnico, sem realizar atendimentos clínicos ou consultas presenciais.</p>
+<p class="apoio">Para atendimento presencial em saúde, procure um centro de saúde, policlínica, UPA ou CAPS, conforme a necessidade e os fluxos da rede municipal de saúde.</p>
+</section>
+</main>
+
+</div>
+<style>.portal{min-height:0!important}</style></div><div data-visat-moldura="rodape"><template shadowrootmode="open"><link rel="stylesheet" href="../assets/moldura-visat.css"><footer class="landmark"><img class="panorama" src="../assets/ponte.png" alt="Ponte Hercílio Luz ao entardecer, em Florianópolis" width="1536" height="512" loading="lazy"><div class="caption"><div class="caption-inner"><div class="org"><strong>Vigilância em Saúde do Trabalhador</strong><span>Secretaria Municipal de Saúde de Florianópolis</span></div><div class="visat-credito"><div class="credito-container" tabindex="0" aria-label="Créditos: Desenvolvido por Tuany Pereira"><span class="txt">Desenvolvido por Tuany Pereira</span><span class="icone-info" aria-hidden="true">i</span></div></div><!--/visat-credito--></div></div></footer></template></div>
+<link rel="stylesheet" href="../assets/ajustes-sites-contatos.css"></body>
+</html>

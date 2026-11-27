@@ -1,0 +1,52 @@
+html.visat-replica-nativa, html.visat-replica-nativa > body { background:#faf8f5; }
+html.visat-replica-nativa > body > .replica-conteudo {
+  box-sizing:border-box; width:100%; max-width:1160px; margin-inline:auto;
+  padding:clamp(20px,3vw,36px) clamp(16px,2.7vw,32px) clamp(24px,3.2vw,40px);
+  color:#283747; font-family:Roboto,Arial,sans-serif;
+}
+.replica-conteudo > .portal {
+  border:0!important; border-radius:0!important; box-shadow:none!important;
+  background:transparent!important; overflow:visible!important;
+}
+.replica-conteudo > .portal > .vp-conteudo {
+  padding:0!important; background:transparent!important;
+}
+.replica-conteudo > main,
+.replica-conteudo > .portal > .vp-conteudo > main {
+  width:100%; max-width:none!important; margin:0; padding:0!important;
+  color:#283747; font-family:Roboto,Arial,sans-serif; font-size:16px;
+}
+.replica-conteudo > main > h1:first-child,
+.replica-conteudo > .portal > .vp-conteudo > main > h1:first-child {
+  margin:0 0 18px!important; color:#195e8c!important; text-align:center!important;
+  font-size:clamp(24px,3.5vw,36px)!important; line-height:1.18!important;
+  font-weight:700; letter-spacing:.012em; text-transform:uppercase;
+}
+.replica-conteudo > main > h1:first-child::after,
+.replica-conteudo > .portal > .vp-conteudo > main > h1:first-child::after {
+  content:""; display:block; width:clamp(48px,7vw,70px); height:3px;
+  margin:12px auto 0!important; border-radius:2px; background:#cc6a00;
+}
+.replica-conteudo > main > h1:first-child + p { margin-top:0; }
+.replica-conteudo .legislacao-intro, .replica-conteudo .legislacao-assunto p {
+  font-size:clamp(15px,1.55vw,18px);
+}
+.replica-conteudo .legislacao-card,
+.replica-conteudo .accident-groups > details.card {
+  border:1px solid #d3d0cb; border-radius:14px; background:#fff;
+}
+.replica-conteudo .legislacao-assunto h2,
+.replica-conteudo .accident-groups > details.card > summary,
+.replica-conteudo .accident-groups > details.card > .group-content h2 {
+  color:#195e8c!important; font-size:clamp(18px,2vw,22px)!important;
+  line-height:1.25!important; font-weight:700;
+}
+.replica-conteudo :is(.legislacao-link, .notificar-topo .btn) {
+  min-height:46px; border-radius:9px; background:#112c45; color:#fff;
+  font:700 16px/1.25 Roboto,Arial,sans-serif;
+}
+.replica-conteudo :is(.legislacao-link, .notificar-topo .btn):hover { background:#195e8c; }
+@media (max-width:480px) {
+  .replica-conteudo .accident-groups > details.card > summary { padding:12px 14px; }
+  .replica-conteudo .accident-groups > details.card > .group-content { padding-inline:14px; }
+}

@@ -1,0 +1,80 @@
+
+  main.legislacao {
+    width: min(100%, 72rem);
+    margin-inline: auto;
+    padding: clamp(1.4rem, 3.4vw, 3.5rem) clamp(.5rem, 1.7vw, 1.6rem);
+    font-size: 16px;
+  }
+  .legislacao h1 {
+    color: #195e8c;
+    font-size: clamp(1.5rem, 3.5vw, 2.9rem);
+    line-height: 1.18;
+    letter-spacing: .012em;
+  }
+  .legislacao h1::after {
+    width: clamp(3rem, 7vw, 5.3rem);
+    height: 4px;
+    margin-top: .85rem;
+  }
+  .legislacao h1 + .legislacao-intro {
+    margin: .95rem 0 clamp(1.3rem, 3.2vw, 3rem);
+    color: #283747;
+    font-size: clamp(1rem, 1.9vw, 1.45rem);
+  }
+  .legislacao-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(.75rem, 1.6vw, 1.25rem);
+  }
+  .legislacao-card {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2vw, 1.8rem);
+    padding: clamp(.9rem, 2.4vw, 2.1rem);
+    border: 1px solid #d3d0cb;
+    border-radius: 14px;
+    background: #fff;
+  }
+  .legislacao-assunto {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(.6rem, 1.6vw, 1.5rem);
+  }
+  .legislacao-assunto img {
+    display: block;
+    width: clamp(2.15rem, 5.6vw, 5.2rem);
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .legislacao-assunto h2 {
+    margin: 0 0 .4rem;
+    color: #195e8c;
+    font-size: clamp(1.18rem, 2.35vw, 1.95rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .legislacao-assunto p {
+    margin: 0;
+    font-size: clamp(.94rem, 1.55vw, 1.25rem);
+    line-height: 1.5;
+  }
+  .legislacao-link {
+    display: grid;
+    place-items: center;
+    min-height: 46px;
+    margin-top: auto;
+    padding: .6rem .8rem;
+    border-radius: 9px;
+    background: #112c45;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    font-size: clamp(1rem, 1.7vw, 1.3rem);
+    font-weight: 700;
+  }
+  .legislacao-link:hover { background: #195e8c; }
+  .legislacao-link:focus-visible { outline-offset: 3px; }
+  @media (max-width: 560px) {
+    .legislacao-grid { grid-template-columns: minmax(0, 1fr); }
+  }

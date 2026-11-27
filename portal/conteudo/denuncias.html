@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR" class="visat-replica-nativa">
+<head><script src="../assets/modo-visat.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Denúncias | VISAT Florianópolis</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap">
+  <style>
+*{box-sizing:border-box}
+body{margin:0;background:#FAF8F5;color:#283747;font:12px/1.6 Roboto,Arial,sans-serif}
+main{max-width:100%;margin:auto;padding:20px clamp(14px,3vw,28px) 12px}
+header{text-align:center;margin-bottom:20px}
+h1,h2,h3{color:#112C45;line-height:1.3}
+h1{font-size:22px;margin:0 0 6px;letter-spacing:.02em}
+h1::after{content:"";display:block;width:48px;height:3px;margin:8px auto 0;border-radius:2px;background:#CC6A00}
+h2{font-size:18px;font-weight:500;margin:0 0 16px}
+h3{font-size:14px;font-weight:700;margin:0 0 8px}
+p{margin:0}
+a{color:#112C45;text-underline-offset:.18em}
+:is(a,button):focus-visible{outline:3px solid #195E8C;outline-offset:2px}
+.status{color:#505B65}
+.card{background:#fff;border:1px solid #DEDCD7;border-radius:10px;padding:22px 26px;margin:0 0 16px}
+.vx-passo{display:grid;grid-template-columns:26px 1fr;column-gap:14px;position:relative;padding-bottom:22px}
+.vx-passo:last-child{padding-bottom:0}
+.vx-passo:not(:last-child)::before{content:"";position:absolute;left:12px;top:30px;bottom:4px;width:2px;background:#DEDCD7}
+.vx-num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#112C45;color:#fff;font-size:12px;font-weight:700}
+.vx-corpo{min-width:0}
+.vx-etapa{font-size:12px;font-weight:700;color:#112C45;line-height:26px;margin:0 0 8px}
+.vx-passo:last-child .vx-etapa{line-height:1.6;padding-top:3px;font-weight:400;color:#283747}
+.vx-lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px}
+.vx-item{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;padding:5px 2px 5px 4px;border-bottom:1px solid #F2F0ED}
+.vx-item.vx-destaque{background:#FFF0DF}
+.vx-item > span{flex:1 1 0}
+.den-referencia-rodape{position:relative;height:0;pointer-events:none}.den-referencia-rodape>span{position:absolute;right:12px;top:8px;width:98px;height:48px}
+.vx-item span{min-width:0;font-size:12px;color:#112C45;overflow-wrap:anywhere;user-select:all}
+.vx-item button{box-sizing:border-box;flex:none;width:7.9em;min-width:7.9em;min-height:30px;padding:4px 14px;border:1px solid #DEDCD7;border-radius:999px;background:#fff;color:#112C45;font:500 12px Roboto,Arial,sans-serif;cursor:pointer}
+.vx-item button:hover{border-color:#112C45;background:#F2F0ED}
+.vx-item button.ok{background:#1e7a37;border-color:#1e7a37;color:#fff}
+.vx-botao{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 28px;border-radius:8px;background:#CC6A00;color:#fff!important;font-size:14px;font-weight:700;text-decoration:none}
+.vx-botao:hover,.vx-botao:focus{background:#7D4000}
+.vx-img{display:block;width:100%;max-width:520px;height:auto;margin-top:10px;border:1px solid #DEDCD7;border-radius:8px}
+.intro{color:#505B65;margin:-8px 0 16px}
+.guide{display:grid;grid-template-columns:1.2fr 1fr}
+.guide section{min-width:0;padding-right:26px}
+.guide section+section{padding:0 0 0 26px;border-left:1px solid #DEDCD7}
+ol{margin:0;padding-inline-start:1.4em}
+li+li{margin-top:6px}
+.note{margin:0 0 16px;padding:12px 16px;border-left:4px solid #CC6A00;border-radius:8px;background:#F2F0ED}
+.contato{display:grid;grid-template-columns:1fr 2fr}
+.contato>section{min-width:0}
+.contato>section+section{padding-left:26px;border-left:1px solid #DEDCD7}
+.support{padding-right:26px;overflow-wrap:anywhere}
+.support p{line-height:2}
+.support a{white-space:nowrap}
+.channels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px}
+.channels a{display:flex;align-items:center;min-height:40px;padding:6px 2px;border-bottom:1px solid #F2F0ED;text-decoration:none}
+.channels a:hover{text-decoration:underline}
+@media (max-width:640px){
+body{font-size:16px}
+main{padding:14px 12px 10px}
+header{margin-bottom:14px}
+.card{padding:16px;border-radius:8px}
+.vx-passo{grid-template-columns:28px 1fr;column-gap:10px}
+.vx-num{width:28px;height:28px;font-size:14px}
+.vx-passo:not(:last-child)::before{left:13px;top:32px}
+.vx-etapa{font-size:16px;line-height:28px}
+.vx-lista,.channels{grid-template-columns:1fr}
+.vx-item span{font-size:16px}
+.vx-item button{min-height:40px;font-size:15px}
+.vx-botao{display:flex;font-size:16px}
+h3{font-size:16px}
+.guide,.contato{grid-template-columns:1fr}
+.guide section{padding:0}
+.guide section+section,.contato>section+section{margin-top:16px;padding:16px 0 0;border-left:0;border-top:1px solid #DEDCD7}
+.support{padding:0}
+}
+.vx-nota{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:#F3F5F8;border:1px solid #DDE3EA;font-size:12px;line-height:1.6;color:#283747}.vx-nota strong{color:#112C45}.vx-base{display:block;margin-top:6px;font-size:11px;color:#5B6B7B}@media (max-width:480px){.vx-nota{font-size:16px}.vx-base{font-size:14px}}
+</style>
+<style id="visat-padrao">
+/* VISAT — padrão do portal (design system VISAT Florianópolis, 18/11/2026).
+   Fontes: texto 14 px (16 px no celular), título 22 px em caixa alta, subtítulos 18 px.
+   Cabeçalho e rodapé iguais aos da página Início. */
+:root{
+  --marinho:#112C45; --azul:#195E8C; --azul-hover:#124D75;
+  --laranja:#CC6A00; --laranja-suave:#FFF0DF; --laranja-texto:#7D4000;
+  --texto:#283747; --texto-suave:#505B65; --borda:#DEDCD7;
+  --fundo:#FAF8F5; --exterior:#F2F0ED; --branco:#FFFFFF;
+  --margem:28px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:var(--branco);color:var(--texto);font:14px/1.55 Roboto,Arial,sans-serif}
+a{color:var(--azul);text-underline-offset:.2em}
+a:focus-visible{outline:3px solid var(--azul);outline-offset:3px}
+.portal{background:var(--fundo);border:1px solid var(--borda);border-radius:14px 14px 0 0;container-type:inline-size;overflow:hidden}
+/* Cabeçalho */
+.identity{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:clamp(10px,4vw,48px);padding:12px clamp(12px,4vw,48px);background:var(--marinho);border-bottom:3px solid var(--laranja)}
+.brand{position:relative;width:100%;max-width:260px;aspect-ratio:3.3;overflow:hidden;background:#fff;border-radius:8px}
+.brand-pmf{justify-self:start}.brand-visat{justify-self:end}
+.brand img{position:absolute;display:block;width:84%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%)}
+.brand-visat img{width:70%;top:49%}
+/* Títulos e texto */
+.secao{padding:22px var(--margem) 24px}
+.secao:not(.topo) + .secao{padding-top:0}
+.topo{background:var(--branco);padding-bottom:22px}
+h1{margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--marinho)}
+h1::after{content:"";display:block;width:48px;height:3px;margin-top:10px;background:var(--laranja)}
+h2{margin:0 0 10px;font-size:18px;line-height:1.35;font-weight:700;color:var(--marinho)}
+p{margin:0 0 10px;max-width:80ch}
+.topo p:last-child{margin:0}
+.apoio{color:var(--texto-suave)}
+/* Rodapé */
+.bridge-footer{position:relative;border-top:3px solid var(--laranja);overflow:hidden}
+.bridge-photo{position:relative;overflow:hidden;aspect-ratio:5.8;min-height:211px}
+.bridge-photo img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 65%}
+.bridge-footer::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(5,23,36,.94),rgba(5,23,36,.79) 38%,rgba(5,23,36,.35) 68%,transparent 100%)}
+.bridge-contact{position:absolute;z-index:2;inset:clamp(16px,2vw,28px) auto auto clamp(16px,2.5vw,36px);max-width:calc(100% - 30px);color:#fff;font-size:14px;line-height:1.4;text-shadow:0 1px 2px #071522,0 0 5px #071522}
+.bridge-contact p{margin:0 0 4px}
+.bridge-identity{display:flex;flex-direction:column;gap:2px}
+.bridge-identity strong{font-size:22px}
+.bridge-contact address{display:flex;flex-direction:column;align-items:flex-start;margin-top:12px;font-style:normal}
+.bridge-contact a{display:flex;align-items:center;gap:8px;min-height:28px;color:#fff;text-decoration:none;max-width:100%}
+.bridge-contact a span{overflow-wrap:anywhere}
+.bridge-contact svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bridge-contact a:focus-visible{outline-color:#fff}
+@container (max-width:560px){
+  .identity{grid-template-columns:1fr;gap:10px}
+  .brand-visat{justify-self:start}
+  .secao{padding-left:18px;padding-right:18px}
+  .bridge-photo{min-height:228px}
+  .bridge-footer::before{background:linear-gradient(90deg,rgba(5,23,36,.94),rgba(5,23,36,.62) 77%,rgba(5,23,36,.24))}
+}
+@media (max-width:480px){html,body{font-size:16px}h1{font-size:20px}}
+
+/* Moldura aplicada a página existente: conteúdo original dentro de .vp-conteudo */
+html,body{height:auto!important;min-height:100%;padding:0!important;background:var(--branco)!important}
+
+.portal{display:flex;flex-direction:column;min-height:var(--vp-alt,100vh)}
+.vp-conteudo{flex:1;padding:22px var(--margem) 28px;background:var(--fundo)}
+.vp-conteudo>main,.vp-conteudo main{padding:0!important;margin:0!important;max-width:none!important;background:transparent!important}
+.vp-conteudo,.vp-conteudo p,.vp-conteudo li,.vp-conteudo td,.vp-conteudo th,.vp-conteudo dd,.vp-conteudo dt,.vp-conteudo label{font-size:14px;line-height:1.55}
+.vp-conteudo h1{margin:0 0 14px!important;font-size:22px!important;line-height:1.25!important;font-weight:700!important;letter-spacing:.02em;text-transform:uppercase;text-align:left!important;color:var(--marinho)!important}
+.vp-conteudo h1::after{content:"";display:block;width:48px;height:3px;margin:10px 0 0!important;background:var(--laranja)}
+.vp-conteudo h2,.vp-conteudo summary{font-size:18px!important;line-height:1.35!important;color:var(--marinho)!important}
+.vp-conteudo h2{font-weight:700!important}
+.vp-conteudo>h2,.vp-conteudo main>h2{margin:24px 0 10px!important}
+.vp-conteudo h3{font-size:16px!important;line-height:1.35!important;color:var(--marinho)!important}
+.vp-conteudo p{margin:0 0 10px}
+.vp-conteudo .intro,.vp-conteudo main>p{text-align:left!important;margin-left:0!important;margin-right:0!important}
+@container (max-width:560px){.vp-conteudo{padding:18px 18px 24px}}
+@media (max-width:480px){.vp-conteudo,.vp-conteudo p,.vp-conteudo li,.vp-conteudo td,.vp-conteudo th,.vp-conteudo dd,.vp-conteudo dt,.vp-conteudo label{font-size:16px}.vp-conteudo h1{font-size:20px!important}}
+</style>
+<style id="visat-largura-justificada">
+/* Largura total e texto justificado (24/11/2026) */
+:root{--margem:20px}
+.vp-conteudo p,.vp-conteudo li,.vp-conteudo dd,.vp-conteudo .note,.vp-conteudo .intro{max-width:none!important;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
+.vp-conteudo .card{padding:20px 20px}
+.vp-conteudo .vx-item span,.vp-conteudo button,.vp-conteudo .vx-botao{text-align:left;hyphens:manual}
+@media (max-width:600px){:root{--margem:14px}.vp-conteudo .card{padding:16px 14px}}
+</style><link rel="stylesheet" href="../assets/pagina-visat.css"><script data-so-replica-src="../assets/moldura-visat.js"></script><link rel="stylesheet" href="../assets/padrao-visat.css"><script defer src="../assets/pesquisa-visat.js"></script><meta name="robots" content="noindex,nofollow"></head>
+<body><div data-visat-moldura="cabecalho"><template shadowrootmode="open"><link rel="stylesheet" href="../assets/moldura-visat.css"><header><p class="notice">RÉPLICA PARA TESTES — NÃO É O SITE OFICIAL</p><div class="bar"><div class="bar-inner"><button class="nav-toggle" type="button" aria-controls="menu" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Menu</button><a class="site-link" aria-label="VISAT, início" href="index.html">VISAT</a></div><nav hidden id="menu" class="nav" aria-label="Menu do portal"><a href="index.html">Início</a><a href="../../site-visat/consulta-sites.html?escopo=visat&amp;homologacao=1&amp;paginaInteira=1&amp;rotulosExames=1">Como notificar</a><a href="acidentes.html">Acidentes de trabalho</a><a href="doencas.html">Doenças do trabalho</a><a href="denuncias.html" aria-current="page">Denúncias</a><a href="inspecoes.html">Inspeções</a><a href="legislacao.html">Legislação</a><a href="materiais.html">Materiais e cursos</a><a href="contatos.html">Contatos</a><a href="dados.html">Dados e indicadores</a><a href="conheca.html">Conheça a VISAT</a></nav></div></header><nav class="crumb" aria-label="Você está em"><a href="index.html">Início</a><span aria-hidden="true">›</span><span aria-current="page">Denúncias</span></nav></template></div><div class="replica-conteudo"><div class="portal"><div class="vp-conteudo">
+  <main>
+    <header>
+      <h1>DENÚNCIAS</h1>
+    </header>
+
+    <section class="vx card" aria-labelledby="assuntos">
+      <h2 id="assuntos">Escolha o assunto da denúncia</h2>
+      <div class="vx-passo"><span class="vx-num">1</span><div class="vx-corpo"><p class="vx-etapa">Copie o assunto da denúncia:</p>
+      <div class="vx-lista">
+        <div class="vx-item vx-destaque"><span>SAÚDE DO TRABALHADOR</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>ALIMENTOS</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>COVID 19 - CORONAVÍRUS</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>DENGUE</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>ESGOTO</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>LIXO</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>MEDICAMENTOS E PRODUTOS PARA A SAÚDE</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>OUTROS</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span id="den-servicos-saude">SERVIÇOS DE SAÚDE (Consultório médico, odonto etc)</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>SERVIÇOS DE SAÚDE ( Hospitais, Clínicas e etc.)</span><button type="button">Copiar</button></div>
+        <div class="vx-item"><span>ZOONOSES</span><button type="button">Copiar</button></div>
+      </div>
+      <p class="vx-nota"><strong>Por que manter os demais assuntos?</strong> Riscos ao trabalhador também aparecem em outros temas, como saneamento, alimentos e vetores.</p>
+</div></div>
+<div class="vx-passo"><span class="vx-num">2</span><div class="vx-corpo"><p class="vx-etapa">Abra o formulário:</p>
+      <a class="vx-botao" href="https://vigilanciaflorianopolis.celk.com.br/denuncia" target="_blank" rel="noopener noreferrer">Abrir formulário de denúncia</a>
+</div></div>
+<div class="vx-passo"><span class="vx-num">3</span><div class="vx-corpo"><p class="vx-etapa">No campo <strong>Tipo</strong>, cole (<strong>Ctrl+V</strong> ou toque longo › Colar) e toque na opção que aparecer. Se não aparecer, toque na <strong>lupa</strong> ao lado do campo, depois em <strong>Procurar</strong>, e escolha o assunto.</p>
+      <img class="vx-img" src="data:image/jpeg;base64,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r3MNsNInDb3tr3MXQAofuGUidVSF7YaROG3vbXuYbYaROG3vbXuYugBQ/cMpE6qkL2w0icNve2vcw2w0icNve2vcxdACh+4ZSJ1VIXthpE4be9te5hthpE4be9te5i6AFD9wykTqqQvbDSJw297a9zDbDSJw297a9zF0AKH7hlInVUhe2GkTht7217mG2GkTht7217mLoAUP3DKROqpC9sNInDb3tr3MNsNInDb3tr3MXQAofuGUidVSF7YaROG3vbXuYbYaROG3vbXuYugBQ/cMpE6qkL2w0icNve2vcw2w0icNve2vcxdACh+4ZSJ1VIXthpE4be9te5hthpE4be9te5i6AFD9wykTqqQvbDSJw297a9zDbDSJw297a9zF0AKH7hlInVUhe2GkTht7217mG2GkTht7217mLoAUP3DKROqpC9sNInDb3tr3MNsNInDb3tr3MXQAofuGUidVSF7YaROG3vbXuYbYaROG3vbXuYugBQ/cMpE6qkL2w0icNve2vcw2w0icNve2vcxdACh+4ZSJ1VILOxNj6dAlxJGGHlIksrYUoqe+SkpWk0mZb7XsfeRj2ODNHCYuFI0SuuLKX0hUpSWFkWrzJQRtme8lfsSZmXf2HuudJAYrAR/+T4vqbeH4d0GJiq9VcnI4okZmHGbjxW0tMtlZKElYiHKADeiS0Q6VWYAAAH//2Q==" alt="Campo Tipo preenchido com Saúde do Trabalhador">
+</div></div>
+</section>
+
+    <section class="work-guide card" aria-labelledby="orientacoes-trabalho">
+      <h2 id="orientacoes-trabalho">Orientações para denúncias de saúde do trabalhador</h2>
+      <p class="intro">Comunique riscos à saúde nos ambientes de trabalho de Florianópolis pelo Formulário da Vigilância em Saúde.</p>
+
+      <div class="guide">
+        <section>
+          <h3>O que informar</h3>
+          <ul style="list-style:none;padding:0;margin:0">
+            <li><strong>Local:</strong> pessoa ou estabelecimento, endereço e ponto de referência.</li>
+            <li><strong>Tipo e motivo:</strong> Saúde do Trabalhador; o que ocorre, em qual atividade e quando.</li>
+            <li><strong>Anexos:</strong> fotos ou documentos, se houver.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Escolha o tipo de sigilo</h3>
+          <p>Antes de preencher, escolha <strong>Sigiloso</strong>, <strong>Anônimo</strong> ou <strong>Sem Sigilo</strong>.</p>
+        </section>
+      </div>
+    </section>
+
+    <div class="card contato">
+<section class="support">
+      <h2>Orientação da VISAT</h2>
+      <p><a href="mailto:saudetrab.sms.pmf@floripa.sc.gov.br">saudetrab.sms.pmf@floripa.sc.gov.br</a> · <a href="tel:+554832391589">(48) 3239-1589</a></p>
+    </section>
+
+    <section>
+      <h2>Outros canais por assunto</h2>
+      <div class="channels">
+        <a href="https://denuncia.sit.trabalho.gov.br/home" target="_blank" rel="noopener noreferrer">Irregularidades trabalhistas · MTE ↗</a>
+        <a href="https://ipe.sit.trabalho.gov.br/" target="_blank" rel="noopener noreferrer">Trabalho análogo à escravidão · Ipê ↗</a>
+        <a href="https://ipetrabalhoinfantil.trabalho.gov.br/#!/" target="_blank" rel="noopener noreferrer">Trabalho infantil · Ipê ↗</a>
+        <a href="https://mpt.mp.br/pgt/servicos/servico-denuncie" target="_blank" rel="noopener noreferrer">Direitos coletivos · MPT ↗</a>
+      </div>
+    </section>
+</div>
+</main>
+  <script>
+    async function vxCopiar(texto) {
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(texto);
+          return true;
+        }
+      } catch (erro) {}
+      const anterior = document.activeElement;
+      const campo = document.createElement("textarea");
+      campo.value = texto;
+      campo.readOnly = true;
+      campo.style.cssText = "position:fixed;left:0;top:0;opacity:0";
+      document.body.appendChild(campo);
+      try {
+        campo.focus({ preventScroll: true });
+        campo.select();
+        return document.execCommand("copy");
+      } catch (erro) {
+        return false;
+      } finally {
+        campo.remove();
+        anterior?.focus({ preventScroll: true });
+      }
+    }
+    let ultimaCopia = 0;
+    const cartoes = document.querySelectorAll(".vx-item");
+    cartoes.forEach(function (cartao) {
+      const botao = cartao.querySelector("button");
+      const rotulo = cartao.querySelector("span");
+      botao.addEventListener("click", async function () {
+        const pedido = ++ultimaCopia;
+        cartoes.forEach(function (item) {
+          const outro = item.querySelector("button");
+          outro.classList.remove("ok");
+          outro.textContent = "Copiar";
+        });
+        const copiado = await vxCopiar(rotulo.textContent);
+        if (pedido !== ultimaCopia) return;
+        if (copiado) {
+          botao.classList.add("ok");
+          botao.textContent = "Copiado ✓";
+        } else {
+          const intervalo = document.createRange();
+          intervalo.selectNodeContents(rotulo);
+          const selecao = window.getSelection();
+          selecao.removeAllRanges();
+          selecao.addRange(intervalo);
+          botao.textContent = "Copie o texto";
+        }
+      });
+    });
+  </script>
+</div></div></div><div class="den-referencia-rodape" aria-hidden="true"><span id="den-alvo-rodape"></span></div><div data-visat-moldura="rodape"><template shadowrootmode="open"><link rel="stylesheet" href="../assets/moldura-visat.css"><footer class="landmark"><img class="panorama" src="../assets/ponte.png" alt="Ponte Hercílio Luz ao entardecer, em Florianópolis" width="1536" height="512" loading="lazy"><div class="caption"><div class="caption-inner"><div class="org"><strong>Vigilância em Saúde do Trabalhador</strong><span>Secretaria Municipal de Saúde de Florianópolis</span></div><div class="visat-credito"><div class="credito-container" tabindex="0" aria-label="Créditos: Desenvolvido por Tuany Pereira"><span class="txt">Desenvolvido por Tuany Pereira</span><span class="icone-info" aria-hidden="true">i</span></div></div><!--/visat-credito--></div></div></footer></template></div>
+<link rel="stylesheet" href="../assets/ajustes-sites-denuncias.css"></body>
+</html>

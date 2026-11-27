@@ -1,0 +1,43 @@
+
+.replica-conteudo > .review { padding:0!important; }
+.replica-conteudo > .review > .stage > .portal {
+  border:0!important; border-radius:0!important; box-shadow:none!important;
+  background:transparent!important; overflow:visible!important;
+}
+.replica-conteudo > .portal > main { margin:0; padding:0; max-width:none; }
+.replica-conteudo > .portal > main > .secao { padding-inline:0; border-inline:0; }
+.replica-conteudo > .portal > main > .secao + .secao { border-top:0; }
+.replica-conteudo > main:has(> header > h1:first-child) { border-top:0; }
+.replica-conteudo > main:has(> header > h1:first-child) > header,
+.replica-conteudo > .portal > main > .topo,
+.replica-conteudo #conteudo > .hero {
+  padding:0; margin:0 0 22px; background:transparent; color:#283747;
+}
+.replica-conteudo #conteudo > .hero { margin-top:22px; }
+.replica-conteudo #conteudo > .access { padding-inline:0; }
+.replica-conteudo :is(main > header > h1:first-child, main > .topo > h1:first-child, #conteudo .hero h1) {
+  margin:0 0 18px!important; color:#195e8c!important; text-align:center!important;
+  font-size:clamp(24px,3.5vw,36px)!important; line-height:1.18!important;
+  font-weight:700; letter-spacing:.012em; text-transform:uppercase;
+}
+.replica-conteudo :is(main > header > h1:first-child, main > .topo > h1:first-child, #conteudo .hero h1)::after {
+  content:""; display:block; width:clamp(48px,7vw,70px); height:3px;
+  margin:12px auto 0!important; border-radius:2px; background:#cc6a00;
+}
+.replica-conteudo :is(main > header > h1:first-child, main > .topo > h1:first-child, #conteudo .hero h1) + p {
+  color:#283747; margin:0 auto; text-align:center;
+  font-size:clamp(15px,1.55vw,18px); line-height:1.55;
+}
+.replica-conteudo > main > details,
+.replica-conteudo .vp-conteudo main > details {
+  border:1px solid #d3d0cb; border-radius:14px; background:#fff;
+}
+.replica-conteudo > main > details > summary,
+.replica-conteudo .vp-conteudo main > details > summary {
+  color:#195e8c!important; font-size:clamp(18px,2vw,22px)!important;
+  line-height:1.25!important; font-weight:700;
+}
+.replica-conteudo :is(main > h2, main > section > h2, .sections > section > h2, #conteudo .access > h2) {
+  color:#195e8c!important; font-size:clamp(18px,2vw,22px)!important;
+  line-height:1.25!important; font-weight:700;
+}

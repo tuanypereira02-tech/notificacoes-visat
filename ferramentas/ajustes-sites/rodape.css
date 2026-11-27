@@ -1,0 +1,5 @@
+/* Rodapé único até as bordas e até o fim da página. */
+html.visat-replica-nativa { min-height:100%!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) { display:flex!important; flex-direction:column!important; min-height:100vh!important; padding-bottom:0!important; margin-bottom:0!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) > :is(.home-shell,.replica-conteudo,main#principal) { flex:1 0 auto; }
+html.visat-replica-nativa body > [data-visat-moldura="rodape"] { display:block!important; flex:0 0 auto; width:100%!important; max-width:none!important; margin:0!important; padding:0!important; border:0!important; align-self:stretch; box-sizing:border-box; }
