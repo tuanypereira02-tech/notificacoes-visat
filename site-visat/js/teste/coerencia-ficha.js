@@ -56,7 +56,7 @@ const revisaoVisat = (() => {
       const n = campo.valueAsNumber;
       if (!campo.closest('[hidden]') && (campo.value || campo.validity.badInput)) {
         if (!Number.isInteger(n) || n < 0) mensagem = nome + ' deve ser um número inteiro igual ou superior a zero.';
-        else if (n > max) mensagem = nome + ' ultrapassa a idade na data de referência. Confira o valor e a unidade.';
+        else if (n > max) mensagem = nome + ' ultrapassa a idade da pessoa. Confira o valor e a unidade.';
         else if (temDatas && max > 0 && n > 0 && n === max) avisos.push({campo, mensagem: nome + ' corresponde à idade inteira da pessoa. Confira o início da exposição e a unidade.'});
       }
       campo.setCustomValidity(mensagem);
