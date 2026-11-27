@@ -142,13 +142,59 @@
       return el && !el.validity.badInput && !el.validity.rangeUnderflow && !el.validity.rangeOverflow && /^\d{4}-\d{2}-\d{2}$/.test(el.value);
     }
 
+    const rotuloIdade = idade.labels[0];
+    const rotulosEvento = {
+      dataAcidente: 'Idade na data do acidente',
+      dataDiag: 'Idade na data do diagnóstico',
+      dataDiagnostico: 'Idade na data do diagnóstico',
+      inicioSintomas: 'Idade no início dos sintomas'
+    };
+    const rotuloEvento = rotulosEvento[evento?.dataset.key] || 'Idade na data de referência';
+    rotuloIdade.textContent = rotuloEvento;
+    rotuloIdade.dataset.visatRotuloPdf = rotuloEvento;
+    const blocoAtual = document.createElement('div');
+    blocoAtual.dataset.visatSomenteTela = '';
+    const rotuloAtual = document.createElement('label');
+    rotuloAtual.className = 'field-label';
+    const atual = document.createElement('output');
+    atual.id = idade.id + '-atual';
+    atual.className = 'input input-lg';
+    atual.style.display = 'block';
+    rotuloAtual.htmlFor = atual.id;
+    blocoAtual.append(rotuloAtual, atual);
+    rotuloIdade.before(blocoAtual);
+
+    function idadeEntre(inicio, fim) {
+      const n = new Date(inicio + 'T00:00:00Z');
+      const ref = new Date(fim + 'T00:00:00Z');
+      const anos = ref.getUTCFullYear() - n.getUTCFullYear() - Number(fim.slice(5) < inicio.slice(5));
+      if (anos >= 1) return [anos, 'Ano'];
+      const meses = (ref.getUTCFullYear() - n.getUTCFullYear()) * 12 +
+        ref.getUTCMonth() - n.getUTCMonth() - Number(ref.getUTCDate() < n.getUTCDate());
+      return meses >= 1 ? [meses, 'Mês'] : [Math.floor((ref - n) / 86400000), 'Dia'];
+    }
+    const unidadePorExtenso = { Ano: ['ano', 'anos'], 'Mês': ['mês', 'meses'], Dia: ['dia', 'dias'] };
+    const calendario = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    const obito = raiz.querySelector('[data-key="dataObito"]');
     var baseIdade = document.createElement('small');
     baseIdade.className = 'field-help';
     idade.closest('.unit-row').after(baseIdade);
     function calcular() {
+      const hoje = calendario.format(new Date());
+      const evolucao = raiz.querySelector('[data-chips="evolucao"] .selected')?.dataset.value || '';
+      rotuloAtual.textContent = obito?.value || /óbito/i.test(evolucao) ? 'Idade que teria hoje' : 'Idade atual';
+      const atualValida = dataValida(nasc) && nasc.value <= hoje;
+      if (atualValida) {
+        const [valorAtual, unAtual] = idadeEntre(nasc.value, hoje);
+        atual.textContent = valorAtual + ' ' + unidadePorExtenso[unAtual][Number(valorAtual !== 1)];
+      } else {
+        atual.textContent = '—';
+      }
       idade.readOnly = !!nasc.value;
       if (unidade) unidade.disabled = !!nasc.value;
-      var referencia = evento && (evento.value || evento.validity.badInput) ? evento : notificacao;
+      var referencia = evento;
       if (!dataValida(nasc) || !dataValida(referencia) || nasc.value > referencia.value ||
           (referencia === evento && dataValida(notificacao) && evento.value > notificacao.value)) {
         idade.removeAttribute('title');
@@ -160,28 +206,24 @@
         }
         return;
       }
-      var n = new Date(nasc.value + 'T00:00:00Z');
-      var ref = new Date(referencia.value + 'T00:00:00Z');
-      var anos = ref.getUTCFullYear() - n.getUTCFullYear() - Number(referencia.value.slice(5) < nasc.value.slice(5));
-      var valor = anos, un = 'Ano';
-      if (anos < 1) {
-        var meses = (ref.getUTCFullYear() - n.getUTCFullYear()) * 12 + ref.getUTCMonth() - n.getUTCMonth() -
-          Number(ref.getUTCDate() < n.getUTCDate());
-        if (meses >= 1) { valor = meses; un = 'Mês'; } else { valor = Math.floor((ref - n) / 86400000); un = 'Dia'; }
-      }
+      const [valor, un] = idadeEntre(nasc.value, referencia.value);
       var dataBase = referencia.value.split('-').reverse().join('/');
       var rotuloBase = referencia.labels[0]?.textContent.trim() || 'Data de referência';
       idade.title = 'Idade calculada em ' + dataBase + ' (' + rotuloBase + ')';
       baseIdade.textContent = rotuloBase + ' · ' + dataBase;
+      if (evento?.dataset.key === 'dataAcidente' && (un !== 'Ano' || valor < 18)) {
+        baseIdade.textContent += ' · Menor de 18 anos nessa data. Confira o ano do acidente.';
+      }
       definir(idade, valor, true);
       idade.dataset.autopreenchido = '1';
       if (unidade) definir(unidade, un, true);
     }
-    [nasc, evento, notificacao].filter(Boolean).forEach(function (data) {
+    [nasc, evento, notificacao, obito].filter(Boolean).forEach(function (data) {
       data.addEventListener('input', calcular);
       data.addEventListener('change', calcular);
       data.addEventListener('blur', calcular);
     });
+    raiz.querySelector('[data-chips="evolucao"]')?.addEventListener('click', calcular);
     raiz.addEventListener('visat:restaurado', calcular);
     calcular();
   }
