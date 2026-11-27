@@ -74,7 +74,7 @@
       montar: (caixa, voltar) => window.montarFormularioAcidente(caixa, voltar, true)
     },
     '1-f-lesoes-por-esforcos-repetitivos-dort': {
-      titulo: '1.f - Lesões por Esforços Repetitivos/Distúrbios Osteomusculares Relacionados ao Trabalho (LER/DORT)',
+      titulo: '1.f - LER/DORT',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-lerdort-template',
 
@@ -127,7 +127,7 @@
     '1.c': ['câncer ocupacional'],
     '1.d': ['dermatose ocupacional', 'dermatoses ocupacionais', 'dermatite ocupacional'],
     '1.e': ['DVRT', 'distúrbio vocal ocupacional'],
-    '1.f': ['LER', 'DORT', 'LER DORT'],
+    '1.f': ['LER', 'DORT', 'LER DORT', 'lesões por esforços repetitivos', 'distúrbios osteomusculares relacionados ao trabalho'],
     '1.g': ['PAIR', 'perda auditiva induzida por ruído', 'perda auditiva ocupacional'],
     '1.h': ['pneumoconiose ocupacional'],
     '1.i': ['TMRT', 'transtorno mental relacionado ao trabalho'],
