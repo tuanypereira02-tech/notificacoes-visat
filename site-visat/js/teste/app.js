@@ -74,7 +74,7 @@
       montar: (caixa, voltar) => window.montarFormularioAcidente(caixa, voltar, true)
     },
     '1-f-lesoes-por-esforcos-repetitivos-dort': {
-      titulo: '1.f - LER/DORT',
+      titulo: '1.f - Lesões por Esforços Repetitivos (LER) e Distúrbios Osteomusculares (DORT)',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-lerdort-template',
 
