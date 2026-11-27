@@ -15,6 +15,38 @@
 (function () {
   'use strict';
 
+  // Resolve os arquivos de apoio a partir da URL deste próprio script.
+  // Isso preserva os caminhos em GitHub Pages, Posit Connect e incorporações.
+  var VISAT_SCRIPT_SRC = document.currentScript && document.currentScript.src || '';
+  function visatCarregarJsonApoio(arquivo, versao) {
+    var urls = [];
+    if (VISAT_SCRIPT_SRC) {
+      var peloScript = new URL('../../data/' + arquivo, VISAT_SCRIPT_SRC);
+      if (versao) peloScript.searchParams.set('v', versao);
+      urls.push(peloScript.href);
+    }
+    var pelaPagina = new URL('data/' + arquivo, document.baseURI);
+    if (versao) pelaPagina.searchParams.set('v', versao);
+    if (urls.indexOf(pelaPagina.href) < 0) urls.push(pelaPagina.href);
+
+    return (async function () {
+      var ultimoErro = null;
+      for (var i = 0; i < urls.length; i++) {
+        try {
+          var resposta = await fetch(urls[i], {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          if (!resposta.ok) throw new Error('HTTP ' + resposta.status);
+          return await resposta.json();
+        } catch (erro) {
+          ultimoErro = erro;
+        }
+      }
+      throw ultimoErro || new Error('Arquivo de apoio indisponível: ' + arquivo);
+    })();
+  }
+
   var PADRAO = { uf: 'SC', municipio: 'Florianópolis', ibge: '420540' }; // Sinan: código IBGE com 6 dígitos
 
   // Correspondências oficiais por subclasse, com revisão dos casos ambíguos.
@@ -22,8 +54,7 @@
   var consultaCorrespondencias = null;
   function carregarCorrespondencias() {
     if (!consultaCorrespondencias) {
-      consultaCorrespondencias = fetch('data/cnae-correspondencias.json?v=20261117-ibge')
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      consultaCorrespondencias = visatCarregarJsonApoio('cnae-correspondencias.json', '20261117-ibge')
         .then(function (t) { correspondenciasCnae = t.subclasses; return t; })
         .catch(function (erro) { consultaCorrespondencias = null; throw erro; });
     }
@@ -34,8 +65,7 @@
   var consultaTabelaCnae = null;
   window.visatCarregarCnae = function () {
     if (!consultaTabelaCnae) {
-      consultaTabelaCnae = fetch('data/cnae-sinan.json?v=20261117-tb-cnae')
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      consultaTabelaCnae = visatCarregarJsonApoio('cnae-sinan.json', '20261117-tb-cnae')
         .then(function (tabela) {
           tabelaCnae = tabela;
           return tabela;
@@ -843,14 +873,17 @@
   var baseEmpresas = null;
   function carregarBaseEmpresas() {
     if (!baseEmpresas) {
-      baseEmpresas = fetch('data/empresas-visat.json?v=20261116')
-        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      baseEmpresas = visatCarregarJsonApoio('empresas-visat.json', '20261127-cnpj-assets-1')
         .then(function (lista) {
           return lista.map(function (registro) {
             return { registro: registro, nomes: [registro[1], registro[2], registro[3]].map(normalizarNome) };
           });
         })
-        .catch(function () { baseEmpresas = null; return []; });
+        .catch(function () {
+          baseEmpresas = null;
+          window.VISAT_BASE_EMPRESAS_INDISPONIVEL = true;
+          return [];
+        });
     }
     return baseEmpresas;
   }
