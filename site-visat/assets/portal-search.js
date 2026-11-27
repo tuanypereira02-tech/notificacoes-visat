@@ -1,0 +1,13 @@
+(()=>{'use strict';if(document.querySelector('.visat-portal-search'))return;const pages=[
+['Início','inicio','portal saúde trabalhador'],
+['Como notificar','como-notificar','notificação ficha sinan celk cievs formulário'],
+['Acidentes de trabalho','acidentes-de-trabalho','acidente material biológico perfurocortante pep pack cat óbito'],
+['Doenças do trabalho','doencas-do-trabalho','doença câncer dermatose voz ler dort pair pneumoconiose transtorno mental'],
+['Denúncias','denúncias','denúncia risco lixo esgoto alimentos zoonoses'],
+['Inspeções','inspecoes','inspeção fiscalização risco ambiente'],
+['Legislação','legislacao','lei norma portaria protocolo'],
+['Materiais e cursos','materiais-e-cursos','material curso capacitação guia'],
+['Contatos','contatos','contato telefone email equipe'],
+['Dados e indicadores','dados-e-indicadores','dado indicador observatório estatística'],
+['Conheça a VISAT','conheça-a-visat','visat vigilância missão atuação']
+];const root=document.createElement('section');root.className='visat-portal-search';root.setAttribute('aria-label','Pesquisa do portal VISAT');const form=document.createElement('form');form.setAttribute('role','search');const input=document.createElement('input');input.type='search';input.maxLength=120;input.placeholder='Pesquisar no portal VISAT';input.setAttribute('aria-label','Pesquisar no portal VISAT');input.autocomplete='off';const button=document.createElement('button');button.type='submit';button.textContent='Pesquisar';form.append(input,button);const status=document.createElement('p');status.setAttribute('role','status');status.hidden=true;const results=document.createElement('ul');results.hidden=true;root.append(form,status,results);document.body.prepend(root);const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();function search(){const q=normalize(input.value.trim());results.replaceChildren();if(!q){status.hidden=results.hidden=true;return;}const tokens=q.split(/\s+/);const found=pages.filter(([title,slug,keywords])=>tokens.every(t=>normalize(title+' '+keywords).includes(t)));for(const [title,slug]of found){const li=document.createElement('li');const a=document.createElement('a');a.textContent=title;a.href='https://sites.google.com/view/visat-sms-pmf/'+encodeURIComponent(slug);a.target='_top';li.append(a);results.append(li);}status.textContent=found.length?found.length+' '+(found.length===1?'página encontrada':'páginas encontradas'):'Nenhuma página encontrada. Tente outro assunto.';status.hidden=false;results.hidden=!found.length;}form.addEventListener('submit',e=>{e.preventDefault();search();});input.addEventListener('input',search);input.addEventListener('keydown',e=>{if(e.key==='Escape'){input.value='';search();}});})();
