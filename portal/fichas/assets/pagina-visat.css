@@ -1,0 +1,118 @@
+html.visat-replica-nativa { height:auto !important; min-height:0 !important; max-height:none !important; overflow-y:visible !important; scroll-behavior:auto; }
+html.visat-replica-nativa > body { display:block !important; margin:0; height:auto !important; min-height:0 !important; max-height:none !important; overflow:visible !important; }
+[data-visat-moldura] { display:block; width:100%; min-width:0; margin:0; padding:0; border:0; }
+/* O conteúdo e os grupos recolhíveis crescem na própria página. */
+.visat-replica-nativa .replica-conteudo { display:flow-root; width:min(100%,76rem); margin:0 auto; padding:clamp(.6rem,1.5vw,1.1rem) clamp(.6rem,2vw,1.5rem); box-sizing:border-box; min-width:0; }
+.visat-replica-nativa .replica-conteudo > :first-child { margin-top:0; }
+.visat-replica-nativa .replica-conteudo > :last-child { margin-bottom:0; }
+.visat-replica-nativa.visat-inicio .identity { position:relative; display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:0; padding:clamp(1rem,2vw,1.65rem) clamp(.9rem,3vw,2.15rem); border:0; border-bottom:1px solid #d8e1e7; border-radius:0; background:linear-gradient(108deg,#fff 54%,#f3f7f9 100%); }
+.visat-replica-nativa.visat-inicio .identity::after { content:""; position:absolute; left:clamp(.9rem,3vw,2.15rem); bottom:-1px; width:3.2rem; height:3px; background:#bd630a; }
+.visat-replica-nativa.visat-inicio .identity .brand { flex:0 1 auto; display:flex; align-items:center; justify-content:flex-start; position:static; width:auto; min-width:0; max-width:none; height:auto; padding:0; border:0; border-radius:0; aspect-ratio:auto; background:transparent; box-shadow:none; overflow:visible; }
+.visat-replica-nativa.visat-inicio .identity .brand + .brand { margin-left:clamp(.7rem,2.25vw,2.1rem); padding-left:clamp(.7rem,2.25vw,2.1rem); border-left:1px solid #c8d6df; }
+.visat-replica-nativa.visat-inicio .identity .brand img { position:static; display:block; width:auto; height:auto; max-width:100%; object-fit:contain; transform:none; }
+.visat-replica-nativa.visat-inicio .identity .brand-pmf img { width:clamp(6.5rem,16vw,11.7rem); }
+.visat-replica-nativa.visat-inicio .identity .brand-visat img { width:clamp(6.05rem,14.6vw,10.7rem); }
+/* Nenhum painel da ficha limita a altura disponível para o texto ou para as opções. */
+.visat-replica-nativa.visat-fichas #principal, .visat-replica-nativa.visat-fichas .acidente-inline, .visat-replica-nativa.visat-fichas .step-area, .visat-replica-nativa.visat-fichas #lista-agravos,
+.visat-replica-nativa.visat-fichas :is(.visat-cid-lista,.visat-lista-apoio,.empresa-resultados,.visat-ruas-resultados) { height:auto !important; max-height:none !important; min-height:0 !important; overflow:visible !important; overscroll-behavior:auto; }
+.visat-replica-nativa.visat-fichas textarea { resize:vertical; field-sizing:content; }
+@media(max-width:480px) { .visat-replica-nativa .replica-conteudo { padding-inline:.5rem; } }
+@media print { [data-visat-moldura] { display:none !important; } }
+.visat-replica-nativa .tabela { width:100%; max-width:100%; overflow:visible; }
+.visat-replica-nativa .tabela table { width:100%; min-width:0; table-layout:fixed; }
+.visat-replica-nativa .tabela :is(td,th) { overflow-wrap:anywhere; }
+
+/* A coluna do menu participa do mesmo layout que as páginas e as fichas. */
+[data-visat-navegacao] { display: none; }
+@media screen and (min-width: 800px) {
+  html.visat-replica-nativa > body.visat-com-menu {
+    display: grid !important;
+    grid-template-columns: 250px minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    align-items: start;
+    min-height: 100vh !important;
+    padding-inline: 0 !important;
+  }
+  html.visat-replica-nativa.visat-fichas > body.visat-com-menu {
+    grid-template-rows: auto auto 1fr auto auto;
+  }
+  .visat-com-menu > * { grid-column: 2; min-width: 0; }
+  .visat-com-menu > [data-visat-navegacao] {
+    display: block;
+    width: 100%;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: stretch;
+    background: #19354f;
+  }
+  .visat-com-menu > .replica-conteudo,
+  .visat-com-menu > main#principal {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+}
+
+
+/* VISAT: padrão Como notificar, com fundo claro. */
+:root { --fundo:#FAF8F5; --marinho:#112C45; --azul:#195E8C; --laranja:#CC6A00; --laranja-terra:#9B4F00; }
+html.visat-replica-nativa, html.visat-replica-nativa > body { background:#FAF8F5!important; font-family:Roboto,Arial,sans-serif!important; }
+html.visat-replica-nativa body :is(main,#conteudo) { font-family:Roboto,Arial,sans-serif!important; color:#283747; }
+html.visat-replica-nativa body :is(main,#conteudo) h1 { font:700 22px/1.3 Roboto,Arial,sans-serif!important; color:#112C45!important; text-align:left!important; text-transform:uppercase; letter-spacing:0!important; margin:0 0 12px!important; }
+html.visat-replica-nativa body :is(main,#conteudo) h1::after { display:none!important; }
+html.visat-replica-nativa body :is(main,#conteudo) h2 { font:700 18px/1.35 Roboto,Arial,sans-serif!important; color:#112C45!important; font-style:normal!important; }
+html.visat-replica-nativa body :is(main,#conteudo) h3 { font-family:Roboto,Arial,sans-serif!important; color:#112C45; }
+html.visat-replica-nativa body main > header, html.visat-replica-nativa body main > .topo, html.visat-replica-nativa body .hero { background:transparent!important; color:#283747!important; }
+html.visat-replica-nativa body .identity { background:#FAF8F5!important; border:0!important; border-radius:0!important; justify-content:space-between!important; }
+html.visat-replica-nativa body .identity::after { display:none!important; }
+html.visat-replica-nativa body .identity .brand { background:transparent!important; border:0!important; }
+html.visat-replica-nativa body .identity .brand + .brand { margin-left:auto!important; padding-left:16px!important; border-left:0!important; }
+html.visat-replica-nativa body .brand img { mix-blend-mode:multiply; }
+html.visat-replica-nativa body .hero-copy p { color:#505B65!important; }
+html.visat-replica-nativa body .cards > .card { border-color:#DCCDBE; }
+html.visat-replica-nativa body .cards > .card:first-child { border-color:#CC6A00; border-width:2px; }
+html.visat-replica-nativa body .cards > .card:first-child :is(h2,h3,.icon,.arrow) { color:#9B4F00!important; }
+html.visat-replica-nativa body .cards > .card:first-child .icon { background:#FFF0DF; }
+html.visat-replica-nativa body main :is(.eyebrow,.kicker,.pack-label,.pack-title) { color:#9B4F00!important; }
+html.visat-replica-nativa body main :is(details,.legislacao-card,.profile-card,.panel) { border-color:#DCCDBE; }
+
+html.visat-replica-nativa body :is(main,#conteudo), html.visat-replica-nativa body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label) { font-family:Roboto,Arial,sans-serif!important; font-size:14px; line-height:1.55; }
+html.visat-replica-nativa body :is(main,#conteudo) * { font-style:normal!important; }
+html.visat-replica-nativa body :is(main,#conteudo) h3 { font-size:16px!important; line-height:1.35!important; }
+@media(max-width:480px) { html.visat-replica-nativa body :is(main,#conteudo), html.visat-replica-nativa body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label) { font-size:16px; } }
+
+
+/* Rodapé único até as bordas e até o fim da página. */
+html.visat-replica-nativa { min-height:100%!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) { display:flex!important; flex-direction:column!important; min-height:100vh!important; padding-bottom:0!important; margin-bottom:0!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) > :is(.home-shell,.replica-conteudo,main#principal) { flex:1 0 auto; }
+html.visat-replica-nativa body > [data-visat-moldura="rodape"] { display:block!important; flex:0 0 auto; width:100%!important; max-width:none!important; margin:0!important; padding:0!important; border:0!important; align-self:stretch; box-sizing:border-box; }
+
+/* Logos no topo claro, integrados ao fundo. */
+.visat-top-logos { display:flex!important; align-items:center; justify-content:space-between; gap:24px; flex:0 0 auto; box-sizing:border-box; width:min(100%,76rem); margin:0 auto; padding:16px clamp(20px,4vw,56px) 12px; background:linear-gradient(180deg,#FAF8F5 0%,#F2F0ED 60%,#FAF8F5 100%); border:0; }
+.visat-top-logos .brand { position:static!important; display:block!important; flex:0 1 auto; width:auto!important; max-width:none!important; min-width:0; height:auto!important; aspect-ratio:auto!important; overflow:visible!important; padding:0!important; margin:0!important; border:0!important; border-radius:0!important; background:transparent!important; }
+.visat-top-logos .brand img { position:static!important; display:block; width:100%!important; max-width:100%; height:auto!important; transform:none!important; object-fit:contain; mix-blend-mode:multiply; }
+.visat-top-logos .brand-pmf { flex-basis:197px; max-width:197px!important; }
+.visat-top-logos .brand-visat { flex-basis:190px; max-width:190px!important; }
+@media(max-width:500px) { .visat-top-logos { gap:18px; padding:14px 20px 10px; } .visat-top-logos .brand-pmf { flex-basis:140px; } .visat-top-logos .brand-visat { flex-basis:128px; } }
+
+html.visat-replica-nativa .replica-conteudo > .portal { min-height:0!important; }
+
+/* Padrão das páginas internas do portal (27/11/2026). */
+html.visat-fichas body :is(main,#conteudo){padding-top:22px!important;padding-inline:clamp(14px,2.35vw,32px)!important}
+html.visat-fichas body :is(main,#conteudo) h1{margin-bottom:16px!important;letter-spacing:.2px!important}
+html.visat-fichas body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label){font-size:16px;line-height:1.55}
+
+/* Ajustes aprovados na réplica: lista legível e encerramento compacto. */
+html.visat-fichas #lista-agravos .item-agravo,
+html.visat-fichas #lista-agravos .grupo-agravo-titulo,
+html.visat-fichas #busca-status { font-size:.875rem!important; line-height:1.5!important; }
+html.visat-fichas #lista-agravos,
+html.visat-fichas #lista-agravos ul,
+html.visat-fichas #lista-agravos li { list-style:none!important; }
+html.visat-fichas #nota-fluxo-ve { margin:16px 0 0; padding:0; background:transparent; color:#283747; }
+html.visat-fichas #nota-fluxo-ve :is(p,li,a) { font-size:.875rem!important; line-height:1.5!important; }
+html.visat-fichas #nota-fluxo-ve h2 { margin:0 0 12px; }
+html.visat-fichas #nota-fluxo-ve a { color:#195E8C; text-underline-offset:2px; }
+html.visat-fichas #nota-fluxo-ve a:hover { color:#9B4F00; }
+html.visat-fichas body > footer.rodape { height:0!important; min-height:0!important; margin:0!important; padding:0!important; border:0!important; overflow:hidden; }
+html.visat-fichas body > main#principal { padding-bottom:24px!important; }

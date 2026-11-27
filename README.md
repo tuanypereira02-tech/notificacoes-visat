@@ -1,5 +1,13 @@
 # Notificações compulsórias — VISAT Florianópolis
 
+## Portal compartilhado com Google Sites e réplica
+
+As páginas públicas estão em [portal/](portal/) e a operação está descrita no
+[guia de atualização conjunta](docs/portal-publicacao.md). A rotina publicar.sh
+prepara e confere a cópia de teste antes de enviar os arquivos. A ligação das
+hospedagens e as incorporações no Google Sites precisam estar configuradas
+conforme o guia.
+
 Cópia do site de direcionamento de notificações compulsórias (notificacao-sms.onrender.com), desenvolvido por Luana Lenzi, mantida pela VISAT/SMS Florianópolis com preenchimento automático e regras de qualidade dos formulários de Saúde do Trabalhador.
 
 Encaminhamento das fichas identificadas: PDF final enviado ao e-mail institucional saudetrab.sms.pmf@floripa.sc.gov.br.

@@ -1,0 +1,4 @@
+.visat-aviso-replica{box-sizing:border-box;padding:12px 18px;background:#fff0df;color:#283747;border-bottom:2px solid #cc6a00;font:16px/1.45 Roboto,Arial,sans-serif}
+.visat-aviso-replica p{margin:4px 0}.visat-aviso-replica a{color:#112c45;font-weight:700}
+@media print{.visat-aviso-replica{display:none}}
+.visat-indice-ficha button{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:start}.visat-indice-ficha{min-width:0;max-width:100%;flex-wrap:wrap}
