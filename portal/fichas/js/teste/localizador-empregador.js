@@ -10,6 +10,38 @@
 (function () {
   'use strict';
 
+  // Resolve os arquivos de apoio a partir da URL deste próprio script.
+  // Isso preserva os caminhos em GitHub Pages, Posit Connect e incorporações.
+  var VISAT_SCRIPT_SRC = document.currentScript && document.currentScript.src || '';
+  function visatCarregarJsonApoio(arquivo, versao) {
+    var urls = [];
+    if (VISAT_SCRIPT_SRC) {
+      var peloScript = new URL('../../data/' + arquivo, VISAT_SCRIPT_SRC);
+      if (versao) peloScript.searchParams.set('v', versao);
+      urls.push(peloScript.href);
+    }
+    var pelaPagina = new URL('data/' + arquivo, document.baseURI);
+    if (versao) pelaPagina.searchParams.set('v', versao);
+    if (urls.indexOf(pelaPagina.href) < 0) urls.push(pelaPagina.href);
+
+    return (async function () {
+      var ultimoErro = null;
+      for (var i = 0; i < urls.length; i++) {
+        try {
+          var resposta = await fetch(urls[i], {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          if (!resposta.ok) throw new Error('HTTP ' + resposta.status);
+          return await resposta.json();
+        } catch (erro) {
+          ultimoErro = erro;
+        }
+      }
+      throw ultimoErro || new Error('Arquivo de apoio indisponível: ' + arquivo);
+    })();
+  }
+
   var MAX_LISTA = 4;
     var ALIAS = {
     cnpj: ['cnpj'], nome: ['empresa', 'empresaNome', 'razao'], cnae: ['cnae'],
@@ -98,14 +130,20 @@
 
   /* ---------- base: empresas já cadastradas pela VISAT (data/empresas-visat.json) ---------- */
   var baseUnica = null;
+  var baseLocalIndisponivel = false;
   function carregarBase() {
     if (!baseUnica) {
       baseUnica = Promise.all([
-        fetch('data/empresas-visat.json?v=20261116').then(function (r) { if (!r.ok) throw new Error(); return r.json(); }),
-        fetch('data/cnae-correspondencias.json?v=20261117-ibge').then(function (r) { return r.ok ? r.json() : { subclasses: {} }; })
+        visatCarregarJsonApoio('empresas-visat.json', '20261127-cnpj-assets-1'),
+        visatCarregarJsonApoio('cnae-correspondencias.json', '20261117-ibge')
           .catch(function () { return { subclasses: {} }; })
       ]).then(function (res) { return preparar(res[0], res[1].subclasses || {}); })
-        .catch(function () { baseUnica = null; return null; });
+        .catch(function () {
+          // Sem a lista local, ainda manter a consulta online por nome disponível.
+          baseLocalIndisponivel = true;
+          baseUnica = preparar([], {});
+          return baseUnica;
+        });
     }
     return baseUnica;
   }
@@ -318,7 +356,7 @@
       if (base) return Promise.resolve(base);
       var carga = window.visatCarregarCnae ? window.visatCarregarCnae().then(function (t) { tabelaCnae = t; }).catch(function () {}) : Promise.resolve();
       return Promise.all([carregarBase(), carga]).then(function (res) {
-        base = res[0];
+        base = res[0] || preparar([], {});
         return base;
       });
     }
@@ -361,6 +399,7 @@
         limparLista();
         var res = d ? filtrar(d, f) : [];
         marcarAntigaLista(res.length > 0);
+        if (baseLocalIndisponivel) avisoMunicipio.textContent = 'Base local indisponível; tentando consulta online.';
         if (res.length) desenhar(d, res);
         buscarOnline(f);
       });
@@ -370,7 +409,7 @@
     // e detalha os primeiros CNPJs (bairro, endereço, CNAE, situação) para que os demais filtros valham para eles.
     var ultimaOnline = '', esperaOnline = null, rodada = 0;
     function buscarOnline(f) {
-      if (!base || !f.nome || norm(c.nome.value).replace(/ /g, '').length < 3) return;
+      if (!f.nome || norm(c.nome.value).replace(/ /g, '').length < 3) return;
       var termo = (c.nome.value || '').trim();
       var munTxt = String(c.mun && c.mun.value || '').split('/')[0].trim();
       var uf = String(c.uf && c.uf.value || '').trim();
@@ -405,7 +444,14 @@
               detalharCnpj(r[0]).then(function (x) { aplicarDetalhe(base, r, x); if (minha === rodada) executar(); proximo(); });
             })();
           })
-          .catch(function () { if (minha === rodada) ultimaOnline = ''; });
+          .catch(function () {
+            if (minha === rodada) {
+              ultimaOnline = '';
+              avisoMunicipio.textContent = baseLocalIndisponivel
+                ? 'Base local e consulta online indisponíveis. Tente novamente ou informe o CNPJ.'
+                : 'Consulta online indisponível. As sugestões da base VISAT continuam disponíveis.';
+            }
+          });
       }, 500);
     }
 

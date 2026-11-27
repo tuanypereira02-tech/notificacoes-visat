@@ -23,4 +23,14 @@ assert.match(client, /credentials:\s*'omit'/);
 assert.match(client, /referrerPolicy:\s*'no-referrer'/);
 assert.doesNotMatch(client, /ENVIO_CHAVE|TURNSTILE_SECRET|password\s*=/i);
 
-console.log('OK: réplica sem envio, servidor fail-closed e cliente sem segredo.');
+
+const autoCnpj = read('portal/fichas/js/teste/autopreenchimento.js');
+assert.match(autoCnpj, /visatCarregarJsonApoio\('empresas-visat\.json'/);
+assert.doesNotMatch(autoCnpj, /fetch\(['"]data\/empresas-visat\.json/);
+
+const localizadorCnpj = read('portal/fichas/js/teste/localizador-empregador.js');
+assert.match(localizadorCnpj, /visatCarregarJsonApoio\('empresas-visat\.json'/);
+assert.match(localizadorCnpj, /baseUnica = preparar\(\[\], \{\}\)/);
+assert.doesNotMatch(localizadorCnpj, /if \(!base \|\| !f\.nome/);
+
+console.log('OK: réplica sem envio, servidor fail-closed, cliente sem segredo e busca de empresas resiliente.');

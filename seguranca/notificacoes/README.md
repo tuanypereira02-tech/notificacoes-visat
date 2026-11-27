@@ -88,3 +88,18 @@ O prazo de guarda e a eliminação dos PDFs precisam seguir a tabela de temporal
 Este protótipo recebe o PDF como arquivo opaco: valida assinatura e tamanho, mas **não interpreta os campos clínicos dentro do PDF**. Portanto, ele não substitui a validação de completude, cronologia e consistência já feita no formulário. Se a TI exigir validação autoritativa no servidor, será necessário enviar também um payload estruturado com os campos definidos, criar um esquema versionado e validar esses campos no backend antes de persistir o PDF. Essa mudança deve ser projetada com a equipe técnica e o encarregado, minimizando os dados e evitando duplicar identificadores em planilhas de controle.
 
 A chave de idempotência é consultada antes de consumir um novo token antirobô, para que uma repetição de uma submissão já confirmada possa devolver o protocolo existente sem gerar outro recebimento. Tokens novos continuam obrigatórios para novos envios.
+
+## Preservação da busca de CNPJ e empregador
+
+Foi preparada, nesta branch isolada, uma correção de resiliência para os arquivos de apoio usados pela busca de empresas:
+
+- Os JSONs de empresas e CNAE são resolvidos primeiro em relação ao próprio arquivo JavaScript, e depois em relação à página.
+- As requisições usam `cache: no-store`, evitando manter uma resposta antiga ou um 404 em cache.
+- Se a base local falhar, o localizador cria um índice vazio e continua tentando a consulta online por nome, em vez de encerrar a busca por completo.
+- A interface informa quando a base local e/ou a consulta online não estão disponíveis, em vez de ocultar a falha.
+
+A alteração foi aplicada tanto à fonte `site-visat/` quanto à cópia de homologação `portal/fichas/`, apenas nesta branch. Os arquivos HTML receberam novos identificadores de versão para evitar cache dos scripts anteriores.
+
+A base atual com 9.588 registros foi preservada. Não foram restaurados cinco registros da cópia anterior que continham números de CPF nos campos de nome fantasia/razão social. A recuperação da funcionalidade não deve reintroduzir esses dados pessoais.
+
+**Limite da validação:** a análise estática confirma os caminhos e o fallback de código, mas a causa exata do problema no Posit Connect ainda precisa ser confirmada com teste de rede no endereço publicado (HTTP do JSON, CSP e resposta da consulta online). Nada foi publicado na `main`, no Google Sites ou no Posit Connect.
