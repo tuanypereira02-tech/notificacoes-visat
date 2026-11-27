@@ -84,17 +84,33 @@ function doPost(e) {
     }
 
     var dados = validarEntrada_(entrada);
-    if (!validarTurnstile_(dados.turnstileToken, cfg)) {
-      return erro_('VALIDACAO_ANTIROBO_FALHOU', correlacao);
-    }
-
-    var bytesPdf = decodificarPdf_(dados.pdfBase64);
     var hashIdempotencia = sha256_(dados.idempotencia);
 
     trava = LockService.getScriptLock();
     trava.waitLock(15000);
 
     if (cfg.ambiente === 'HOMOLOGACAO') {
+      var cacheHomologacao = CacheService.getScriptCache();
+      var chaveHomologacao = 'hom:' + hashIdempotencia;
+      var protocoloAnterior = cacheHomologacao.get(chaveHomologacao);
+      if (protocoloAnterior) {
+        var protocoloSalvo = JSON.parse(protocoloAnterior);
+        return resposta_({
+          ok: true,
+          homologacao: true,
+          simulacao: true,
+          duplicado: true,
+          protocolo: protocoloSalvo.protocolo,
+          recebidoEm: protocoloSalvo.recebidoEm,
+          armazenamento: 'NAO_REALIZADO',
+          email: 'NAO_ENVIADO',
+          correlacao: correlacao
+        });
+      }
+      if (!validarTurnstile_(dados.turnstileToken, cfg)) {
+        return erro_('VALIDACAO_ANTIROBO_FALHOU', correlacao);
+      }
+      decodificarPdf_(dados.pdfBase64);
       return respostaHomologacao_(hashIdempotencia, correlacao);
     }
 
@@ -115,6 +131,11 @@ function doPost(e) {
       });
     }
 
+    if (!validarTurnstile_(dados.turnstileToken, cfg)) {
+      return erro_('VALIDACAO_ANTIROBO_FALHOU', correlacao);
+    }
+
+    var bytesPdf = decodificarPdf_(dados.pdfBase64);
     if (!consumirLimiteEmail_(dados.emailRecibo)) {
       return erro_('LIMITE_DE_ENVIO_ATINGIDO', correlacao);
     }
@@ -127,6 +148,9 @@ function doPost(e) {
     arquivo = pasta.createFile(
       Utilities.newBlob(bytesPdf, 'application/pdf', nomeArquivo)
     );
+    if (arquivo.getSharingAccess() !== DriveApp.Access.PRIVATE) {
+      throw new Error('ARQUIVO_COM_COMPARTILHAMENTO_AMplo');
+    }
 
     var recebidoEm = new Date();
     var linha = aba.getLastRow() + 1;

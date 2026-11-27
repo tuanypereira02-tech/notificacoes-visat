@@ -82,3 +82,9 @@ O prazo de guarda e a eliminação dos PDFs precisam seguir a tabela de temporal
 8. Só então preparar a troca do endpoint de produção e a publicação oficial.
 
 **Este pacote é código de preparação, não uma declaração de conformidade LGPD nem uma implantação em produção.**
+
+## Limite de validação do PDF
+
+Este protótipo recebe o PDF como arquivo opaco: valida assinatura e tamanho, mas **não interpreta os campos clínicos dentro do PDF**. Portanto, ele não substitui a validação de completude, cronologia e consistência já feita no formulário. Se a TI exigir validação autoritativa no servidor, será necessário enviar também um payload estruturado com os campos definidos, criar um esquema versionado e validar esses campos no backend antes de persistir o PDF. Essa mudança deve ser projetada com a equipe técnica e o encarregado, minimizando os dados e evitando duplicar identificadores em planilhas de controle.
+
+A chave de idempotência é consultada antes de consumir um novo token antirobô, para que uma repetição de uma submissão já confirmada possa devolver o protocolo existente sem gerar outro recebimento. Tokens novos continuam obrigatórios para novos envios.
