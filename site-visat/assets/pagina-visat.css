@@ -96,3 +96,8 @@ html.visat-replica-nativa body > [data-visat-moldura="rodape"] { display:block!i
 @media(max-width:500px) { .visat-top-logos { gap:18px; padding:14px 20px 10px; } .visat-top-logos .brand-pmf { flex-basis:140px; } .visat-top-logos .brand-visat { flex-basis:128px; } }
 
 html.visat-replica-nativa .replica-conteudo > .portal { min-height:0!important; }
+
+/* Padrão das páginas internas do portal (27/11/2026). */
+html.visat-fichas body :is(main,#conteudo){padding-top:22px!important;padding-inline:clamp(14px,2.35vw,32px)!important}
+html.visat-fichas body :is(main,#conteudo) h1{margin-bottom:16px!important;letter-spacing:.2px!important}
+html.visat-fichas body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label){font-size:16px;line-height:1.55}
