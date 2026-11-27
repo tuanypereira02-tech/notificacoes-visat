@@ -549,6 +549,9 @@
       if (evento.isTrusted || !cep.value) buscar();
     });
     cep.addEventListener('change', evento => { if (evento.isTrusted) buscar(); });
+    // Colagem, preenchimento do navegador e ferramentas assistivas podem produzir
+    // eventos diferentes. Ao sair da residência, confira o valor efetivamente exibido.
+    if (chaveCep === 'cep') cep.addEventListener('blur', buscar);
   }
 
   /* ---------- 5. CNPJ (BrasilAPI) ---------- */

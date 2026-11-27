@@ -435,7 +435,7 @@
     var [municipios, ocupacoes, unidades, atividades] = await Promise.all([
       localizacoes.length ? carregar('mun') : [],
       cbo ? carregar('cbo') : [],
-      cnes?.value ? carregar('cnes') : [],
+      cnes?.value ? carregar('cnesAtendimento') : [],
       camposCnae.length ? carregar('cnae') : []
     ]);
     localizacoes.forEach(function ([municipio, ibge, uf]) {
@@ -533,7 +533,21 @@
     }
     var grupoUnidade = ![nomeUnidade, cnes].some(el => el?.dataset.visatLista) &&
       vincularCampos([nomeUnidade, cnes], [ibgeNotif, municipioNotif, ufNotif]);
+    function pertenceAoLocal(item, municipio, uf, ibge) {
+      const codigo = ibge?.value.trim().slice(0, 6);
+      return (!codigo || codigo === item.ibge) &&
+        (!municipio?.value.trim() || norm(municipio.value) === norm(item.municipio)) &&
+        (!uf?.value.trim() || norm(uf.value) === norm(item.uf));
+    }
+    function unidadeDoMunicipio(item) {
+      return pertenceAoLocal(item, municipioNotif, ufNotif, ibgeNotif);
+    }
+    var unidadeSelecionada = null;
+    var preenchendoUnidade = false;
     function preencherUnidade(item) {
+      if (!unidadeDoMunicipio(item)) return;
+      unidadeSelecionada = item;
+      preenchendoUnidade = true;
       grupoUnidade.preencher(function () {
         definir(nomeUnidade, item.v, true);
         definir(cnes, item.c, true);
@@ -541,20 +555,29 @@
         definir(municipioNotif, item.municipio, true);
         definir(ufNotif, item.uf, true);
       });
+      preenchendoUnidade = false;
     }
-    anexarLista(nomeUnidade, 'cnes', preencherUnidade);
-    anexarLista(cnes, 'cnes', preencherUnidade);
+    if (grupoUnidade) {
+      const verificarLocal = evento => {
+        if (preenchendoUnidade || !unidadeSelecionada) return;
+        const removido = (evento.target === municipioNotif || evento.target === ufNotif) && !evento.target.value.trim();
+        if (!removido && unidadeDoMunicipio(unidadeSelecionada)) return;
+        unidadeSelecionada = null;
+        grupoUnidade.reiniciar(null, true);
+      };
+      [municipioNotif, ufNotif, ibgeNotif].filter(Boolean).forEach(el => {
+        ['input', 'change', 'blur', 'visat:escolha-manual'].forEach(tipo => el.addEventListener(tipo, verificarLocal));
+      });
+    }
+    anexarLista(nomeUnidade, 'cnes', preencherUnidade, cnes, unidadeDoMunicipio);
+    anexarLista(cnes, 'cnes', preencherUnidade, null, unidadeDoMunicipio);
     var unidadeAtendimento = campo(raiz, ['unidAtendimento']);
     var cnesAtendimento = campo(raiz, ['cnesAtendimento']);
     var municipioAtendimento = campo(raiz, ['munAtendimento']);
     var ufAtendimento = campo(raiz, ['ufAtendimento']);
     var ibgeAtendimento = campo(raiz, ['ibgeAtendimento']);
     function estabelecimentoDoMunicipio(item) {
-      var codigo = ibgeAtendimento?.value.trim();
-      var municipio = norm(municipioAtendimento?.value);
-      var uf = norm(ufAtendimento?.value);
-      return (!codigo || codigo.slice(0, 6) === item.ibge) &&
-        (!municipio || municipio === norm(item.municipio)) && (!uf || uf === norm(item.uf));
+      return pertenceAoLocal(item, municipioAtendimento, ufAtendimento, ibgeAtendimento);
     }
     var grupoAtendimento = ![unidadeAtendimento, cnesAtendimento].some(el => el?.dataset.visatLista) &&
       vincularCampos([unidadeAtendimento, cnesAtendimento], [ibgeAtendimento, municipioAtendimento, ufAtendimento]);
@@ -638,7 +661,8 @@
         if (evento.isTrusted) municipio.dispatchEvent(new Event('blur'));
       });
       function preencherMunicipio(item, escolhaManual) {
-        var mudouMunicipio = norm(municipio.value) !== norm(item.v) || norm(uf?.value) !== norm(item.uf);
+        var mudouMunicipio = norm(municipio.value) !== norm(item.v) || norm(uf?.value) !== norm(item.uf) ||
+          Boolean(ibge.value && ibge.value.slice(0, 6) !== item.c);
         if (localEmpresa && escolhaManual &&
             ((ibge.value && ibge.value !== item.c) ||
              (municipio.value && norm(municipio.value) !== norm(item.v)) ||
