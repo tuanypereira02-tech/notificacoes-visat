@@ -55,7 +55,7 @@
       })
     },
     '1-d-dermatose-ocupacionais': {
-      titulo: '1.d - Dermatose ocupacionais',
+      titulo: '1.d - Dermatoses ocupacionais',
       montar: (caixa, voltar) => window.montarFormulario(caixa, voltar, {
         templateId: 'form-dermatose-template',
 
