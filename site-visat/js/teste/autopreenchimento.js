@@ -135,34 +135,13 @@
     if (!nasc || !idade || nasc.dataset.autopreenchimentoIdade) return;
     nasc.dataset.autopreenchimentoIdade = '1';
 
-    var evento = raiz.querySelector('[data-visat-data-referencia]');
-    var notificacao = raiz.querySelector('#sinan-data-notif');
-
+    // Decisão VISAT 27/11/2026: a ficha tem um único campo de idade, "Idade atual", calculado pela data
+    // de nascimento e impresso no PDF. A idade na data do acidente, do diagnóstico ou dos sintomas não é exibida.
     function dataValida(el) {
       return el && !el.validity.badInput && !el.validity.rangeUnderflow && !el.validity.rangeOverflow && /^\d{4}-\d{2}-\d{2}$/.test(el.value);
     }
 
     const rotuloIdade = idade.labels[0];
-    const rotulosEvento = {
-      dataAcidente: 'Idade na data do acidente',
-      dataDiag: 'Idade na data do diagnóstico',
-      dataDiagnostico: 'Idade na data do diagnóstico',
-      inicioSintomas: 'Idade no início dos sintomas'
-    };
-    const rotuloEvento = rotulosEvento[evento?.dataset.key] || 'Idade na data de referência';
-    rotuloIdade.textContent = rotuloEvento;
-    rotuloIdade.dataset.visatRotuloPdf = rotuloEvento;
-    const blocoAtual = document.createElement('div');
-    blocoAtual.dataset.visatSomenteTela = '';
-    const rotuloAtual = document.createElement('label');
-    rotuloAtual.className = 'field-label';
-    const atual = document.createElement('output');
-    atual.id = idade.id + '-atual';
-    atual.className = 'input input-lg';
-    atual.style.display = 'block';
-    rotuloAtual.htmlFor = atual.id;
-    blocoAtual.append(rotuloAtual, atual);
-    rotuloIdade.before(blocoAtual);
 
     function idadeEntre(inicio, fim) {
       const n = new Date(inicio + 'T00:00:00Z');
@@ -173,32 +152,21 @@
         ref.getUTCMonth() - n.getUTCMonth() - Number(ref.getUTCDate() < n.getUTCDate());
       return meses >= 1 ? [meses, 'Mês'] : [Math.floor((ref - n) / 86400000), 'Dia'];
     }
-    const unidadePorExtenso = { Ano: ['ano', 'anos'], 'Mês': ['mês', 'meses'], Dia: ['dia', 'dias'] };
     const calendario = new Intl.DateTimeFormat('sv-SE', {
       timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
     });
     const obito = raiz.querySelector('[data-key="dataObito"]');
-    var baseIdade = document.createElement('small');
-    baseIdade.className = 'field-help';
-    idade.closest('.unit-row').after(baseIdade);
     function calcular() {
       const hoje = calendario.format(new Date());
       const evolucao = raiz.querySelector('[data-chips="evolucao"] .selected')?.dataset.value || '';
-      rotuloAtual.textContent = obito?.value || /óbito/i.test(evolucao) ? 'Idade que teria hoje' : 'Idade atual';
-      const atualValida = dataValida(nasc) && nasc.value <= hoje;
-      if (atualValida) {
-        const [valorAtual, unAtual] = idadeEntre(nasc.value, hoje);
-        atual.textContent = valorAtual + ' ' + unidadePorExtenso[unAtual][Number(valorAtual !== 1)];
-      } else {
-        atual.textContent = '—';
+      const rotulo = obito?.value || /óbito/i.test(evolucao) ? 'Idade que teria hoje' : 'Idade atual';
+      if (rotuloIdade) {
+        rotuloIdade.textContent = rotulo;
+        rotuloIdade.dataset.visatRotuloPdf = rotulo;
       }
       idade.readOnly = !!nasc.value;
       if (unidade) unidade.disabled = !!nasc.value;
-      var referencia = evento;
-      if (!dataValida(nasc) || !dataValida(referencia) || nasc.value > referencia.value ||
-          (referencia === evento && dataValida(notificacao) && evento.value > notificacao.value)) {
-        idade.removeAttribute('title');
-        baseIdade.textContent = '';
+      if (!dataValida(nasc) || nasc.value > hoje) {
         if (nasc.value || idade.dataset.autopreenchido === '1') {
           limparCampo(idade);
           if (unidade) definir(unidade, 'Ano', true);
@@ -206,19 +174,12 @@
         }
         return;
       }
-      const [valor, un] = idadeEntre(nasc.value, referencia.value);
-      var dataBase = referencia.value.split('-').reverse().join('/');
-      var rotuloBase = referencia.labels[0]?.textContent.trim() || 'Data de referência';
-      idade.title = 'Idade calculada em ' + dataBase + ' (' + rotuloBase + ')';
-      baseIdade.textContent = rotuloBase + ' · ' + dataBase;
-      if (evento?.dataset.key === 'dataAcidente' && (un !== 'Ano' || valor < 18)) {
-        baseIdade.textContent += ' · Menor de 18 anos nessa data. Confira o ano do acidente.';
-      }
+      const [valor, un] = idadeEntre(nasc.value, hoje);
       definir(idade, valor, true);
       idade.dataset.autopreenchido = '1';
       if (unidade) definir(unidade, un, true);
     }
-    [nasc, evento, notificacao, obito].filter(Boolean).forEach(function (data) {
+    [nasc, obito].filter(Boolean).forEach(function (data) {
       data.addEventListener('input', calcular);
       data.addEventListener('change', calcular);
       data.addEventListener('blur', calcular);
