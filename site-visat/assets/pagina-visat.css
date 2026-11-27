@@ -79,3 +79,20 @@ html.visat-replica-nativa body :is(main,#conteudo), html.visat-replica-nativa bo
 html.visat-replica-nativa body :is(main,#conteudo) * { font-style:normal!important; }
 html.visat-replica-nativa body :is(main,#conteudo) h3 { font-size:16px!important; line-height:1.35!important; }
 @media(max-width:480px) { html.visat-replica-nativa body :is(main,#conteudo), html.visat-replica-nativa body :is(main,#conteudo) :is(p,li,dd,dt,td,th,label) { font-size:16px; } }
+
+
+/* Rodapé único até as bordas e até o fim da página. */
+html.visat-replica-nativa { min-height:100%!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) { display:flex!important; flex-direction:column!important; min-height:100vh!important; padding-bottom:0!important; margin-bottom:0!important; }
+html.visat-replica-nativa > body:not(.visat-com-menu) > :is(.home-shell,.replica-conteudo,main#principal) { flex:1 0 auto; }
+html.visat-replica-nativa body > [data-visat-moldura="rodape"] { display:block!important; flex:0 0 auto; width:100%!important; max-width:none!important; margin:0!important; padding:0!important; border:0!important; align-self:stretch; box-sizing:border-box; }
+
+/* Logos no topo claro, integrados ao fundo. */
+.visat-top-logos { display:flex!important; align-items:center; justify-content:space-between; gap:24px; flex:0 0 auto; box-sizing:border-box; width:min(100%,76rem); margin:0 auto; padding:16px clamp(20px,4vw,56px) 12px; background:linear-gradient(180deg,#FAF8F5 0%,#F2F0ED 60%,#FAF8F5 100%); border:0; }
+.visat-top-logos .brand { position:static!important; display:block!important; flex:0 1 auto; width:auto!important; max-width:none!important; min-width:0; height:auto!important; aspect-ratio:auto!important; overflow:visible!important; padding:0!important; margin:0!important; border:0!important; border-radius:0!important; background:transparent!important; }
+.visat-top-logos .brand img { position:static!important; display:block; width:100%!important; max-width:100%; height:auto!important; transform:none!important; object-fit:contain; mix-blend-mode:multiply; }
+.visat-top-logos .brand-pmf { flex-basis:197px; max-width:197px!important; }
+.visat-top-logos .brand-visat { flex-basis:190px; max-width:190px!important; }
+@media(max-width:500px) { .visat-top-logos { gap:18px; padding:14px 20px 10px; } .visat-top-logos .brand-pmf { flex-basis:140px; } .visat-top-logos .brand-visat { flex-basis:128px; } }
+
+html.visat-replica-nativa .replica-conteudo > .portal { min-height:0!important; }
